@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Goldy Automobiles Masters</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      main {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 280px 1fr;
+        padding: 20px;
+      }
+
+      nav {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      nav button,
+      .actions button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      nav button {
+        display: block;
+        margin-bottom: 8px;
+        text-align: left;
+        width: 100%;
+      }
+
+      nav button[aria-selected="true"],
+      .primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      input,
+      textarea,
+      select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 5px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f7f9fc;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      #message {
+        min-height: 20px;
+      }
+
+      @media (max-width: 900px) {
+        main,
+        form {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Masters</h1>
+      <a href="/">Login</a>
+    </header>
+    <main>
+      <nav id="resource-tabs" aria-label="Master resources"></nav>
+      <section>
+        <div class="toolbar">
+          <input id="search" placeholder="Search">
+          <button id="search-button" class="primary">Search</button>
+        </div>
+        <form id="editor"></form>
+        <div class="actions">
+          <button id="save-button" class="primary">Create</button>
+          <button id="reset-button">Reset</button>
+          <button id="prev-button">Previous</button>
+          <button id="next-button">Next</button>
+        </div>
+        <p id="message" role="status"></p>
+        <div id="table"></div>
+      </section>
+    </main>
+    <script src="/masters.js"></script>
+  </body>
+</html>

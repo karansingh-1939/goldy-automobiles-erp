@@ -1,0 +1,123 @@
+import { AppError } from '../../shared/errors/AppError.js';
+import { validatePayload } from './master.validator.js';
+
+function normalizeDatabaseError(error) {
+  if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    return new AppError('A record with the same unique value already exists.', 409, 'DUPLICATE_RECORD');
+  }
+
+  if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+    return new AppError('Related record was not found.', 400, 'RELATED_RECORD_NOT_FOUND');
+  }
+
+  if (error.code?.startsWith('SQLITE_CONSTRAINT')) {
+    return new AppError('Record violates a database constraint.', 400, 'CONSTRAINT_FAILED');
+  }
+
+  return error;
+}
+
+export class MasterService {
+  constructor({ repository, auditService, config }) {
+    this.repository = repository;
+    this.auditService = auditService;
+    this.config = config;
+  }
+
+  list(query) {
+    const { rows, total } = this.repository.list(query);
+
+    return {
+      data: rows,
+      pagination: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    };
+  }
+
+  get(id) {
+    const record = this.repository.findById(id);
+
+    if (!record) {
+      throw new AppError('Record not found.', 404, 'RECORD_NOT_FOUND');
+    }
+
+    return record;
+  }
+
+  create(payload, userId) {
+    const data = validatePayload(this.config, payload);
+    this.validateRelations(data);
+
+    try {
+      const record = this.repository.create(data);
+      this.auditService.record({
+        userId,
+        action: 'CREATE',
+        entityType: this.config.entityType,
+        entityId: record.id,
+        newValue: record,
+      });
+
+      return record;
+    } catch (error) {
+      throw normalizeDatabaseError(error);
+    }
+  }
+
+  update(id, payload, userId) {
+    const existing = this.get(id);
+    const data = validatePayload(this.config, payload, { partial: true });
+    this.validateRelations(data);
+
+    try {
+      const record = this.repository.update(id, data);
+      this.auditService.record({
+        userId,
+        action: 'UPDATE',
+        entityType: this.config.entityType,
+        entityId: id,
+        oldValue: existing,
+        newValue: record,
+      });
+
+      return record;
+    } catch (error) {
+      throw normalizeDatabaseError(error);
+    }
+  }
+
+  delete(id, userId) {
+    const existing = this.get(id);
+
+    try {
+      this.repository.delete(id);
+      this.auditService.record({
+        userId,
+        action: 'DELETE',
+        entityType: this.config.entityType,
+        entityId: id,
+        oldValue: existing,
+      });
+
+      return { success: true };
+    } catch (error) {
+      throw normalizeDatabaseError(error);
+    }
+  }
+
+  validateRelations(data) {
+    for (const relation of this.config.relations || []) {
+      if (data[relation.field] !== undefined && data[relation.field] !== null) {
+        const exists = this.repository.exists(relation.table, data[relation.field]);
+
+        if (!exists) {
+          throw new AppError(`${relation.label} was not found.`, 400, 'RELATED_RECORD_NOT_FOUND');
+        }
+      }
+    }
+  }
+}
