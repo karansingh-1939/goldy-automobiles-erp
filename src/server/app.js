@@ -10,6 +10,9 @@ import { createJobCardRouter } from './modules/jobCards/jobCard.routes.js';
 import { registerMasterRoutes } from './modules/masters/master.routes.js';
 import { createProfitRouter } from './modules/profit/profit.routes.js';
 import { createPurchasingRouter } from './modules/purchasing/purchasing.routes.js';
+import { createDashboardRouter } from './modules/dashboard/dashboard.routes.js';
+import { createGstRouter } from './modules/gst/gst.routes.js';
+import { createServiceHistoryRouter } from './modules/serviceHistory/serviceHistory.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/errorHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -40,6 +43,9 @@ export function createApp({ db = getDatabase() } = {}) {
   app.use('/api/v1/expenses', createExpenseRouter(db));
   app.use('/api/v1/inventory', createInventoryRouter(db));
   app.use('/api/v1/profit', createProfitRouter(db));
+  app.use('/api/v1/dashboard', createDashboardRouter(db));
+  app.use('/api/v1/gst', createGstRouter(db));
+  app.use('/api/v1', createServiceHistoryRouter(db));
   app.use('/api/v1', createJobCardRouter(db));
   app.use('/api/v1/purchases', createPurchasingRouter(db));
   registerMasterRoutes(app, db);

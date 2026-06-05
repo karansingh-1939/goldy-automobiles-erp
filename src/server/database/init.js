@@ -1,10 +1,13 @@
 import { createDatabase } from './connection.js';
-import { runMigrations } from './migrationRunner.js';
+import { MigrationRunner } from './migrationRunner.js';
+import { BackupService } from './backupService.js';
 import { runSeeds } from './seedRunner.js';
 import { pathToFileURL } from 'node:url';
 
 export async function initializeDatabase(db = createDatabase()) {
-  const migrations = runMigrations(db);
+  const backupService = new BackupService(db);
+  const runner = new MigrationRunner(db, backupService);
+  const migrations = runner.run();
   const seeds = await runSeeds(db);
 
   return { migrations, seeds };

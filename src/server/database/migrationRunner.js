@@ -1,62 +1,64 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
+import { MigrationRepository } from './migrationRepository.js';
+import { MigrationService } from './migrationService.js';
+import { IntegrityCheckService } from './integrityCheckService.js';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const defaultMigrationsDir = path.join(__dirname, 'migrations');
 
-function checksum(contents) {
-  return crypto.createHash('sha256').update(contents).digest('hex');
+// Dynamically resolve application version from package.json if available
+let appVersion = '0.1.0';
+try {
+  const packageJsonPath = path.resolve(process.cwd(), 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    appVersion = pkg.version || appVersion;
+  }
+} catch (err) {
+  // Fallback to default
 }
 
-export function ensureMigrationTable(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS schema_migrations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      filename TEXT NOT NULL UNIQUE,
-      checksum TEXT NOT NULL,
-      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-}
-
-export function runMigrations(db, migrationsDir = defaultMigrationsDir) {
-  ensureMigrationTable(db);
-
-  const applied = new Map(
-    db.prepare('SELECT filename, checksum FROM schema_migrations').all()
-      .map((row) => [row.filename, row.checksum]),
-  );
-
-  const files = fs.readdirSync(migrationsDir)
-    .filter((file) => file.endsWith('.sql'))
-    .sort();
-
-  const appliedFiles = [];
-
-  for (const filename of files) {
-    const filePath = path.join(migrationsDir, filename);
-    const sql = fs.readFileSync(filePath, 'utf8');
-    const hash = checksum(sql);
-
-    if (applied.has(filename)) {
-      if (applied.get(filename) !== hash) {
-        throw new Error(`Migration checksum mismatch: ${filename}`);
-      }
-      continue;
-    }
-
-    const applyMigration = db.transaction(() => {
-      db.exec(sql);
-      db.prepare(
-        'INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)',
-      ).run(filename, hash);
-    });
-
-    applyMigration();
-    appliedFiles.push(filename);
+export class MigrationRunner {
+  /**
+   * @param {object} db - Active better-sqlite3 database connection
+   * @param {object} [backupService] - Backup service for pre-migration backups
+   * @param {string} [migrationsDir] - Folder containing .sql migration files
+   * @param {string} [version] - Current application version string
+   */
+  constructor(db, backupService = null, migrationsDir = null, version = appVersion) {
+    this.db = db;
+    this.backupService = backupService;
+    this.migrationsDir = migrationsDir || defaultMigrationsDir;
+    this.version = version;
   }
 
-  return appliedFiles;
+  /**
+   * Runs the sequential migration process.
+   * @returns {Array<string>} Filenames of migrations applied in this run.
+   */
+  run() {
+    const repository = new MigrationRepository(this.db);
+    const service = new MigrationService(
+      this.db,
+      repository,
+      IntegrityCheckService,
+      this.backupService,
+      this.migrationsDir,
+      this.version
+    );
+    return service.runMigrations();
+  }
+}
+
+/**
+   * Legacy wrapper function to preserve backward compatibility for existing tests/files.
+   * @param {object} db - SQLite connection
+   * @param {string} [migrationsDir] - custom path
+   * @returns {Array<string>} list of migrations applied
+   */
+export function runMigrations(db, migrationsDir = defaultMigrationsDir) {
+  const runner = new MigrationRunner(db, null, migrationsDir);
+  return runner.run();
 }

@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+
+# Database files
+data/*.sqlite
+data/*.db
+data/*.sqlite-wal
+data/*.sqlite-shm
+*.db-wal
+*.db-shm
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Backup files
+backups/
