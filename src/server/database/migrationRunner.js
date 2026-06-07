@@ -8,16 +8,21 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const defaultMigrationsDir = path.join(__dirname, 'migrations');
 
-// Dynamically resolve application version from package.json if available
 let appVersion = '0.1.0';
-try {
-  const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    appVersion = pkg.version || appVersion;
+const packageJsonPaths = [
+  path.join(__dirname, '..', '..', '..', 'package.json'),
+  path.resolve(process.cwd(), 'package.json')
+];
+for (const p of packageJsonPaths) {
+  try {
+    if (fs.existsSync(p)) {
+      const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
+      appVersion = pkg.version || appVersion;
+      break;
+    }
+  } catch (err) {
+    // Ignore and try next path
   }
-} catch (err) {
-  // Fallback to default
 }
 
 export class MigrationRunner {

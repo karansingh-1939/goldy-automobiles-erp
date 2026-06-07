@@ -1,0 +1,49 @@
+{
+  // Core Application Metadata
+  appId: "com.goldyautomobiles.erp",
+  productName: "Goldy Automobiles ERP",
+  copyright: "Copyright © 2026 Goldy Automobiles",
+
+  // Packaging Rules
+  files: [
+    "src/**/*",
+    "public/**/*",
+    "package.json",
+    // Exclude developer configuration, backups, local database copies, and tests
+    "!src/server/tests/**/*",
+    "!data/**/*",
+    "!.git/**/*",
+    "!.env*",
+    "!**/*.log"
+  ],
+
+  // Security and Module Support
+  asar: true, // Package application code into ASAR archive
+  npmRebuild: true, // Rebuild native dependencies (better-sqlite3) automatically for Electron ABI
+  asarUnpack: [
+    "**/node_modules/better-sqlite3/**/*"
+  ],
+
+  // Windows Specific Configuration
+  win: {
+    target: [
+      {
+        target: "nsis",
+        arch: ["x64"]
+      }
+    ]
+  },
+
+  // NSIS Installer Configuration
+  nsis: {
+    oneClick: false, // Wizard-based custom installation steps
+    allowToChangeInstallationDirectory: true, // User can customize installation target directory
+    perMachine: true, // Install to Program Files (requires UAC admin privileges)
+    createDesktopShortcut: "always", // Create Desktop shortcut
+    createStartMenuShortcut: true, // Create Start Menu shortcut
+    shortcutName: "Goldy Automobiles ERP",
+    uninstallDisplayName: "Goldy Automobiles ERP",
+    deleteAppDataOnUninstall: false, // Ensure database, logs, and backups are NOT removed during uninstalls
+    runAfterFinish: true // Offer running the app immediately after installation finishes
+  }
+}

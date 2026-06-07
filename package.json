@@ -4,20 +4,26 @@
   "private": true,
   "type": "module",
   "description": "Offline-first desktop ERP backend foundation for Goldy Automobiles.",
-  "main": "src/server/server.js",
+  "main": "src/main.js",
   "scripts": {
-    "dev": "node src/server/server.js",
+    "dev": "electron .",
     "start": "node src/server/server.js",
     "db:migrate": "node src/server/database/migrate.js",
     "db:seed": "node src/server/database/seed.js",
     "db:init": "node src/server/database/init.js",
-    "test": "node --test src/server/tests/*.test.js"
+    "test": "node --test src/server/tests/*.test.js",
+    "pack": "electron-builder --dir",
+    "build:win": "electron-builder --win"
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^26.15.0"
   }
 }

@@ -13,6 +13,7 @@ import { createPurchasingRouter } from './modules/purchasing/purchasing.routes.j
 import { createDashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { createGstRouter } from './modules/gst/gst.routes.js';
 import { createServiceHistoryRouter } from './modules/serviceHistory/serviceHistory.routes.js';
+import { createBackupRouter } from './modules/backup/backup.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/errorHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -45,6 +46,7 @@ export function createApp({ db = getDatabase() } = {}) {
   app.use('/api/v1/profit', createProfitRouter(db));
   app.use('/api/v1/dashboard', createDashboardRouter(db));
   app.use('/api/v1/gst', createGstRouter(db));
+  app.use('/api/v1/backups', createBackupRouter(db));
   app.use('/api/v1', createServiceHistoryRouter(db));
   app.use('/api/v1', createJobCardRouter(db));
   app.use('/api/v1/purchases', createPurchasingRouter(db));

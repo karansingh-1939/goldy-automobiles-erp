@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const roles = [
   ['Admin', 'Full system access.'],
@@ -38,13 +38,15 @@ const permissions = [
   ['tally.export', 'Export Tally data.'],
   ['dashboard.read', 'View dashboard analytics.'],
   ['audit.read', 'View audit logs.'],
+  ['backups.read', 'View database backups and logs.'],
+  ['backups.write', 'Create manual database backups.'],
 ];
 
 const rolePermissionKeys = {
   Admin: permissions.map(([key]) => key),
   Manager: permissions
     .map(([key]) => key)
-    .filter((key) => !['users.manage', 'roles.manage'].includes(key)),
+    .filter((key) => !['users.manage', 'roles.manage', 'backups.read', 'backups.write'].includes(key)),
   Mechanic: [
     'customers.read',
     'vehicles.read',

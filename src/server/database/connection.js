@@ -145,3 +145,31 @@ export function closeDatabase() {
     activeDatabase = null;
   }
 }
+
+export function reopenDatabase(filePath = env.dbFile) {
+  closeDatabase();
+  activeDatabase = createDatabase(filePath);
+  return activeDatabase;
+}
+
+export function cleanupWalFiles(dbPath) {
+  const resolvedPath = path.resolve(dbPath);
+  const walPath = `${resolvedPath}-wal`;
+  const shmPath = `${resolvedPath}-shm`;
+
+  if (fs.existsSync(walPath)) {
+    try {
+      fs.unlinkSync(walPath);
+    } catch (err) {
+      console.warn(`Failed to clean up WAL file: ${err.message}`);
+    }
+  }
+
+  if (fs.existsSync(shmPath)) {
+    try {
+      fs.unlinkSync(shmPath);
+    } catch (err) {
+      console.warn(`Failed to clean up SHM file: ${err.message}`);
+    }
+  }
+}

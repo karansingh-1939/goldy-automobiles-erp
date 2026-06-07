@@ -42,6 +42,12 @@ const getDatabaseFilePath = () => {
 
 const dbFile = getDatabaseFilePath();
 
+const getLogLevel = () => {
+  const level = (process.env.LOG_LEVEL || '').toUpperCase();
+  const validLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+  return validLevels.includes(level) ? level : 'INFO';
+};
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 4321),
@@ -50,5 +56,6 @@ export const env = {
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   adminDefaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@12345',
   sessionTtlHours: Number(process.env.SESSION_TTL_HOURS || 12),
+  logLevel: getLogLevel(),
 };
 
