@@ -11,6 +11,9 @@ export function createAuthRouter(db) {
   const controller = new AuthController(service);
   const requireAuth = authenticate(service);
 
+  router.get('/setup-status', controller.getSetupStatus);
+  router.post('/setup', controller.setup);
+  router.post('/forgot-password', controller.forgotPassword);
   router.post('/login', controller.login);
   router.post('/logout', requireAuth, controller.logout);
   router.get('/me', requireAuth, controller.me);

@@ -118,18 +118,4 @@ export async function run(db) {
   });
 
   seedTransaction();
-
-  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@12345';
-  const adminRole = db.prepare('SELECT id FROM roles WHERE name = ?').get('Admin');
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ?').get(adminUsername);
-
-  if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-
-    db.prepare(`
-      INSERT INTO users (name, username, password_hash, role_id, password_changed_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run('System Administrator', adminUsername, passwordHash, adminRole.id);
-  }
 }

@@ -9,6 +9,7 @@ data/*.sqlite
 data/*.db
 data/*.sqlite-wal
 data/*.sqlite-shm
+data/setup/
 *.db-wal
 *.db-shm
 

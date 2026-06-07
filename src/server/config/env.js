@@ -54,7 +54,6 @@ export const env = {
   appDataPath,
   dbFile,
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
-  adminDefaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@12345',
   sessionTtlHours: Number(process.env.SESSION_TTL_HOURS || 12),
   logLevel: getLogLevel(),
 };

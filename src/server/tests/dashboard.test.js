@@ -23,6 +23,14 @@ async function createDashboardApiTestContext() {
   runMigrations(db);
   await runSeeds(db);
 
+  const adminRole = db.prepare("SELECT id FROM roles WHERE name = 'Admin'").get();
+  const bcrypt = await import('bcryptjs');
+  const passwordHash = await bcrypt.default.hash('Admin@12345', 12);
+  db.prepare(`
+    INSERT INTO users (name, username, password_hash, role_id, is_active)
+    VALUES (?, ?, ?, ?, 1)
+  `).run('System Administrator', 'admin', passwordHash, adminRole.id);
+
   const app = express();
   app.use('/api/v1/dashboard', createDashboardRouter(db));
   app.use(createApp({ db }));
