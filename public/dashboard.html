@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Dashboard</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .section-title {
+        color: #0f766e;
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 6px;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+
+      .metric-card {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .metric-card.alert {
+        border-color: #fca5a5;
+        background: #fef2f2;
+      }
+
+      .metric-card.alert .value {
+        color: #dc2626;
+      }
+
+      .metric-card.success {
+        border-color: #86efac;
+        background: #f0fdf4;
+      }
+
+      .metric-card h3 {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .metric-card .value {
+        font-size: 26px;
+        font-weight: bold;
+        color: #0f766e;
+      }
+
+      .metric-card .subtext {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+      }
+
+      .dashboard-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 1024px) {
+        .dashboard-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel-card {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+
+      .panel-card h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #0f766e;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 8px;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 8px;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .tabs button {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .tabs button[aria-selected="true"] {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html" class="active">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color:#0f766e; font-size: 20px;">Workshop Dashboard & Analytics</h2>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 13px; font-weight: bold; color: #475569;">Target Date:</span>
+          <input type="date" id="dashboard-date" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit;">
+          <button id="refresh-btn" style="background:#0f766e; color:white; border:0; padding:7px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">Refresh</button>
+        </div>
+      </div>
+
+      <p id="message" role="status"></p>
+
+      <!-- Section 1: Workshop KPIs -->
+      <div>
+        <div class="section-title">Workshop KPIs</div>
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+          <div class="metric-card">
+            <h3>Today's Job Cards</h3>
+            <div class="value" id="op-today-jc">0</div>
+            <div class="subtext">Opened on selected date</div>
+          </div>
+          <div class="metric-card">
+            <h3>Vehicles In Workshop</h3>
+            <div class="value" id="op-active-jc">0</div>
+            <div class="subtext">Job cards currently in Draft</div>
+          </div>
+          <div class="metric-card alert" id="pending-deliveries-card">
+            <h3>Pending Deliveries</h3>
+            <div class="value" id="op-pending-deliveries">0</div>
+            <div class="subtext">Drafts with promised delivery</div>
+          </div>
+          <div class="metric-card success">
+            <h3>Today's Revenue</h3>
+            <div class="value" id="fin-today-revenue">Rs. 0.00</div>
+            <div class="subtext">Finalized invoice totals today</div>
+          </div>
+          <div class="metric-card alert">
+            <h3>Outstanding Amount</h3>
+            <div class="value" id="fin-outstanding" style="color: #b91c1c;">Rs. 0.00</div>
+            <div class="subtext">Unpaid finalized balance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Financial Metrics -->
+      <div>
+        <div class="section-title">Financial Summary</div>
+        <div class="tabs" id="financial-tabs">
+          <button type="button" data-period="today" aria-selected="true">Selected Day</button>
+          <button type="button" data-period="month">This Month</button>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-card success">
+            <h3>Revenue</h3>
+            <div class="value" id="fin-revenue">Rs. 0.00</div>
+            <div class="subtext" id="fin-revenue-lbl">Selected Day Revenue</div>
+          </div>
+          <div class="metric-card alert" id="fin-expenses-card" style="display: none;">
+            <h3>Expenses</h3>
+            <div class="value" id="fin-expenses">Rs. 0.00</div>
+            <div class="subtext">Total cash expenses in selected month</div>
+          </div>
+          <div class="metric-card success">
+            <h3>Gross Profit</h3>
+            <div class="value" id="fin-gross-profit">Rs. 0.00</div>
+            <div class="subtext">Selling cost - Purchase cost</div>
+          </div>
+          <div class="metric-card success" style="background:#f0fdfa; border-color:#86efac;">
+            <h3>Net Profit</h3>
+            <div class="value" id="fin-net-profit" style="color:#16a34a;">Rs. 0.00</div>
+            <div class="subtext">Gross Profit - Month Expenses</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Sales & Services -->
+      <div class="dashboard-row">
+        <!-- Recent Sales -->
+        <div class="panel-card">
+          <h3>Recent Invoices</h3>
+          <div id="recent-sales-container" style="overflow-x: auto;">
+            <!-- Render recent invoices table -->
+          </div>
+        </div>
+        <!-- Top Services -->
+        <div class="panel-card">
+          <h3>Top Services & Labour Operations</h3>
+          <div id="top-services-container" style="overflow-x: auto;">
+            <!-- Render top services table -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Inventory & Warehouse Metrics -->
+      <div>
+        <div class="section-title">Inventory & Warehousing</div>
+        <div class="metrics-grid" style="margin-bottom: 20px;">
+          <div class="metric-card">
+            <h3>Total Catalog Items</h3>
+            <div class="value" id="inv-total-items">0</div>
+            <div class="subtext">Active items in registry</div>
+          </div>
+          <div class="metric-card">
+            <h3>Total Stock In Hand</h3>
+            <div class="value" id="inv-total-qty">0</div>
+            <div class="subtext">Cumulative item quantity</div>
+          </div>
+          <div class="metric-card">
+            <h3>Stock Valuation</h3>
+            <div class="value" id="inv-total-valuation">Rs. 0.00</div>
+            <div class="subtext">Based on batch purchase costs</div>
+          </div>
+          <div class="metric-card alert" id="inv-low-stock-card">
+            <h3>Low Stock Warnings</h3>
+            <div class="value" id="inv-low-stock-count">0</div>
+            <div class="subtext">Items below reorder levels</div>
+          </div>
+        </div>
+
+        <div class="dashboard-row">
+          <!-- Warehouse stock aggregates -->
+          <div class="panel-card">
+            <h3>Warehouse Godowns Valuation</h3>
+            <div id="warehouse-container" style="overflow-x: auto;">
+              <!-- Render warehouse totals -->
+            </div>
+          </div>
+          <!-- Low Stock details -->
+          <div class="panel-card">
+            <h3>Critical Low Stock Items</h3>
+            <div id="low-stock-container" style="overflow-x: auto;">
+              <!-- Render critical low stock items -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="/dashboard.js"></script>
+  </body>
+</html>

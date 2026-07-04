@@ -1,3 +1,5 @@
+import { env } from '../../config/env.js';
+
 export class AuthController {
   constructor(authService) {
     this.authService = authService;
@@ -33,6 +35,13 @@ export class AuthController {
   login = async (req, res, next) => {
     try {
       const result = await this.authService.login(req.body || {});
+      res.cookie('goldy_session_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: false, // Omit/false since it's local HTTP
+        sameSite: 'strict',
+        maxAge: (env.sessionTtlHours || 12) * 60 * 60 * 1000 // In milliseconds
+      });
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -42,6 +51,7 @@ export class AuthController {
   logout = (req, res, next) => {
     try {
       this.authService.logout(req.authToken);
+      res.clearCookie('goldy_session_token', { path: '/' });
       res.status(200).json({ success: true });
     } catch (error) {
       next(error);

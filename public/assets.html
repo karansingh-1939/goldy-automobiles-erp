@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Asset Register</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .toolbar input {
+        width: auto;
+        flex: 1;
+        min-width: 250px;
+      }
+
+      input, textarea, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      form.grid-form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .form-group label {
+        font-weight: bold;
+        font-size: 13px;
+        color: #4b5563;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        grid-column: span 3;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 12px 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f7f9fc;
+        color: #4b5563;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+      }
+
+      .error-text { color: #dc2626; }
+      .success-text { color: #16a34a; }
+
+      /* Modal Popups styling */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: 24px;
+        width: min(800px, calc(100vw - 32px));
+        box-sizing: border-box;
+      }
+
+      .modal h2 {
+        margin-top: 0;
+        color: #0f766e;
+        border-bottom: 1px solid #e1e7ef;
+        padding-bottom: 10px;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+      }
+
+      @media (max-width: 900px) {
+        form.grid-form {
+          grid-template-columns: 1fr;
+        }
+        .form-actions {
+          grid-column: span 1;
+        }
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html" class="active">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <section>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <h2 style="margin: 0; color: #0f766e;">Capital Equipment & Fixed Assets</h2>
+          <button id="add-asset-btn" class="primary">Register Fixed Asset</button>
+        </div>
+
+        <p id="message" role="status"></p>
+
+        <div class="toolbar">
+          <input id="search-query" placeholder="Search assets by name, SKU, or supplier...">
+          <button id="search-btn" class="primary">Search</button>
+          <button id="reset-btn">Reset</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Asset Name</th>
+                <th>Category</th>
+                <th>Supplier</th>
+                <th>Invoice Ref</th>
+                <th>Purchase Date</th>
+                <th>Purchase Cost (Excl. GST)</th>
+                <th>GST Amount</th>
+                <th>Total Value</th>
+                <th>Serial Number</th>
+                <th>Warranty</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="assets-list-body">
+              <tr>
+                <td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading fixed assets...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span id="pagination-info" style="font-size: 14px; color: #64748b;">Showing 0 to 0 of 0 entries</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="prev-page-btn" disabled>Previous</button>
+            <button id="next-page-btn" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal for registering asset -->
+    <div id="asset-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Register New Capital Asset</h2>
+        <form id="asset-form" class="grid-form">
+          <div class="form-group">
+            <label for="asset-name">Asset Name *</label>
+            <input id="asset-name" required placeholder="e.g. 2 Post Lift">
+          </div>
+
+          <div class="form-group">
+            <label for="asset-sku">SKU Code *</label>
+            <input id="asset-sku" required placeholder="e.g. EQ-2POST-LIFT">
+          </div>
+
+          <div class="form-group">
+            <label for="asset-category">Category</label>
+            <input id="asset-category" value="Equipment" required>
+          </div>
+
+          <div class="form-group">
+            <label for="asset-supplier">Supplier *</label>
+            <select id="asset-supplier" required>
+              <option value="">Select Supplier</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="asset-invoice">Invoice Number *</label>
+            <input id="asset-invoice" required placeholder="e.g. INV-1002">
+          </div>
+
+          <div class="form-group">
+            <label for="asset-date">Purchase Date *</label>
+            <input id="asset-date" type="date" required>
+          </div>
+
+          <div class="form-group">
+            <label for="asset-cost">Purchase Cost (Excl. GST) *</label>
+            <input id="asset-cost" type="number" step="0.01" min="0" required placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="asset-gst">GST Amount</label>
+            <input id="asset-gst" type="number" step="0.01" min="0" value="0.00" placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="asset-serial">Serial Number</label>
+            <input id="asset-serial" placeholder="e.g. SN-9812-XYZ">
+          </div>
+
+          <div class="form-group" style="grid-column: span 3;">
+            <label for="asset-warranty">Warranty Info</label>
+            <input id="asset-warranty" placeholder="e.g. 2 Years Manufacturer Warranty">
+          </div>
+
+          <div class="form-group" style="grid-column: span 3;">
+            <label for="asset-notes">Notes</label>
+            <textarea id="asset-notes" rows="3" placeholder="Additional details..."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary">Save Asset</button>
+            <button type="button" id="close-modal-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Script dependency utilities -->
+    <script src="/assets.js"></script>
+  </body>
+</html>

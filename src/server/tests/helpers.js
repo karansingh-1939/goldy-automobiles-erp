@@ -11,9 +11,11 @@ export async function createTestContext() {
   const dbPath = path.join(tempDir, 'test.sqlite');
   const db = createDatabase(dbPath);
 
+  process.env.NODE_ENV = 'test';
   process.env.ADMIN_USERNAME = 'admin';
   process.env.ADMIN_DEFAULT_PASSWORD = 'Admin@12345';
   process.env.SESSION_TTL_HOURS = '12';
+  process.env.ALLOW_FUTURE_EXPENSES = 'true';
 
   runMigrations(db);
   await runSeeds(db);
@@ -42,7 +44,14 @@ export async function createTestContext() {
     });
 
     const text = await response.text();
-    const body = text ? JSON.parse(text) : null;
+    let body = null;
+    if (text) {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = text;
+      }
+    }
 
     return { response, body };
   }

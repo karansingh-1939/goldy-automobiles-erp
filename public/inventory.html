@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Inventory Catalog</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 280px 1fr;
+        padding: 20px;
+      }
+
+      nav.sidebar {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      nav.sidebar button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: left;
+        width: 100%;
+      }
+
+      nav.sidebar button[aria-selected="true"] {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar input, .toolbar select {
+        width: auto;
+        flex: 1;
+        min-width: 150px;
+      }
+
+      input, textarea, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      form.grid-form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button.danger {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f7f9fc;
+      }
+
+      .card {
+        border: 1px solid #e1e7ef;
+        border-radius: 6px;
+        padding: 14px;
+        margin-bottom: 14px;
+        background: #ffffff;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        font-size: 16px;
+        border-bottom: 1px solid #e1e7ef;
+        padding-bottom: 6px;
+        color: #0f766e;
+      }
+
+      .stock-indicator {
+        font-weight: bold;
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+
+      .stock-ok { background: #dcfce7; color: #15803d; }
+      .stock-low { background: #fef3c7; color: #d97706; }
+      .stock-none { background: #fee2e2; color: #dc2626; }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+      }
+
+      /* Modal Popups styling */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: 24px;
+        width: min(650px, calc(100vw - 32px));
+        box-sizing: border-box;
+      }
+
+      .modal h2 {
+        margin-top: 0;
+        color: #0f766e;
+        border-bottom: 1px solid #e1e7ef;
+        padding-bottom: 10px;
+      }
+
+      .inner-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 8px;
+      }
+
+      .inner-tabs button {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .inner-tabs button[aria-selected="true"] {
+        background: #0f766e;
+        color: white;
+        border-color: #0f766e;
+      }
+
+      @media (max-width: 900px) {
+        main, form.grid-form {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html" class="active">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <nav class="sidebar" id="inventory-tabs" aria-label="Inventory operations">
+        <button type="button" data-tab="catalog" aria-selected="true">Current Stock</button>
+        <button type="button" id="sidebar-quick-add-btn">Quick Add Item</button>
+        <button type="button" data-tab="quick-update">Update Stock</button>
+        <button type="button" data-tab="low-stock">Low Stock Alert</button>
+        <button type="button" data-tab="reports">Stock History</button>
+      </nav>
+
+      <section>
+        <p id="message" role="status"></p>
+
+        <!-- Tab 0: Inventory Dashboard -->
+        <div id="tab-dashboard" style="display: block;">
+          <h2 style="margin: 0 0 16px; color:#0f766e;">Inventory Dashboard</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div class="card" style="text-align: center; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Total Items</div>
+              <div id="dash-total-items" style="font-size: 32px; font-weight: bold; color: #0f766e; margin-top: 8px;">0</div>
+            </div>
+            <div class="card" style="text-align: center; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Total Value</div>
+              <div id="dash-total-value" style="font-size: 32px; font-weight: bold; color: #0f766e; margin-top: 8px;">Rs. 0.00</div>
+            </div>
+            <div class="card" style="text-align: center; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;" id="dash-low-stock-card">
+              <div style="font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Low Stock Items</div>
+              <div id="dash-low-stock" style="font-size: 32px; font-weight: bold; color: #b45309; margin-top: 8px;">0</div>
+            </div>
+            <div class="card" style="text-align: center; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Out Of Stock Items</div>
+              <div id="dash-out-stock" style="font-size: 32px; font-weight: bold; color: #dc2626; margin-top: 8px;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: Catalog Registry -->
+        <div id="tab-catalog" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h2 style="margin: 0; color:#0f766e;">Catalog & Current Stock</h2>
+            <div style="display: flex; gap: 8px;">
+              <button id="quick-add-btn" class="primary" style="background: #0d9488; border-color: #0d9488; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);">Quick Add Item</button>
+              <button id="add-item-btn" style="color: #0f766e; border-color: #0f766e; background: white;">Advanced Add Item</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <input id="search-query" placeholder="Search by SKU, Barcode, or Name...">
+            <select id="filter-category">
+              <option value="">All Categories</option>
+            </select>
+            <select id="filter-warehouse" style="display: none;">
+              <option value="1" selected>Main Warehouse</option>
+            </select>
+            <button id="search-btn" class="primary">Search</button>
+            <button id="reset-filters-btn">Clear</button>
+          </div>
+
+          <div id="table-container">
+            <!-- Dynamically populated catalog grid -->
+          </div>
+
+          <div class="form-actions" style="margin-top: 14px;">
+            <button id="prev-btn">Previous</button>
+            <button id="next-btn">Next</button>
+            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+          </div>
+        </div>
+
+        <!-- Tab 2: Initial Stock Count Mode -->
+        <div id="tab-initial-count" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h2 style="margin: 0; color:#0f766e;">Initial Stock Count</h2>
+            <button id="initial-save-all-btn" class="primary">Save All Counts</button>
+          </div>
+          <p style="color: #4b5563; font-size: 14px; margin-top: 0; margin-bottom: 14px;">Walk through the store and enter actual stock levels. Click "Save All Counts" at the bottom or top to submit.</p>
+          <div class="toolbar">
+            <input id="initial-search-query" placeholder="Search item to update...">
+            <button id="initial-search-btn" class="primary">Search</button>
+            <button id="initial-clear-btn">Clear</button>
+          </div>
+          <div id="initial-table-container">
+            <!-- Dynamic grid with count input boxes -->
+          </div>
+          <div class="form-actions" style="margin-top: 14px; justify-content: space-between; width: 100%;">
+            <div>
+              <button id="initial-prev-btn">Previous</button>
+              <button id="initial-next-btn">Next</button>
+              <span id="initial-page-info" style="margin-left: 8px; font-size: 14px; align-self: center;"></span>
+            </div>
+            <button id="initial-save-all-bottom-btn" class="primary">Save All Counts</button>
+          </div>
+        </div>
+
+        <!-- Tab 3: Update Stock -->
+        <div id="tab-quick-update" style="display: none;">
+          <h2 style="color:#0f766e; margin-top: 0; margin-bottom: 14px;">Update Stock</h2>
+          <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <form id="quick-update-form" style="display: flex; flex-direction: column; gap: 14px;">
+              <label style="position: relative; display: block;">
+                Search & Select Item *
+                <input id="quick-item-search" placeholder="Type SKU or Name to search item..." required autocomplete="off">
+                <div id="quick-search-results" style="display: none; position: absolute; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                  <!-- Autocomplete results -->
+                </div>
+                <input type="hidden" id="quick-item-id">
+              </label>
+              
+              <div id="quick-item-details" style="display: none; background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <div style="font-weight: bold; color: #0f766e;" id="quick-selected-name">Item Name</div>
+                <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                  SKU: <span id="quick-selected-sku">-</span> | Current Stock: <strong id="quick-selected-stock">0</strong> <span id="quick-selected-unit">pcs</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; align-items: center;">
+                <label>
+                  Actual Count On Shelf *
+                  <input id="quick-qty" type="number" min="0" step="any" required placeholder="e.g. 15">
+                </label>
+                <div style="margin-top: 18px;">
+                  <span id="quick-adjustment-label" style="font-size: 13px; font-weight: bold; color: #4b5563; display: block; margin-bottom: 5px;">System Adjustment</span>
+                  <div id="quick-variance-val" style="font-size: 18px; font-weight: bold; color: #64748b;">0</div>
+                </div>
+              </div>
+
+              <label>
+                Reason *
+                <select id="quick-reason-select" required>
+                  <option value="Physical Count">Physical Count</option>
+                  <option value="Purchased Stock">Purchased Stock</option>
+                  <option value="Damaged Item">Damaged Item</option>
+                  <option value="Missing Item">Missing Item</option>
+                  <option value="Returned Item">Returned Item</option>
+                  <option value="Other">Other (Type below...)</option>
+                </select>
+              </label>
+
+              <label id="quick-reason-custom-wrapper" style="display: none;">
+                Custom Reason Details *
+                <input id="quick-reason-custom" type="text" placeholder="e.g. Discarded expired filter">
+              </label>
+
+              <button type="submit" class="primary" style="margin-top: 8px;">Update Stock</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab 6: Reports Tab -->
+        <div id="tab-reports" style="display: none;">
+          <h2 style="color:#0f766e; margin-top: 0; margin-bottom: 14px;">Stock Movements / History</h2>
+          <div class="inner-tabs" id="reports-inner-tabs" style="display: none;">
+            <button type="button" data-subreport="summary">Inventory Summary</button>
+            <button type="button" data-subreport="movements" aria-selected="true">Stock Movements</button>
+            <button type="button" data-subreport="valuation">Stock Valuation</button>
+          </div>
+
+          <!-- Subreport 1: Inventory Summary -->
+          <div id="subreport-summary">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3>Inventory Summary</h3>
+              <button id="print-summary-btn" class="primary">Print Report</button>
+            </div>
+            <div id="summary-report-container">
+              <!-- Render summary report -->
+            </div>
+          </div>
+
+          <!-- Subreport 2: Stock Valuation -->
+          <div id="subreport-valuation" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3>Stock Valuation</h3>
+              <button id="print-valuation-btn" class="primary">Print Report</button>
+            </div>
+            <div id="valuation-container">
+              <!-- Render valuation grid -->
+            </div>
+          </div>
+
+          <!-- Subreport 3: Stock Movements -->
+          <div id="subreport-movements" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3>Stock Transaction Movements</h3>
+              <div style="display: flex; gap: 8px;">
+                <select id="movement-item-filter" style="width: auto;">
+                  <option value="">-- All Items --</option>
+                </select>
+                <button id="print-movements-btn" class="primary">Print Report</button>
+              </div>
+            </div>
+            <div id="movements-container">
+              <!-- Render movements table -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal for Adding / Editing Items -->
+    <div id="item-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2 id="modal-title">Add New Inventory Item</h2>
+        <form id="item-form" style="display: flex; flex-direction: column; gap: 12px;">
+          <input type="hidden" id="modal-item-id">
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label>
+              SKU (Optional, system-generated if blank)
+              <input id="modal-sku" type="text" name="sku" placeholder="e.g. FILTER-MH-01">
+            </label>
+
+            <label>
+              Barcode
+              <input id="modal-barcode" type="text" name="barcode" placeholder="e.g. 89012345">
+            </label>
+          </div>
+
+          <label>
+            Item Description / Name *
+            <input id="modal-name" type="text" name="item_name" required placeholder="e.g. Oil Filter Mahindra Bolero">
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label>
+              Category *
+              <select id="modal-category-id" name="category_id" required>
+                <option value="">-- Select Category --</option>
+              </select>
+            </label>
+
+            <label>
+              Preferred Supplier
+              <select id="modal-supplier-id" name="supplier_id">
+                <option value="">-- Select Supplier --</option>
+              </select>
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <label>
+              HSN/SAC Code
+              <input id="modal-hsn" type="text" name="hsn_code" placeholder="e.g. 8708">
+            </label>
+
+            <label>
+              GST Rate (%) *
+              <input id="modal-gst" type="number" name="gst_rate" min="0" max="100" step="any" value="18" required>
+            </label>
+
+            <label>
+              Unit of Measure *
+              <select id="modal-unit" name="unit_of_measure" required>
+                <option value="pcs">Pieces (pcs)</option>
+                <option value="ltr">Liters (ltr)</option>
+                <option value="box">Box (box)</option>
+                <option value="set">Set (set)</option>
+              </select>
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; margin-bottom: 4px;" id="modal-opening-stock-section">
+            <label>
+              Opening Quantity (Optional)
+              <input id="modal-opening-qty" type="number" name="opening_qty" min="0" step="any" value="0">
+            </label>
+            <label>
+              Opening Cost (Optional)
+              <input id="modal-opening-cost" type="number" name="opening_cost" min="0" step="0.01" value="0">
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <label>
+              Initial Purchase Cost *
+              <input id="modal-cost" type="number" name="purchase_cost" min="0" step="0.01" required>
+            </label>
+
+            <label>
+              Selling Price *
+              <input id="modal-price" type="number" name="selling_price" min="0" step="0.01" required>
+            </label>
+
+            <label>
+              Reorder Warning level *
+              <input id="modal-reorder" type="number" name="reorder_level" min="0" step="any" value="5" required>
+            </label>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
+            <input id="modal-active" type="checkbox" style="width: auto;" checked>
+            <span>Is Active / Available for Sale</span>
+          </label>
+
+          <div class="form-actions" style="justify-content: flex-end; margin-top: 10px;">
+            <button id="modal-cancel-btn" type="button">Cancel</button>
+            <button id="modal-submit-btn" type="submit" class="primary">Save Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Modal for Quick Adding Items -->
+    <div id="quick-add-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h2 style="margin-top: 0; color:#0d9488; border-bottom: 1px solid #e1e7ef; padding-bottom: 10px;">Quick Add Inventory Item</h2>
+        <form id="quick-add-form" style="display: flex; flex-direction: column; gap: 12px;">
+          
+          <label>
+            Item Name *
+            <input id="quick-add-name" type="text" name="item_name" required placeholder="e.g. Engine Oil 15W40 1L">
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label>
+              Purchase Cost *
+              <input id="quick-add-cost" type="number" name="purchase_cost" min="0" step="0.01" required placeholder="e.g. 350">
+            </label>
+
+            <label>
+              Selling Price *
+              <input id="quick-add-price" type="number" name="selling_price" min="0" step="0.01" required placeholder="e.g. 500">
+            </label>
+          </div>
+
+          <label>
+            Opening Stock Quantity (Optional)
+            <input id="quick-add-opening-qty" type="number" name="opening_qty" min="0" step="any" value="0">
+          </label>
+
+          <div class="form-actions" style="justify-content: flex-end; margin-top: 10px;">
+            <button id="quick-add-cancel-btn" type="button">Cancel</button>
+            <button id="quick-add-submit-btn" type="submit" class="primary" style="background: #0d9488; border-color: #0d9488;">Save Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/inventory.js"></script>
+  </body>
+</html>

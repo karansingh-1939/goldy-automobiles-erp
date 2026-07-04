@@ -43,7 +43,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    title: 'Goldy Automobiles ERP',
+    title: 'GOLDY AUTOMOBILE ERP',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
@@ -67,6 +67,12 @@ function createWindow() {
 // Single instance lock to prevent multiple launches
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
+  try {
+    const logger = getLogger();
+    logger.warn('STARTUP', 'Another instance of GOLDY AUTOMOBILE ERP is already running. Exiting...');
+  } catch (err) {
+    console.error('Another instance of GOLDY AUTOMOBILE ERP is already running. Exiting...', err);
+  }
   app.quit();
 } else {
   app.on('second-instance', () => {
@@ -79,10 +85,16 @@ if (!gotTheLock) {
   app.whenReady().then(async () => {
     try {
       const logger = getLogger();
-      logger.info('STARTUP', 'Goldy Automobiles ERP desktop application starting up...');
+      logger.info('STARTUP', 'GOLDY AUTOMOBILE ERP desktop application starting up...');
       await startBackend();
       createWindow();
     } catch (err) {
+      try {
+        const logger = getLogger();
+        logger.error('STARTUP', 'Failed to initialize application server:', err);
+      } catch (logErr) {
+        console.error('Failed to log startup error:', logErr);
+      }
       console.error('Failed to initialize application server:', err);
       app.quit();
     }

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Supplier Ledger</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px;
+        flex-wrap: wrap;
+      }
+
+      select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        font: inherit;
+        padding: 8px 12px;
+        min-width: 250px;
+      }
+
+      .supplier-card {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-top: 16px;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .supplier-card {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card-info {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .card-info h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #0f766e;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 6px;
+        font-size: 16px;
+      }
+
+      .card-metric {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+
+      .card-metric.warning {
+        background: #fffbeb;
+        border-color: #fde68a;
+      }
+
+      .card-metric h4 {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .card-metric .value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #0f766e;
+      }
+
+      .card-metric.warning .value {
+        color: #b45309;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 10px;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 8px 12px;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html" class="active">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <h2 style="margin: 0; color:#0f766e; font-size: 20px;">Supplier Financial Ledger</h2>
+      
+      <section>
+        <p id="message" role="status"></p>
+
+        <!-- Toolbar Selector -->
+        <div class="toolbar">
+          <span style="font-weight: bold; color: #475569;">Select Supplier:</span>
+          <select id="supplier-select">
+            <option value="">-- Loading Suppliers --</option>
+          </select>
+          <button id="refresh-btn" class="primary">Load Ledger</button>
+        </div>
+
+        <!-- Selection view wrapper -->
+        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b;">
+          <h3>Please select a supplier from the dropdown list to inspect ledger records.</h3>
+        </div>
+
+        <!-- Ledger Content (Initially hidden) -->
+        <div id="ledger-view" style="display: none;">
+          <div class="supplier-card">
+            <!-- Supplier Profile -->
+            <div class="card-info">
+              <h3 id="supplier-name">Supplier Details</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                <div><strong>Phone Number:</strong> <span id="supplier-phone">-</span></div>
+                <div><strong>Email Address:</strong> <span id="supplier-email">-</span></div>
+                <div><strong>GSTIN (Tax ID):</strong> <span id="supplier-gstin">-</span></div>
+                <div><strong>City / State:</strong> <span id="supplier-city-state">-</span></div>
+                <div style="grid-column: span 2; margin-top: 4px;"><strong>Address:</strong> <span id="supplier-address">-</span></div>
+              </div>
+            </div>
+            
+            <!-- Outstanding balance card -->
+            <div class="card-metric warning" id="balance-card">
+              <h4>Total Outstanding Balance</h4>
+              <div class="value" id="outstanding-balance">Rs. 0.00</div>
+              <div style="font-size: 11px; color: #b45309; margin-top: 6px; font-weight: bold;">Amount payable to this supplier</div>
+            </div>
+          </div>
+
+          <!-- Ledger Table -->
+          <h3 style="color:#0f766e; margin-top:20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px;">Statement of Account</h3>
+          <div id="table-container" style="overflow-x: auto;">
+            <!-- Dynamically populated table -->
+          </div>
+
+          <!-- Pagination -->
+          <div class="form-actions" style="margin-top: 14px; justify-content: space-between;">
+            <div>
+              <button id="prev-btn">Previous</button>
+              <button id="next-btn">Next</button>
+            </div>
+            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/supplier-ledger.js"></script>
+  </body>
+</html>

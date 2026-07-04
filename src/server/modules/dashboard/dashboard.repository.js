@@ -7,7 +7,7 @@ export class DashboardRepository {
     const openJobCards = this.db.prepare(`
       SELECT COUNT(*) AS count
       FROM job_cards
-      WHERE status IN ('DRAFT', 'IN_PROGRESS')
+      WHERE status = 'DRAFT'
     `).get().count;
 
     const completedJobCards = this.db.prepare(`
@@ -23,10 +23,24 @@ export class DashboardRepository {
         AND DATE(closed_at) = DATE(?)
     `).get(todayDate).count;
 
+    const todayJobCardsCount = this.db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM job_cards
+      WHERE DATE(opened_at) = DATE(?)
+    `).get(todayDate).count;
+
+    const pendingDeliveriesCount = this.db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM job_cards
+      WHERE status = 'DRAFT' AND promised_delivery_at IS NOT NULL
+    `).get().count;
+
     return {
       openJobCards,
       completedJobCards,
       vehiclesServicedToday,
+      todayJobCardsCount,
+      pendingDeliveriesCount,
     };
   }
 
@@ -92,7 +106,7 @@ export class DashboardRepository {
       FROM invoice_items
       JOIN invoices ON invoices.id = invoice_items.invoice_id
       WHERE invoices.status = 'FINALIZED'
-        AND invoice_items.item_type IN ('LABOR', 'SERVICE')
+        AND invoice_items.item_type IN ('LABOR', 'SERVICE', 'OUTSIDE_JOB')
       GROUP BY TRIM(description)
       ORDER BY count DESC, totalRevenue DESC
       LIMIT ?

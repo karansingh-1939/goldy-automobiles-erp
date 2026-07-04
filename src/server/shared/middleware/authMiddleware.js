@@ -29,10 +29,15 @@ export function requirePermission(permissionKey) {
       return next(new AppError('Authentication is required.', 401, 'AUTH_REQUIRED'));
     }
 
-    if (!req.user.permissions.includes(permissionKey)) {
-      return next(new AppError('You do not have permission to perform this action.', 403, 'PERMISSION_DENIED'));
+    const roleName = req.user.role?.name || '';
+    if (
+      roleName.toLowerCase() === 'admin' ||
+      roleName.toLowerCase() === 'administrator' ||
+      req.user.permissions.includes(permissionKey)
+    ) {
+      return next();
     }
 
-    return next();
+    return next(new AppError('You do not have permission to perform this action.', 403, 'PERMISSION_DENIED'));
   };
 }

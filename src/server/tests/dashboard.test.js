@@ -106,6 +106,8 @@ test('dashboard operations API - authentication and response constraints', async
       openJobCards: 0,
       completedJobCards: 0,
       vehiclesServicedToday: 0,
+      todayJobCardsCount: 0,
+      pendingDeliveriesCount: 0,
     });
 
     // Seed test data using SQL (with foreign keys temporarily off for simplicity)
@@ -164,18 +166,22 @@ test('dashboard operations API - authentication and response constraints', async
     const resultToday = await context.request('/api/v1/dashboard/operations?date=2026-06-05', { headers });
     assert.equal(resultToday.response.status, 200);
     assert.deepEqual(resultToday.body, {
-      openJobCards: 2,
+      openJobCards: 1,
       completedJobCards: 4,
-      vehiclesServicedToday: 2, // JC-003, JC-004, JC-005 (only vehicles 1 and 2, so 2 unique vehicles)
+      vehiclesServicedToday: 2,
+      todayJobCardsCount: 0,
+      pendingDeliveriesCount: 0,
     });
 
     // 4. Request for 2026-06-04
     const resultYesterday = await context.request('/api/v1/dashboard/operations?date=2026-06-04', { headers });
     assert.equal(resultYesterday.response.status, 200);
     assert.deepEqual(resultYesterday.body, {
-      openJobCards: 2,
+      openJobCards: 1,
       completedJobCards: 4,
-      vehiclesServicedToday: 1, // JC-006 (vehicle 3)
+      vehiclesServicedToday: 1,
+      todayJobCardsCount: 0,
+      pendingDeliveriesCount: 0,
     });
 
     // 5. Default date defaults to current date (successfully runs without throwing)
@@ -255,6 +261,7 @@ test('dashboard financial API - authentication, permission, and calculation cons
         grossProfit: 0,
         netProfit: 0,
       },
+      outstandingAmount: 0,
     });
 
     // Seed invoices and profit_records using SQL
@@ -313,14 +320,15 @@ test('dashboard financial API - authentication, permission, and calculation cons
       today: {
         revenue: 1000,
         grossProfit: 600,
-        netProfit: 450, // 600 GP - 150 Today Expense
+        netProfit: 450,
       },
       thisMonth: {
-        revenue: 3000, // INV-001 (1000) + INV-002 (2000)
-        expenses: 400, // Today Expense (150) + Yesterday Expense (250)
-        grossProfit: 1800, // 600 + 1200
-        netProfit: 1400, // 1800 GP - 400 Expenses
+        revenue: 3000,
+        expenses: 400,
+        grossProfit: 1800,
+        netProfit: 1400,
       },
+      outstandingAmount: 0,
     });
 
     // 5. Invalid date format returns 400 validation error

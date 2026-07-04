@@ -1,4 +1,4 @@
-# Goldy Automobile ERP
+# GOLDY AUTOMOBILE ERP
 
 This project is an offline-first Windows desktop ERP for an automobile repair workshop.
 

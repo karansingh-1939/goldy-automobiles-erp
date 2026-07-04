@@ -24,12 +24,46 @@ export class MasterRepository {
   }
 
   list({ search, pageSize, offset }) {
+    if (this.config.table === 'invoices' && search) {
+      const querySearch = `%${search}%`;
+      const selectCols = this.config.listColumns.map(col => `invoices.${col}`).join(', ');
+      
+      const rows = this.db.prepare(`
+        SELECT ${selectCols}
+        FROM invoices
+        LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
+        LEFT JOIN customers ON invoices.customer_id = customers.id
+        WHERE invoices.invoice_number LIKE ? COLLATE NOCASE
+           OR vehicles.engine_number LIKE ? COLLATE NOCASE
+           OR vehicles.chassis_number LIKE ? COLLATE NOCASE
+           OR vehicles.registration_number LIKE ? COLLATE NOCASE
+           OR customers.name LIKE ? COLLATE NOCASE
+        ORDER BY invoices.id DESC
+        LIMIT ? OFFSET ?
+      `).all(querySearch, querySearch, querySearch, querySearch, querySearch, pageSize, offset);
+
+      const total = this.db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM invoices
+        LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
+        LEFT JOIN customers ON invoices.customer_id = customers.id
+        WHERE invoices.invoice_number LIKE ? COLLATE NOCASE
+           OR vehicles.engine_number LIKE ? COLLATE NOCASE
+           OR vehicles.chassis_number LIKE ? COLLATE NOCASE
+           OR vehicles.registration_number LIKE ? COLLATE NOCASE
+           OR customers.name LIKE ? COLLATE NOCASE
+      `).get(querySearch, querySearch, querySearch, querySearch, querySearch).count;
+
+      return { rows, total };
+    }
+
     const { clause, params } = searchWhere(this.config, search);
+    const selectCols = this.config.listColumns.map(col => `${this.config.table}.${col}`).join(', ');
     const rows = this.db.prepare(`
-      SELECT ${columnsSql(this.config.listColumns)}
+      SELECT ${selectCols}
       FROM ${this.config.table}
       ${clause}
-      ORDER BY id DESC
+      ORDER BY ${this.config.table}.id DESC
       LIMIT ? OFFSET ?
     `).all(...params, pageSize, offset);
 

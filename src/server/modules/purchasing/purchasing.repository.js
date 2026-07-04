@@ -363,4 +363,22 @@ export class PurchasingRepository {
 
     return result.lastInsertRowid;
   }
+
+  listSupplierLedger(supplierId, { limit, offset }) {
+    const data = this.db.prepare(`
+      SELECT *
+      FROM supplier_ledgers
+      WHERE supplier_id = ?
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+    `).all(supplierId, limit, offset);
+
+    const total = this.db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM supplier_ledgers
+      WHERE supplier_id = ?
+    `).get(supplierId).count;
+
+    return { data, total };
+  }
 }

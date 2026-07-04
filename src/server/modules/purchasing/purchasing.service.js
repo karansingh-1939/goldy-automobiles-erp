@@ -2,6 +2,7 @@ import { AppError } from '../../shared/errors/AppError.js';
 import { AuditRepository } from '../audit/audit.repository.js';
 import { InventoryService } from '../inventory/inventory.service.js';
 import { PurchasingRepository } from './purchasing.repository.js';
+import { AccountingPostingEngine } from '../accounting/postingEngine.service.js';
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
@@ -72,6 +73,7 @@ export class PurchasingService {
     this.repository = new PurchasingRepository(db);
     this.inventoryService = new InventoryService(db);
     this.auditRepository = new AuditRepository(db);
+    this.postingEngine = new AccountingPostingEngine(db);
   }
 
   listOrders(query = {}) {
@@ -97,6 +99,10 @@ export class PurchasingService {
     const supplier = this.repository.findSupplierById(payload.supplier_id);
     if (!supplier) {
       throw new AppError('Supplier was not found.', 400, 'RELATED_RECORD_NOT_FOUND');
+    }
+
+    if (!supplier.is_active) {
+      throw new AppError('Supplier is inactive.', 400, 'VALIDATION_ERROR');
     }
 
     const items = this.validateItems(payload.items, { requireBatch: false });
@@ -161,6 +167,10 @@ export class PurchasingService {
       throw new AppError('Supplier was not found.', 400, 'RELATED_RECORD_NOT_FOUND');
     }
 
+    if (!supplier.is_active) {
+      throw new AppError('Supplier is inactive.', 400, 'VALIDATION_ERROR');
+    }
+
     const purchaseOrder = payload.purchase_order_id
       ? this.repository.findPurchaseOrderById(payload.purchase_order_id)
       : null;
@@ -195,6 +205,45 @@ export class PurchasingService {
           userId,
         });
         this.repository.updatePurchaseReceiptTotals(receiptId, totals);
+
+        // Post Purchase Voucher automatically
+        const supplierLedgerId = this.postingEngine.getOrCreateSupplierLedger(1, supplier.id);
+        const cgstAmount = money(totals.gst_total / 2);
+        const sgstAmount = money(totals.gst_total - cgstAmount);
+
+        const accountingEntries = [];
+        accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'inventory_stock'), type: 'DEBIT', amount: totals.subtotal });
+        
+        if (cgstAmount > 0) {
+          accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'cgst_input'), type: 'DEBIT', amount: cgstAmount });
+        }
+        if (sgstAmount > 0) {
+          accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'sgst_input'), type: 'DEBIT', amount: sgstAmount });
+        }
+
+        accountingEntries.push({ ledgerId: supplierLedgerId, type: 'CREDIT', amount: totals.grand_total });
+
+        // Handle Round Off
+        const sumDebits = totals.subtotal + cgstAmount + sgstAmount;
+        const roundoff = money(totals.grand_total - sumDebits);
+        if (Math.abs(roundoff) >= 0.01) {
+          if (roundoff > 0) {
+            accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'), type: 'DEBIT', amount: roundoff });
+          } else {
+            accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'), type: 'CREDIT', amount: Math.abs(roundoff) });
+          }
+        }
+
+        this.postingEngine.post({
+          companyId: 1,
+          voucherType: 'Purchase',
+          voucherDate: payload.receipt_date || new Date().toISOString().slice(0, 10),
+          referenceTable: 'purchase_receipts',
+          referenceId: receiptId,
+          narration: `Purchase receipt from supplier: ${supplier.name}. GRN: ${payload.receipt_number || receiptId}`,
+          created_by: userId,
+          entries: accountingEntries
+        });
 
         if (purchaseOrder) {
           this.repository.updatePurchaseOrderStatus(purchaseOrder.id, 'RECEIVED');
@@ -350,6 +399,21 @@ export class PurchasingService {
         throw new AppError('Quantity must be greater than zero.', 400, 'VALIDATION_ERROR');
       }
 
+      const purchaseCost = money(item.purchase_cost ?? item.unit_cost ?? inventoryItem.purchase_cost);
+      if (purchaseCost < 0) {
+        throw new AppError('Purchase cost cannot be negative.', 400, 'VALIDATION_ERROR');
+      }
+
+      const sellingPrice = money(item.selling_price ?? inventoryItem.selling_price);
+      if (sellingPrice < 0) {
+        throw new AppError('Selling price cannot be negative.', 400, 'VALIDATION_ERROR');
+      }
+
+      const gstRate = number(item.gst_rate ?? inventoryItem.gst_rate);
+      if (gstRate < 0 || gstRate > 100) {
+        throw new AppError('GST rate must be between 0 and 100.', 400, 'VALIDATION_ERROR');
+      }
+
       return {
         item_id: Number(item.item_id),
         warehouse_id: Number(item.warehouse_id),
@@ -358,9 +422,9 @@ export class PurchasingService {
         manufacture_date: item.manufacture_date || null,
         expiry_date: item.expiry_date || null,
         quantity,
-        purchase_cost: money(item.purchase_cost ?? item.unit_cost ?? inventoryItem.purchase_cost),
-        selling_price: money(item.selling_price ?? inventoryItem.selling_price),
-        gst_rate: number(item.gst_rate ?? inventoryItem.gst_rate),
+        purchase_cost: purchaseCost,
+        selling_price: sellingPrice,
+        gst_rate: gstRate,
       };
     });
   }
@@ -448,6 +512,20 @@ export class PurchasingService {
         totalPages: Math.ceil(result.total / query.pageSize),
       },
     };
+  }
+  getSupplierLedger(supplierId, query = {}) {
+    const supplier = this.repository.findSupplierById(supplierId);
+    if (!supplier) {
+      throw new AppError('Supplier was not found.', 404, 'SUPPLIER_NOT_FOUND');
+    }
+
+    const parsed = parseListQuery(query);
+    const result = this.repository.listSupplierLedger(supplierId, {
+      limit: parsed.pageSize,
+      offset: parsed.offset
+    });
+
+    return this.withPagination(result, parsed);
   }
 }
 

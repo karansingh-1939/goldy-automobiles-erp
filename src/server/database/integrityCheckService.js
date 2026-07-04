@@ -24,20 +24,22 @@ export class IntegrityCheckService {
   /**
    * Performs a physical SQLite database check
    * @param {object} db - Active better-sqlite3 database connection
+   * @param {boolean} [quick=false] - Whether to perform a fast quick_check
    * @returns {HealthStatus} The result status log
    */
-  static check(db) {
+  static check(db, quick = false) {
     try {
-      // Execute standard SQLite integrity scan
-      const rows = db.prepare('PRAGMA integrity_check').all();
+      const pragmaQuery = quick ? 'PRAGMA quick_check' : 'PRAGMA integrity_check';
+      const rows = db.prepare(pragmaQuery).all();
 
       // If check returns a single row containing "ok", the file structure is verified healthy
-      if (rows.length === 1 && rows[0].integrity_check === 'ok') {
+      const resultKey = quick ? 'quick_check' : 'integrity_check';
+      if (rows.length === 1 && rows[0][resultKey] === 'ok') {
         return new HealthStatus(HealthState.HEALTHY);
       }
 
       // Extract details of any structural anomalies or corrupt pages
-      const errors = rows.map(r => r.integrity_check);
+      const errors = rows.map(r => r[resultKey] || r.integrity_check || JSON.stringify(r));
       return new HealthStatus(HealthState.FAILED, errors);
     } catch (error) {
       return new HealthStatus(HealthState.FAILED, [error.message]);

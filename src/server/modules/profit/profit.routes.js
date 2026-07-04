@@ -11,6 +11,9 @@ export function createProfitRouter(db) {
   const requireAuth = authenticate(authService);
 
   router.use(requireAuth);
+
+  router.get('/tally-export', requirePermission('tally.export'), controller.tallyExport);
+
   router.use(requirePermission('profit.read'));
 
   router.get('/summary', controller.summary);
@@ -22,3 +25,4 @@ export function createProfitRouter(db) {
 
   return router;
 }
+

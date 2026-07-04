@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Invoices</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 280px 1fr;
+        padding: 20px;
+      }
+
+      nav.sidebar {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      nav.sidebar button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: left;
+        width: 100%;
+      }
+
+      nav.sidebar button[aria-selected="true"] {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      input, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f7f9fc;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+      }
+
+      /* Invoice Sheet CSS */
+      .invoice-sheet {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+        color: #1e293b;
+      }
+
+      .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid #0f766e;
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+      }
+
+      .invoice-company h2 {
+        margin: 0 0 6px;
+        color: #0f766e;
+        font-size: 24px;
+      }
+
+      .invoice-meta {
+        text-align: right;
+      }
+
+      .invoice-meta h3 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        color: #0f766e;
+      }
+
+      .invoice-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .invoice-totals {
+        margin-left: auto;
+        width: 300px;
+        margin-top: 16px;
+        font-size: 14px;
+      }
+
+      .invoice-totals table {
+        margin-top: 0;
+      }
+
+      .invoice-totals td {
+        padding: 4px 0;
+        border: none;
+      }
+
+      .invoice-totals tr.grand-total td {
+        font-size: 18px;
+        font-weight: bold;
+        color: #0f766e;
+        border-top: 1px solid #cbd5e1;
+        padding-top: 6px;
+      }
+
+      .profit-card {
+        background: #f0fdf4;
+        border: 1px dashed #16a34a;
+        border-radius: 6px;
+        padding: 14px;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+
+      .profit-card h4 {
+        margin: 0 0 6px;
+        color: #16a34a;
+        font-size: 15px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .badge-completed { background: #dcfce7; color: #15803d; }
+      .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: 24px;
+        width: min(450px, calc(100vw - 32px));
+        box-sizing: border-box;
+      }
+
+      .modal h2 {
+        margin-top: 0;
+        color: #dc2626;
+        border-bottom: 1px solid #fee2e2;
+        padding-bottom: 10px;
+      }
+
+      button.danger {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: #ffffff;
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: #ffffff;
+          color: #000000;
+        }
+
+        header, main > nav, .toolbar, .form-actions, #message, #print-action-btn {
+          display: none !important;
+        }
+
+        main {
+          grid-template-columns: 1fr !important;
+          padding: 0 !important;
+        }
+
+        section {
+          border: none !important;
+          padding: 0 !important;
+        }
+
+        .invoice-sheet {
+          border: none !important;
+          padding: 0 !important;
+          max-width: 100% !important;
+        }
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html" class="active">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <nav class="sidebar" id="invoice-tabs" aria-label="Invoice operations">
+        <button type="button" data-tab="list" aria-selected="true">Invoices List</button>
+        <button type="button" data-tab="details" id="details-tab-btn" style="display: none;">Invoice Detail</button>
+      </nav>
+
+      <section>
+        <!-- Tab 1: Invoices List -->
+        <div id="tab-list">
+          <h2>Invoices Registry</h2>
+          <div class="toolbar">
+            <input id="search-query" placeholder="Search by invoice number...">
+            <button id="search-btn" class="primary">Search</button>
+          </div>
+
+          <p id="message" role="status"></p>
+
+          <div id="table-container">
+            <!-- Dynamically populated table -->
+          </div>
+
+          <div class="form-actions" style="margin-top: 14px;">
+            <button id="prev-btn">Previous</button>
+            <button id="next-btn">Next</button>
+            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+          </div>
+        </div>
+
+        <!-- Tab 2: Invoice Details -->
+        <div id="tab-details" style="display: none;">
+          <div class="form-actions" style="margin-bottom: 18px; justify-content: flex-end; gap: 8px;">
+            <button id="cancel-action-btn" class="danger" style="display: none;">Cancel Invoice</button>
+            <button id="print-action-btn" class="primary">Print Invoice</button>
+          </div>
+
+          <div class="invoice-sheet" id="invoice-bill-sheet">
+            <!-- Dynamically populated invoice document -->
+          </div>
+        </div>
+
+        <!-- Modal for Cancelling Invoices (Confirmation) -->
+        <div id="cancel-modal" class="modal" style="display: none;">
+          <div class="modal-content">
+            <h2>Confirm Invoice Cancellation</h2>
+            <p style="font-size: 14px; margin: 14px 0; line-height: 1.5; color: #4b5563;">
+              Are you sure you want to cancel this invoice? This will restore the inventory stock quantities and cannot be undone.
+            </p>
+            <div class="form-actions" style="justify-content: flex-end; gap: 8px;">
+              <button id="cancel-modal-close-btn" type="button">No, Keep Invoice</button>
+              <button id="cancel-modal-confirm-btn" class="danger">Yes, Cancel Invoice</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/invoices.js"></script>
+  </body>
+</html>

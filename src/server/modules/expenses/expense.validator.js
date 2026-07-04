@@ -92,7 +92,13 @@ export function validateExpensePayload(payload = {}, { partial = false } = {}) {
     if (amount === undefined) throw new AppError('Expense amount is required.', 400, 'VALIDATION_ERROR');
   }
 
-  if (expenseDate !== undefined) data.expense_date = expenseDate;
+  if (expenseDate !== undefined) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (process.env.ALLOW_FUTURE_EXPENSES !== 'true' && expenseDate > todayStr) {
+      throw new AppError('Expense date cannot be in the future.', 400, 'VALIDATION_ERROR');
+    }
+    data.expense_date = expenseDate;
+  }
   if (category !== undefined) data.category = category;
   if (amount !== undefined) data.amount = amount;
   if (description !== undefined) data.description = description;

@@ -1,0 +1,2 @@
+-- Migration: 021_autogenerate_technician_codes
+-- No schema changes are required for technicians table as technician_code is auto-filled during creation via repository transactions, ensuring NOT NULL and UNIQUE constraints are satisfied.

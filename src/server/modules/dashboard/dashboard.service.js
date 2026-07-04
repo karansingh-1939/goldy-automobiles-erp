@@ -55,6 +55,12 @@ export class DashboardService {
       dateTo: date,
     }).data;
 
+    const outstandingAmount = this.repository.db.prepare(`
+      SELECT COALESCE(SUM(grand_total - amount_paid), 0) AS balance
+      FROM invoices
+      WHERE status = 'FINALIZED'
+    `).get().balance;
+
     return {
       today: {
         revenue: todayData.totalRevenue,
@@ -67,6 +73,7 @@ export class DashboardService {
         grossProfit: monthData.grossProfit,
         netProfit: monthData.netProfit,
       },
+      outstandingAmount,
     };
   }
 

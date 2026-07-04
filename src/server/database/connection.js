@@ -42,8 +42,8 @@ export function createDatabase(filePath = env.dbFile) {
     // 1. Verify connection safety settings
     DbSafetyService.verifyConfiguration(db);
 
-    // 2. Run Database Integrity Scan
-    const health = IntegrityCheckService.check(db);
+    // 2. Run Database Integrity Scan (using quick_check for fast startup)
+    const health = IntegrityCheckService.check(db, true);
     if (health.status === HealthState.FAILED) {
       const errorMsg = `Database integrity check failed: ${health.errors.join('; ')}`;
       const error = new AppError(errorMsg, 500, 'DATABASE_CORRUPTION');
@@ -96,7 +96,7 @@ export function createDatabase(filePath = env.dbFile) {
 
           DbSafetyService.verifyConfiguration(recoveredDb);
 
-          const healthCheck = IntegrityCheckService.check(recoveredDb);
+          const healthCheck = IntegrityCheckService.check(recoveredDb, true);
           if (healthCheck.status === HealthState.FAILED) {
             recoveredDb.close();
             throw new Error(`Recovered database failed integrity scan: ${healthCheck.errors.join('; ')}`);
@@ -130,10 +130,54 @@ export function createDatabase(filePath = env.dbFile) {
   }
 }
 
+const dbDir = path.dirname(env.dbFile);
+const dbExt = path.extname(env.dbFile);
+const dbBase = path.basename(env.dbFile, dbExt);
+export const demoDbFile = path.join(dbDir, `${dbBase}_demo${dbExt}`);
+const configFilePath = path.join(dbDir, 'setup', 'app_config.json');
+
+function readAppConfig() {
+  try {
+    if (fs.existsSync(configFilePath)) {
+      return JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Failed to read app_config.json:', err);
+  }
+  return { demoMode: false };
+}
+
+function writeAppConfig(config) {
+  try {
+    const configDir = path.dirname(configFilePath);
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to write app_config.json:', err);
+  }
+}
+
+export function isDemoMode() {
+  return readAppConfig().demoMode === true;
+}
+
+export function toggleDemoMode(enable) {
+  const config = readAppConfig();
+  config.demoMode = !!enable;
+  writeAppConfig(config);
+  
+  const filePath = config.demoMode ? demoDbFile : env.dbFile;
+  reopenDatabase(filePath);
+  return config.demoMode;
+}
 
 export function getDatabase() {
   if (!activeDatabase) {
-    activeDatabase = createDatabase();
+    const config = readAppConfig();
+    const filePath = config.demoMode ? demoDbFile : env.dbFile;
+    activeDatabase = createDatabase(filePath);
   }
 
   return activeDatabase;
@@ -146,9 +190,14 @@ export function closeDatabase() {
   }
 }
 
-export function reopenDatabase(filePath = env.dbFile) {
+export function reopenDatabase(filePath = null) {
   closeDatabase();
-  activeDatabase = createDatabase(filePath);
+  let targetPath = filePath;
+  if (!targetPath) {
+    const config = readAppConfig();
+    targetPath = config.demoMode ? demoDbFile : env.dbFile;
+  }
+  activeDatabase = createDatabase(targetPath);
   return activeDatabase;
 }
 

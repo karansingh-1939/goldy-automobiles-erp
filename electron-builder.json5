@@ -1,8 +1,8 @@
 {
   // Core Application Metadata
   appId: "com.goldyautomobiles.erp",
-  productName: "Goldy Automobiles ERP",
-  copyright: "Copyright © 2026 Goldy Automobiles",
+  productName: "GOLDY AUTOMOBILE ERP",
+  copyright: "Copyright © 2026 GOLDY AUTOMOBILE",
 
   // Packaging Rules
   files: [
@@ -41,8 +41,8 @@
     perMachine: true, // Install to Program Files (requires UAC admin privileges)
     createDesktopShortcut: "always", // Create Desktop shortcut
     createStartMenuShortcut: true, // Create Start Menu shortcut
-    shortcutName: "Goldy Automobiles ERP",
-    uninstallDisplayName: "Goldy Automobiles ERP",
+    shortcutName: "GOLDY AUTOMOBILE ERP",
+    uninstallDisplayName: "GOLDY AUTOMOBILE ERP",
     deleteAppDataOnUninstall: false, // Ensure database, logs, and backups are NOT removed during uninstalls
     runAfterFinish: true // Offer running the app immediately after installation finishes
   }

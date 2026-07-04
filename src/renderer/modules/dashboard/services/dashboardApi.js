@@ -11,3 +11,17 @@ export function fetchSalesDashboard(date, options = {}) {
   const queryParam = date ? `?date=${encodeURIComponent(date)}` : '';
   return apiClient.get(`/api/v1/dashboard/sales${queryParam}`, options);
 }
+
+export function fetchOperationsDashboard(date, options = {}) {
+  const queryParam = date ? `?date=${encodeURIComponent(date)}` : '';
+  return apiClient.get(`/api/v1/dashboard/operations${queryParam}`, options);
+}
+
+export function fetchFinancialDashboard(date, options = {}) {
+  const queryParam = date ? `?date=${encodeURIComponent(date)}` : '';
+  return apiClient.get(`/api/v1/dashboard/financial${queryParam}`, options);
+}
+
+export function fetchInventoryDashboard(options = {}) {
+  return apiClient.get('/api/v1/dashboard/inventory', options);
+}

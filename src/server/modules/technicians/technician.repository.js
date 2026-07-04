@@ -18,31 +18,43 @@ export class TechnicianRepository {
    * @returns {number} Inserted row ID
    */
   create(data) {
-    const result = this.db.prepare(`
-      INSERT INTO technicians (
-        technician_code,
-        full_name,
-        phone_number,
-        specialization,
-        is_active,
-        notes
-      )
-      VALUES (
-        @technician_code,
-        @full_name,
-        @phone_number,
-        @specialization,
-        @is_active,
-        @notes
-      )
-    `).run({
-      specialization: null,
-      notes: null,
-      is_active: 1, // default active
-      ...data
-    });
+    return this.transaction(() => {
+      const hasCode = data.technician_code && data.technician_code.trim() !== '';
+      const tempCode = hasCode ? data.technician_code.trim() : `TEMP-${Date.now()}-${Math.random()}`;
 
-    return result.lastInsertRowid;
+      const result = this.db.prepare(`
+        INSERT INTO technicians (
+          technician_code,
+          full_name,
+          phone_number,
+          specialization,
+          is_active,
+          notes
+        )
+        VALUES (
+          ?,
+          @full_name,
+          @phone_number,
+          @specialization,
+          @is_active,
+          @notes
+        )
+      `).run(tempCode, {
+        specialization: null,
+        notes: null,
+        is_active: 1, // default active
+        ...data
+      });
+
+      const insertId = result.lastInsertRowid;
+
+      if (!hasCode) {
+        const finalCode = String(insertId);
+        this.db.prepare('UPDATE technicians SET technician_code = ? WHERE id = ?').run(finalCode, insertId);
+      }
+
+      return insertId;
+    });
   }
 
   /**

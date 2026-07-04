@@ -218,6 +218,7 @@ test('service history API - empty history and populated service records', async 
         year: null,
         vin: null,
         engineNumber: null,
+        chassisNumber: null,
         odometerReading: 0,
         createdAt: emptyResult.body.vehicle.createdAt,
         updatedAt: emptyResult.body.vehicle.updatedAt

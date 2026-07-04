@@ -28,6 +28,7 @@ export class ServiceHistoryRepository {
         year,
         vin,
         engine_number AS engineNumber,
+        chassis_number AS chassisNumber,
         odometer_reading AS odometerReading,
         created_at AS createdAt,
         updated_at AS updatedAt
@@ -80,6 +81,7 @@ export class ServiceHistoryRepository {
         year,
         vin,
         engine_number AS engineNumber,
+        chassis_number AS chassisNumber,
         odometer_reading AS odometerReading,
         created_at AS createdAt,
         updated_at AS updatedAt

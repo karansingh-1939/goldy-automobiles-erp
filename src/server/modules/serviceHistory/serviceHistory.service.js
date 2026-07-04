@@ -85,10 +85,10 @@ export class ServiceHistoryService {
           lineTotal: item.lineTotal
         };
 
-        if (item.itemType === 'PART') {
+        if (item.itemType === 'PART' || item.itemType === 'LUBRICANT') {
           parts.push(itemDto);
         } else {
-          // Both 'LABOR' and 'SERVICE' items belong to services list
+          // 'LABOR', 'SERVICE', and 'OUTSIDE_JOB' items belong to services list
           services.push(itemDto);
         }
       }

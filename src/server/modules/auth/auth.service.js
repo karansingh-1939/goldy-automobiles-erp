@@ -126,7 +126,11 @@ export class AuthService {
   }
 
   async login({ username, password }) {
-    if (!username || !password) {
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      throw new AppError('Username and password must be text.', 400, 'LOGIN_FIELDS_INVALID_TYPE');
+    }
+
+    if (!username.trim() || !password) {
       throw new AppError('Username and password are required.', 400, 'LOGIN_FIELDS_REQUIRED');
     }
 

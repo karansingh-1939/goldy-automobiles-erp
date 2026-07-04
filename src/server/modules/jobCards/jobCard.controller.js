@@ -5,7 +5,8 @@ export class JobCardController {
 
   list = (req, res, next) => {
     try {
-      res.status(200).json(this.jobCardService.list(req.query));
+      const result = this.jobCardService.list(req.query);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -13,7 +14,8 @@ export class JobCardController {
 
   get = (req, res, next) => {
     try {
-      res.status(200).json({ data: this.jobCardService.get(Number(req.params.id)) });
+      const data = this.jobCardService.get(Number(req.params.id));
+      res.status(200).json({ data });
     } catch (error) {
       next(error);
     }

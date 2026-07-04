@@ -18,5 +18,9 @@ export function createGstRouter(db) {
   router.get('/gstr3b', controller.gstr3b);
   router.get('/hsn-summary', controller.hsnSummary);
 
+  // Period Locks endpoints
+  router.get('/locks', controller.getPeriodLocks);
+  router.post('/locks', requirePermission('gst.write'), controller.updatePeriodLock);
+
   return router;
 }

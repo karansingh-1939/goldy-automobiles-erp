@@ -51,25 +51,26 @@ export class TechnicianService {
    * @returns {object} Created technician
    */
   create(payload, userId) {
-    required(payload.technician_code, 'Technician Code');
     required(payload.full_name, 'Full Name');
     required(payload.phone_number, 'Phone Number');
 
-    // Business code format validation
-    const codePattern = /^[a-zA-Z0-9_-]+$/;
-    if (!codePattern.test(payload.technician_code)) {
-      throw new AppError('Technician Code contains invalid characters. Only alphanumeric, dashes, and underscores are allowed.', 400, 'INVALID_CODE_FORMAT');
-    }
+    // Business code format validation: only if explicitly provided
+    if (payload.technician_code) {
+      const codePattern = /^[a-zA-Z0-9_-]+$/;
+      if (!codePattern.test(payload.technician_code)) {
+        throw new AppError('Technician Code contains invalid characters. Only alphanumeric, dashes, and underscores are allowed.', 400, 'INVALID_CODE_FORMAT');
+      }
 
-    // Check if code is already in use
-    const existing = this.repository.findByCode(payload.technician_code);
-    if (existing) {
-      throw new AppError(`Technician Code "${payload.technician_code}" is already in use.`, 409, 'DUPLICATE_TECHNICIAN_CODE');
+      // Check if code is already in use
+      const existing = this.repository.findByCode(payload.technician_code);
+      if (existing) {
+        throw new AppError(`Technician Code "${payload.technician_code}" is already in use.`, 409, 'DUPLICATE_TECHNICIAN_CODE');
+      }
     }
 
     try {
       const technicianId = this.repository.create({
-        technician_code: payload.technician_code.trim(),
+        technician_code: payload.technician_code ? payload.technician_code.trim() : null,
         full_name: payload.full_name.trim(),
         phone_number: payload.phone_number.trim(),
         specialization: payload.specialization ? payload.specialization.trim() : null,

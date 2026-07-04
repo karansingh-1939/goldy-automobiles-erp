@@ -26,7 +26,8 @@ export class InventoryRepository {
         reorder_level,
         unit,
         unit_of_measure,
-        is_active
+        is_active,
+        warranty_period_months
       )
       VALUES (
         @sku,
@@ -45,9 +46,13 @@ export class InventoryRepository {
         @reorder_level,
         @unit_of_measure,
         @unit_of_measure,
-        @is_active
+        @is_active,
+        @warranty_period_months
       )
-    `).run(data);
+    `).run({
+      ...data,
+      warranty_period_months: data.warranty_period_months || 0
+    });
 
     return this.findItemById(result.lastInsertRowid);
   }
@@ -331,10 +336,12 @@ export class InventoryRepository {
         inventory_transactions.*,
         inventory_items.sku,
         inventory_items.item_name,
-        warehouses.name AS warehouse_name
+        warehouses.name AS warehouse_name,
+        users.name AS user_name
       FROM inventory_transactions
       JOIN inventory_items ON inventory_items.id = inventory_transactions.item_id
       JOIN warehouses ON warehouses.id = inventory_transactions.warehouse_id
+      LEFT JOIN users ON users.id = inventory_transactions.created_by
       ${where}
       ORDER BY inventory_transactions.id DESC
     `).all(...params);
@@ -365,5 +372,159 @@ export class InventoryRepository {
         AND DATE(inventory_batches.expiry_date) <= DATE(?, '+' || ? || ' days')
       ORDER BY inventory_batches.expiry_date
     `).all(asOf, days);
+  }
+
+  createFixedAsset(data) {
+    const result = this.db.prepare(`
+      INSERT INTO fixed_assets (
+        asset_name,
+        sku,
+        category,
+        supplier_id,
+        invoice_number,
+        purchase_date,
+        purchase_cost,
+        gst_amount,
+        serial_number,
+        warranty_info,
+        notes,
+        created_by
+      )
+      VALUES (
+        @asset_name,
+        @sku,
+        @category,
+        @supplier_id,
+        @invoice_number,
+        @purchase_date,
+        @purchase_cost,
+        @gst_amount,
+        @serial_number,
+        @warranty_info,
+        @notes,
+        @created_by
+      )
+    `).run(data);
+    return this.findFixedAssetById(result.lastInsertRowid);
+  }
+
+  findFixedAssetById(id) {
+    return this.db.prepare(`
+      SELECT fixed_assets.*, suppliers.name AS supplier_name
+      FROM fixed_assets
+      JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
+      WHERE fixed_assets.id = ?
+    `).get(id);
+  }
+
+  listFixedAssets({ search, pageSize, offset }) {
+    const params = [];
+    const where = search
+      ? `WHERE fixed_assets.asset_name LIKE ? COLLATE NOCASE
+          OR fixed_assets.sku LIKE ? COLLATE NOCASE
+          OR suppliers.name LIKE ? COLLATE NOCASE`
+      : '';
+
+    if (search) {
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    const data = this.db.prepare(`
+      SELECT fixed_assets.*, suppliers.name AS supplier_name
+      FROM fixed_assets
+      JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
+      ${where}
+      ORDER BY fixed_assets.id DESC
+      LIMIT ? OFFSET ?
+    `).all(...params, pageSize, offset);
+
+    const total = this.db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM fixed_assets
+      JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
+      ${where}
+    `).get(...params).count;
+
+    return { data, total };
+  }
+
+  createStockVerification(data) {
+    const result = this.db.prepare(`
+      INSERT INTO stock_verifications (
+        verification_number,
+        verification_type,
+        audit_session_id,
+        warehouse_id,
+        item_id,
+        batch_id,
+        previous_quantity,
+        counted_quantity,
+        difference,
+        adjustment_id,
+        verified_by,
+        notes
+      )
+      VALUES (
+        @verification_number,
+        @verification_type,
+        @audit_session_id,
+        @warehouse_id,
+        @item_id,
+        @batch_id,
+        @previous_quantity,
+        @counted_quantity,
+        @difference,
+        @adjustment_id,
+        @verified_by,
+        @notes
+      )
+    `).run(data);
+    return result.lastInsertRowid;
+  }
+
+  listStockVerifications({ limit, offset, warehouseId, itemId, batchId }) {
+    const conditions = [];
+    const params = [];
+
+    if (warehouseId) {
+      conditions.push('stock_verifications.warehouse_id = ?');
+      params.push(warehouseId);
+    }
+    if (itemId) {
+      conditions.push('stock_verifications.item_id = ?');
+      params.push(itemId);
+    }
+    if (batchId) {
+      conditions.push('stock_verifications.batch_id = ?');
+      params.push(batchId);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const data = this.db.prepare(`
+      SELECT
+        stock_verifications.*,
+        inventory_items.item_name,
+        inventory_items.sku,
+        warehouses.name AS warehouse_name,
+        inventory_batches.batch_number,
+        users.name AS verified_by_name
+      FROM stock_verifications
+      JOIN inventory_items ON inventory_items.id = stock_verifications.item_id
+      JOIN warehouses ON warehouses.id = stock_verifications.warehouse_id
+      LEFT JOIN inventory_batches ON inventory_batches.id = stock_verifications.batch_id
+      LEFT JOIN users ON users.id = stock_verifications.verified_by
+      ${where}
+      ORDER BY stock_verifications.id DESC
+      LIMIT ? OFFSET ?
+    `).all(...params, limit, offset);
+
+    const total = this.db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM stock_verifications
+      ${where}
+    `).get(...params).count;
+
+    return { data, total };
   }
 }

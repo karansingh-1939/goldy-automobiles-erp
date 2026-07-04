@@ -150,7 +150,7 @@ export class ProfitRepository {
       JOIN invoices ON invoices.id = invoice_items.invoice_id
       JOIN inventory_items ON inventory_items.id = invoice_items.inventory_item_id
       ${invoiceFilters.clause}
-        AND invoice_items.item_type = 'PART'
+        AND invoice_items.item_type IN ('PART', 'LUBRICANT')
         AND invoice_items.inventory_item_id IS NOT NULL
       GROUP BY inventory_items.id, inventory_items.sku, inventory_items.item_name
       ORDER BY profit DESC, item
@@ -161,8 +161,8 @@ export class ProfitRepository {
     const invoiceFilters = invoiceWhereClause(filters);
     return this.db.prepare(`
       SELECT
-        users.id AS mechanic_id,
-        COALESCE(users.name, 'Unassigned') AS mechanic,
+        COALESCE(technicians.id, users.id) AS mechanic_id,
+        COALESCE(technicians.full_name, users.name, 'Unassigned') AS mechanic,
         COALESCE(SUM(profit_records.revenue), 0) AS revenue,
         COALESCE(SUM(profit_records.cost_total), 0) AS cost,
         COALESCE(SUM(profit_records.gross_profit), 0) AS profit
@@ -170,9 +170,94 @@ export class ProfitRepository {
       JOIN invoices ON invoices.id = profit_records.invoice_id
       LEFT JOIN job_cards ON job_cards.id = invoices.job_card_id
       LEFT JOIN users ON users.id = job_cards.assigned_to
+      LEFT JOIN technicians ON technicians.id = job_cards.technician_id
       ${invoiceFilters.clause}
-      GROUP BY users.id, users.name
+      GROUP BY COALESCE(technicians.id, users.id), COALESCE(technicians.full_name, users.name)
       ORDER BY profit DESC, mechanic
     `).all(invoiceFilters.params);
   }
+
+  tallyExport(filters) {
+    const clauses = ["invoices.status = 'FINALIZED'"];
+    const params = {};
+
+    if (filters.dateFrom) {
+      clauses.push('DATE(invoices.invoice_date) >= DATE(@dateFrom)');
+      params.dateFrom = filters.dateFrom;
+    }
+
+    if (filters.dateTo) {
+      clauses.push('DATE(invoices.invoice_date) <= DATE(@dateTo)');
+      params.dateTo = filters.dateTo;
+    }
+
+    const clause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+    return this.db.prepare(`
+      SELECT
+        invoices.invoice_number,
+        invoices.invoice_date,
+        invoices.grand_total,
+        invoices.taxable_amount,
+        invoices.cgst_total,
+        invoices.sgst_total,
+        invoices.igst_total,
+        customers.name AS customer_name
+      FROM invoices
+      JOIN customers ON customers.id = invoices.customer_id
+      ${clause}
+      ORDER BY invoices.invoice_date ASC, invoices.id ASC
+    `).all(params);
+  }
+
+  tallyExportAllVouchers(filters) {
+    const clauses = ["vouchers.status <> 'CANCELLED'"];
+    const params = {};
+
+    if (filters.dateFrom) {
+      clauses.push('DATE(vouchers.voucher_date) >= DATE(@dateFrom)');
+      params.dateFrom = filters.dateFrom;
+    }
+
+    if (filters.dateTo) {
+      clauses.push('DATE(vouchers.voucher_date) <= DATE(@dateTo)');
+      params.dateTo = filters.dateTo;
+    }
+
+    const clause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+    const vouchers = this.db.prepare(`
+      SELECT
+        vouchers.id,
+        vouchers.voucher_number,
+        vouchers.voucher_type,
+        vouchers.voucher_date,
+        vouchers.narration,
+        vouchers.company_id
+      FROM vouchers
+      ${clause}
+      ORDER BY vouchers.voucher_date ASC, vouchers.id ASC
+    `).all(params);
+
+    // Load journal entries for each voucher
+    for (const v of vouchers) {
+      v.entries = this.db.prepare(`
+        SELECT
+          je.entry_type,
+          je.amount,
+          je.narration,
+          l.name AS ledger_name,
+          l.nature AS ledger_nature,
+          ag.name AS group_name
+        FROM journal_entries je
+        JOIN ledgers l ON je.ledger_id = l.id
+        JOIN account_groups ag ON l.group_id = ag.id
+        WHERE je.voucher_id = ?
+        ORDER BY je.entry_type DESC -- DEBIT first
+      `).all(v.id);
+    }
+
+    return vouchers;
+  }
 }
+

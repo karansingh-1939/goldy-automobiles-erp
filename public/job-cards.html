@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Job Cards</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 240px 1fr;
+        padding: 20px;
+      }
+
+      nav.sidebar {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 10px;
+        align-self: start;
+      }
+
+      nav.sidebar button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: left;
+        width: 100%;
+      }
+
+      nav.sidebar button[aria-selected="true"] {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar input, .toolbar select {
+        width: auto;
+        flex: 1;
+        min-width: 150px;
+      }
+
+      input, textarea, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      form.grid-form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f7f9fc;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 1.2fr 1fr;
+      }
+
+      .card {
+        border: 1px solid #e1e7ef;
+        border-radius: 6px;
+        padding: 14px;
+        margin-bottom: 14px;
+        background: #ffffff;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        font-size: 16px;
+        border-bottom: 1px solid #e1e7ef;
+        padding-bottom: 6px;
+        color: #0f766e;
+      }
+
+      .stock-indicator {
+        font-weight: bold;
+        margin-top: 6px;
+        font-size: 12px;
+      }
+
+      .stock-ok { color: #16a34a; }
+      .stock-low { color: #d97706; }
+      .stock-none { color: #dc2626; }
+
+      .summary-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 14px;
+        font-size: 15px;
+        text-align: right;
+        margin-top: 14px;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .badge-draft { background: #e2e8f0; color: #475569; }
+      .badge-completed { background: #dcfce7; color: #15803d; }
+      .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+      @media (max-width: 900px) {
+        main, form.grid-form, .detail-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: #ffffff;
+          color: #000000;
+        }
+
+        header, main > nav, .toolbar, .form-actions, #message, #print-job-card-btn, #workspace-controls-container, #finalize-action-container {
+          display: none !important;
+        }
+
+        main {
+          grid-template-columns: 1fr !important;
+          padding: 0 !important;
+        }
+
+        section {
+          border: none !important;
+          padding: 0 !important;
+        }
+
+        .detail-grid {
+          grid-template-columns: 1fr !important;
+        }
+
+        .card {
+          border: 1px solid #000000 !important;
+          margin-bottom: 12px !important;
+          page-break-inside: avoid;
+        }
+
+        table {
+          border: 1px solid #000000 !important;
+        }
+
+        th, td {
+          border-bottom: 1px solid #000000 !important;
+          color: #000000 !important;
+        }
+      }
+
+      /* Autocomplete Suggestions Styling */
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-height: 250px;
+        overflow-y: auto;
+        margin-top: 2px;
+      }
+
+      .autocomplete-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+
+      .autocomplete-item:hover, .autocomplete-item.selected {
+        background: #f1f5f9;
+        color: #0f766e;
+        font-weight: bold;
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html" class="active">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <nav class="sidebar" id="job-card-tabs" aria-label="Job Card operations">
+        <button type="button" data-tab="list" aria-selected="true">Job Cards List</button>
+        <button type="button" data-tab="create">Create Job Card</button>
+        <button type="button" data-tab="details" id="details-tab-btn" style="display: none;">Job Card Details</button>
+      </nav>
+
+      <section>
+        <!-- Tab 1: Job Cards List -->
+        <div id="tab-list">
+          <h2>Job Cards Registry</h2>
+          <div class="toolbar" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px;">
+            <div style="flex: 2; min-width: 280px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="search-query" style="font-weight: bold; font-size: 12px; color: #4b5563; margin: 0; width: auto;">Search</label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; font-weight: bold; color: #4b5563; width: auto; margin: 0;">
+                  <input type="checkbox" id="filter-exact-match" checked style="width: auto; margin: 0;"> Exact Match Only
+                </label>
+              </div>
+              <input id="search-query" placeholder="Search Registration No, Phone No, Customer Name or Job Card No">
+            </div>
+            <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="filter-status" style="font-weight: bold; font-size: 12px; color: #4b5563;">Status</label>
+              <select id="filter-status">
+                <option value="">All</option>
+                <option value="DRAFT">Open</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="filter-from-date" style="font-weight: bold; font-size: 12px; color: #4b5563;">From Date</label>
+              <input type="date" id="filter-from-date">
+            </div>
+            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="filter-to-date" style="font-weight: bold; font-size: 12px; color: #4b5563;">To Date</label>
+              <input type="date" id="filter-to-date">
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="search-btn" class="primary" style="height: 40px;">Search</button>
+              <button id="clear-btn" type="button" style="height: 40px; white-space: nowrap;">Clear Filters</button>
+            </div>
+          </div>
+
+          <div class="quick-filters" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px;">
+            <span style="align-self: center; font-size: 12px; font-weight: bold; color: #4b5563; margin-right: 4px;">Quick Date:</span>
+            <button type="button" class="quick-filter-btn" data-range="today" style="padding: 6px 10px; font-size: 12px;">Today</button>
+            <button type="button" class="quick-filter-btn" data-range="yesterday" style="padding: 6px 10px; font-size: 12px;">Yesterday</button>
+            <button type="button" class="quick-filter-btn" data-range="last7" style="padding: 6px 10px; font-size: 12px;">Last 7 Days</button>
+            <button type="button" class="quick-filter-btn" data-range="thisMonth" style="padding: 6px 10px; font-size: 12px;">This Month</button>
+            <button type="button" class="quick-filter-btn" data-range="lastMonth" style="padding: 6px 10px; font-size: 12px;">Last Month</button>
+            <button type="button" class="quick-filter-btn" data-range="all" style="padding: 6px 10px; font-size: 12px; background: #f1f5f9;">All Records</button>
+          </div>
+
+          <div id="filter-summary" style="font-size: 14px; font-weight: bold; color: #0f766e; margin-bottom: 12px; padding: 6px 10px; background: #f0fdfa; border-left: 4px solid #0f766e; border-radius: 4px; display: inline-block;">
+            Total Job Cards: 0
+          </div>
+
+          <p id="message" role="status"></p>
+
+          <div id="table-container">
+            <!-- Dynamically populated table -->
+          </div>
+
+          <div class="form-actions" style="margin-top: 14px;">
+            <button id="prev-btn">Previous</button>
+            <button id="next-btn">Next</button>
+            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+          </div>
+        </div>
+
+        <!-- Tab 2: Create Job Card -->
+        <div id="tab-create" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 14px;">
+            <h2 style="margin:0; color:#0f766e;">Initiate Repair Job Card</h2>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; width: auto; font-size: 14px;">
+              <input type="checkbox" id="quick-entry-toggle" style="width: auto;"> Quick Entry Mode
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px;">
+            <!-- Left Side: Form -->
+            <div>
+              <form id="job-card-form" class="grid-form" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+                <label style="position: relative;">
+                  Registration Number *
+                  <input id="form-registration-number" type="text" name="registration_number" required placeholder="e.g. HR26AB1234" autocomplete="off" style="text-transform: uppercase;">
+                  <div id="reg-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                </label>
+
+                <label style="position: relative;">
+                  Phone Number
+                  <input id="form-phone" type="text" name="phone" placeholder="e.g. 9876543210" autocomplete="off">
+                  <div id="phone-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                </label>
+
+                <label style="position: relative; grid-column: span 2;">
+                  Customer Name *
+                  <input id="form-customer-name" type="text" name="customer_name" required placeholder="Enter customer name" autocomplete="off">
+                  <div id="name-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                </label>
+
+                <label>
+                  Vehicle Model *
+                  <input id="form-model" type="text" name="model" required placeholder="e.g. Swift, City">
+                </label>
+
+                <label>
+                  Fuel Type *
+                  <select id="form-fuel-type" name="fuel_type" required>
+                    <option value="">-- Select Fuel Type --</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="CNG">CNG</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </label>
+
+                <label>
+                  Chassis Number
+                  <input id="form-chassis-number" type="text" name="chassis_number" placeholder="Enter chassis number">
+                </label>
+
+                <label>
+                  Engine Number
+                  <input id="form-engine-number" type="text" name="engine_number" placeholder="Enter engine number">
+                </label>
+
+                <label>
+                  Address
+                  <input id="form-address" type="text" name="address" placeholder="Customer address">
+                </label>
+
+                <label>
+                  City
+                  <input id="form-city" type="text" name="city" placeholder="e.g. Karnal">
+                </label>
+
+                <label>
+                  Odometer Reading *
+                  <input id="form-odometer" type="number" name="odometer_reading" min="0" required placeholder="Enter current km">
+                </label>
+
+                <label>
+                  Assign Technician
+                  <select id="form-assigned-to" name="technician_id">
+                    <option value="">-- Unassigned --</option>
+                  </select>
+                </label>
+
+                <label style="grid-column: span 2;">
+                  Complaint / Description *
+                  <textarea id="form-complaint" name="complaint" required placeholder="Describe vehicle issue..."></textarea>
+                </label>
+
+                <label>
+                  Fuel Level
+                  <select id="form-fuel-level" name="fuel_level">
+                    <option value="">-- Select Fuel Level --</option>
+                    <option value="Empty">Empty</option>
+                    <option value="1/4">1/4</option>
+                    <option value="1/2">1/2</option>
+                    <option value="3/4">3/4</option>
+                    <option value="Full">Full</option>
+                  </select>
+                </label>
+
+                <label>
+                  Promised Delivery Time
+                  <input id="form-promised-delivery" type="datetime-local" name="promised_delivery_at">
+                </label>
+
+                <label style="grid-column: span 2;">
+                  Customer Notes
+                  <textarea id="form-customer-notes" name="notes" placeholder="Enter customer notes, habits, reminders..."></textarea>
+                </label>
+
+                <label style="grid-column: span 2;">
+                  Battery Brand
+                  <input id="form-battery-brand" type="text" name="battery_brand" placeholder="e.g. Exide, Amaron">
+                </label>
+
+                <div style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 12px; margin-top: 8px;">
+                  <strong style="display: block; margin-bottom: 8px;">Accessories Checklist</strong>
+                  <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
+                      <input type="checkbox" id="form-toolkit" name="toolkit_present" style="width: auto;"> Toolkit
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
+                      <input type="checkbox" id="form-spare-wheel" name="spare_wheel_present" style="width: auto;"> Spare Wheel
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
+                      <input type="checkbox" id="form-jack" name="jack_present" style="width: auto;"> Jack
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
+                      <input type="checkbox" id="form-stereo" name="stereo_present" style="width: auto;"> Stereo
+                    </label>
+                  </div>
+                </div>
+              </form>
+              <div class="form-actions">
+                <button id="create-card-btn" class="primary">Create Job Card</button>
+                <button id="reset-create-btn">Reset</button>
+              </div>
+            </div>
+
+            <!-- Right Side: Information Panels -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div id="registration-lookup-status" style="font-weight: bold; font-size: 13px; padding: 10px; border-radius: 6px; display: none;"></div>
+
+              <!-- Customer Info Panel -->
+              <div id="customer-info-panel" class="card" style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0;">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 6px; font-size: 15px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                  👤 Customer Information
+                </h3>
+                <div style="font-size: 13px; line-height: 1.6;">
+                  <div><strong>Name:</strong> <span id="info-cust-name"></span></div>
+                  <div><strong>Phone:</strong> <span id="info-cust-phone"></span></div>
+                  <div><strong>Total Vehicles:</strong> <span id="info-cust-total-vehicles">0</span></div>
+                  <div><strong>Total Job Cards:</strong> <span id="info-cust-total-job-cards">0</span></div>
+                  <div><strong>Last Visit:</strong> <span id="info-cust-last-visit">Never</span></div>
+                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                    <strong>Customer Notes:</strong>
+                    <div id="info-cust-notes" style="font-style: italic; color: #4b5563; max-height: 80px; overflow-y: auto; white-space: pre-wrap;">None</div>
+                  </div>
+                  <div style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+                    <strong>Linked Vehicles:</strong>
+                    <div id="info-cust-linked-vehicles" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vehicle History Panel -->
+              <div id="vehicle-history-panel" class="card" style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0;">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 6px; font-size: 15px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                  🚗 Vehicle History & Service Due
+                </h3>
+                <div style="font-size: 13px; line-height: 1.6;">
+                  <div><strong>Total Job Cards:</strong> <span id="info-veh-total-job-cards">0</span></div>
+                  <div><strong>Last Service Date:</strong> <span id="info-veh-last-service">Never</span></div>
+                  <div><strong>Last Odometer:</strong> <span id="info-veh-last-odometer">0</span> km</div>
+                  <div><strong>Outstanding Balance:</strong> <span id="info-veh-outstanding" style="font-weight: bold; color: #b91c1c;">Rs. 0.00</span></div>
+                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                    <strong>Last Complaint:</strong>
+                    <div id="info-veh-last-complaint" style="font-style: italic; color: #4b5563; white-space: pre-wrap;">None</div>
+                  </div>
+                  
+                  <!-- Service Due Section -->
+                  <div style="margin-top: 8px; background: #f0fdf4; border-radius: 4px; padding: 8px; border: 1px solid #bbf7d0;">
+                    <strong style="color: #15803d; display: block; margin-bottom: 4px;">📅 Next Recommended Service:</strong>
+                    <div><strong>Due Date:</strong> <span id="due-service-date">N/A</span> <span id="due-service-days" style="font-weight: bold;"></span></div>
+                    <div><strong>Due Odometer:</strong> <span id="due-service-odometer">N/A</span> <span id="due-service-km" style="font-weight: bold;"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Recent Customers Section -->
+          <div style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 16px;">
+            <h3 style="margin-top: 0; color: #0f766e; font-size: 16px;">⏱️ Recent Workshop Visits</h3>
+            <div id="recent-visits-container">
+              <!-- Dynamically populated table -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Job Card Details -->
+        <div id="tab-details" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 14px;">
+            <h2 id="detail-job-number" style="margin:0;">Job Card Detail</h2>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span id="detail-previous-visits-badge" style="cursor: pointer; background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; display: none;">
+                Previous Visits: <span id="lbl-previous-visits-count">0</span>
+              </span>
+              <button id="print-job-card-btn" class="primary">Print Job Card</button>
+              <div id="detail-job-status-badge"></div>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <!-- Left Side: Items & Summary -->
+            <div>
+              <div class="card">
+                <h3>Customer & Vehicle Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                  <div><strong>Customer:</strong> <span id="detail-customer-name"></span></div>
+                  <div><strong>Reg Number:</strong> <span id="detail-vehicle-reg"></span></div>
+                  <div><strong>Odometer:</strong> <span id="detail-odometer"></span> km</div>
+                  <div><strong>Technician:</strong> <span id="detail-assigned-mechanic"></span></div>
+                  <div><strong>Engine No:</strong> <span id="detail-engine-number"></span></div>
+                  <div><strong>Chassis No:</strong> <span id="detail-chassis-number"></span></div>
+                  <div><strong>Fuel Level:</strong> <span id="detail-fuel-level"></span></div>
+                  <div><strong>Promised Delivery:</strong> <span id="detail-promised-delivery"></span></div>
+                  <div><strong>Battery Brand:</strong> <span id="detail-battery-brand"></span></div>
+                  <div style="grid-column: span 2; margin-top: 4px;"><strong>Complaint:</strong> <span id="detail-complaint"></span></div>
+                  <div style="grid-column: span 2; margin-top: 4px; border-top: 1px dashed #e1e7ef; padding-top: 4px;">
+                    <strong>Checklist:</strong> <span id="detail-checklist"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Parts Consumption</h3>
+                <div id="parts-list-container">
+                  <!-- Table of parts -->
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Lubricants</h3>
+                <div id="lubricants-list-container">
+                  <!-- Table of lubricants -->
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Outside Jobs</h3>
+                <div id="outside-jobs-list-container">
+                  <!-- Table of outside jobs -->
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Labour (In-House)</h3>
+                <div id="labour-list-container">
+                  <!-- Table of labour lines -->
+                </div>
+              </div>
+
+              <div class="summary-box">
+                <div>Parts Total: <strong><span id="sum-parts-total">0.00</span></strong></div>
+                <div>Lubricants Total: <strong><span id="sum-lubricants-total">0.00</span></strong></div>
+                <div>Labour Total: <strong><span id="sum-labour-total">0.00</span></strong></div>
+                <div>Outside Job Total: <strong><span id="sum-outside-job-total">0.00</span></strong></div>
+                <div style="margin: 6px 0; border-top: 1px solid #cbd5e1;"></div>
+                <div style="font-size: 18px; color: #0f766e;">Grand Total (inc. Tax): <strong><span id="sum-grand-total">0.00</span></strong></div>
+              </div>
+
+              <div class="form-actions" id="finalize-action-container" style="margin-top:14px; justify-content: flex-end;">
+                <!-- Finalize button will go here -->
+              </div>
+            </div>
+
+            <!-- Right Side: Adding Controls -->
+            <div id="workspace-controls-container">
+              <!-- Add Parts Panel -->
+              <div class="card">
+                <h3>Add Consumable Part</h3>
+                <form id="add-part-form" style="display: flex; flex-direction: column; gap: 8px;">
+                  <label>
+                    Select Inventory Item *
+                    <select id="part-item-id" required>
+                      <option value="">-- Select Item --</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    Select Batch (Stock Location) *
+                    <select id="part-batch-id" required disabled>
+                      <option value="">-- Select Item First --</option>
+                    </select>
+                  </label>
+                  <div id="stock-indicator-message" class="stock-indicator"></div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <label>
+                      Quantity *
+                      <input id="part-quantity" type="number" min="0.01" step="any" required>
+                    </label>
+
+                    <label>
+                      Unit Selling Price *
+                      <input id="part-price" type="number" min="0" step="0.01" required>
+                    </label>
+                  </div>
+
+                  <label>
+                    GST Rate (%) *
+                    <input id="part-gst-rate" type="number" min="0" max="100" step="any" value="18" required>
+                  </label>
+
+                  <button type="submit" class="primary" style="margin-top: 8px;">Add Part to Job Card</button>
+                </form>
+              </div>
+
+              <!-- Add Labour Panel -->
+              <div class="card">
+                <h3>Add Labour Charge</h3>
+                <form id="add-labour-form" style="display: flex; flex-direction: column; gap: 8px;">
+                  <label>
+                    Labour Description *
+                    <input id="labour-description" required placeholder="e.g. Engine tune-up, Oil replacement">
+                  </label>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <label>
+                      Labour Charge (excluding tax) *
+                      <input id="labour-charge" type="number" min="0" step="0.01" required>
+                    </label>
+
+                    <label>
+                      GST Rate (%) *
+                      <input id="labour-gst-rate" type="number" min="0" max="100" step="any" value="18" required>
+                    </label>
+                  </div>
+
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px; margin-bottom: 4px;">
+                    <input id="labour-is-outside" type="checkbox" style="width: auto;">
+                    <span>Is Outside Job / Subcontracted?</span>
+                  </label>
+
+                  <button type="submit" class="primary" style="margin-top: 8px;">Add Labour Charge</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/job-cards.js"></script>
+  </body>
+</html>

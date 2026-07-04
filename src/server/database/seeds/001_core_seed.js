@@ -33,6 +33,7 @@ const permissions = [
   ['expenses.read', 'View expenses.'],
   ['expenses.write', 'Create and update expenses.'],
   ['gst.read', 'View GST reports.'],
+  ['gst.write', 'Modify GST settings and locked periods.'],
   ['gst.export', 'Export GST data.'],
   ['profit.read', 'View profit records.'],
   ['tally.export', 'Export Tally data.'],
@@ -40,6 +41,8 @@ const permissions = [
   ['audit.read', 'View audit logs.'],
   ['backups.read', 'View database backups and logs.'],
   ['backups.write', 'Create manual database backups.'],
+  ['accounting.read', 'View general ledgers, voucher entries, trial balance, P&L, and balance sheets.'],
+  ['accounting.write', 'Post manual vouchers (Contra, Journal, Payments, Receipts) and adjust/cancel accounting logs.'],
 ];
 
 const rolePermissionKeys = {

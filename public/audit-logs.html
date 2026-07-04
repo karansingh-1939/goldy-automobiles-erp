@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Audit Logs</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 15px;
+        font-size: 14px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .toolbar input, .toolbar select {
+        width: auto;
+        flex: 1;
+        min-width: 150px;
+      }
+
+      input, textarea, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 10px;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f7f9fc;
+        color: #475569;
+        font-weight: 700;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+      }
+
+      /* Modal Popups styling */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: 24px;
+        width: min(800px, calc(100vw - 32px));
+        box-sizing: border-box;
+      }
+
+      .modal h2 {
+        margin-top: 0;
+        color: #0f766e;
+        border-bottom: 1px solid #e1e7ef;
+        padding-bottom: 10px;
+      }
+
+      .json-diff-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 10px;
+      }
+
+      .json-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .json-box-title {
+        font-weight: bold;
+        margin-bottom: 6px;
+        color: #475569;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .badge-create { background-color: #dcfce7; color: #15803d; }
+      .badge-update { background-color: #fef9c3; color: #a16207; }
+      .badge-delete { background-color: #fee2e2; color: #b91c1c; }
+      .badge-other { background-color: #f1f5f9; color: #475569; }
+
+      @media (max-width: 768px) {
+        .json-diff-container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html" class="active">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <section>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h2 style="margin: 0; color:#0f766e; font-size: 20px;">System Audit Logs</h2>
+        </div>
+
+        <p id="message" role="status"></p>
+
+        <!-- Filters Toolbar -->
+        <div class="toolbar">
+          <input type="text" id="filter-search" placeholder="Search user or entity...">
+          
+          <select id="filter-action">
+            <option value="">-- All Actions --</option>
+            <option value="CREATE">CREATE</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+
+          <input type="text" id="filter-entity-type" placeholder="Entity Type (e.g. customers)">
+          
+          <input type="date" id="filter-date-from" placeholder="Date From">
+          <input type="date" id="filter-date-to" placeholder="Date To">
+
+          <button id="apply-filters-btn" class="primary">Apply</button>
+          <button id="clear-filters-btn">Clear</button>
+        </div>
+
+        <!-- Audit Table -->
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 15%">Timestamp</th>
+                <th style="width: 15%">User</th>
+                <th style="width: 10%">Action</th>
+                <th style="width: 15%">Entity Type</th>
+                <th style="width: 10%">Entity ID</th>
+                <th style="width: 25%">Summary / Details</th>
+                <th style="width: 10%">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="audit-logs-tbody">
+              <tr>
+                <td colspan="7" style="text-align: center; color: #64748b;">Loading audit logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+          <div style="color: #64748b; font-size: 14px;" id="pagination-info">
+            Showing 0 to 0 of 0 logs
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="prev-page-btn" disabled>&lt; Previous</button>
+            <button id="next-page-btn" disabled>Next &gt;</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Audit Log Detail</h2>
+        <div style="margin-bottom: 12px; font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div><strong>Timestamp:</strong> <span id="modal-timestamp"></span></div>
+          <div><strong>User:</strong> <span id="modal-user"></span></div>
+          <div><strong>Action:</strong> <span id="modal-action"></span></div>
+          <div><strong>Entity:</strong> <span id="modal-entity"></span></div>
+        </div>
+
+        <div class="json-diff-container">
+          <div>
+            <div class="json-box-title">Before Change (Old Value)</div>
+            <div class="json-box" id="modal-old-value">None</div>
+          </div>
+          <div>
+            <div class="json-box-title">After Change (New Value)</div>
+            <div class="json-box" id="modal-new-value">None</div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="justify-content: flex-end; margin-top: 18px;">
+          <button id="close-modal-btn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/audit-logs.js"></script>
+  </body>
+</html>

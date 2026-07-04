@@ -66,4 +66,12 @@ export class PurchasingController {
       next(error);
     }
   };
+
+  getSupplierLedger = (req, res, next) => {
+    try {
+      res.status(200).json(this.purchasingService.getSupplierLedger(Number(req.params.supplierId), req.query));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

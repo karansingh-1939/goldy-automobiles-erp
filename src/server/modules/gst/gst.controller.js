@@ -34,4 +34,26 @@ export class GstController {
       next(error);
     }
   };
+
+  getPeriodLocks = async (req, res, next) => {
+    try {
+      const companyId = 1; // default company
+      const locks = this.gstService.getPeriodLocks(companyId);
+      res.status(200).json({ status: 'success', data: locks });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updatePeriodLock = async (req, res, next) => {
+    try {
+      const companyId = 1; // default company
+      const { taxPeriod, isLocked } = req.body;
+      const userId = req.user.id;
+      const lock = this.gstService.updatePeriodLock(companyId, taxPeriod, isLocked, userId);
+      res.status(200).json({ status: 'success', data: lock });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

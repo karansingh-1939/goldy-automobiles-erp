@@ -23,5 +23,7 @@ export function createPurchasingRouter(db) {
   router.get('/returns/:id', requirePermission('purchases.read'), controller.getReturn);
   router.post('/returns', requirePermission('purchases.write'), controller.createReturn);
 
+  router.get('/suppliers/:supplierId/ledger', requirePermission('purchases.read'), controller.getSupplierLedger);
+
   return router;
 }

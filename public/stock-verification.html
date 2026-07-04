@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Stock Verification</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 20px;
+      }
+
+      nav.sidebar {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: fit-content;
+      }
+
+      nav.sidebar button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+        display: block;
+        text-align: left;
+        width: 100%;
+      }
+
+      nav.sidebar button[aria-selected="true"] {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+
+      .form-group label {
+        font-weight: bold;
+        font-size: 13px;
+        color: #4b5563;
+      }
+
+      input, textarea, select {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #e1e7ef;
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f7f9fc;
+        color: #4b5563;
+      }
+
+      .discrepancy-badge {
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+
+      .discrepancy-in { background: #dcfce7; color: #15803d; }
+      .discrepancy-out { background: #fee2e2; color: #dc2626; }
+      .discrepancy-none { background: #f1f5f9; color: #64748b; }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+        margin-bottom: 12px;
+      }
+
+      .error-text { color: #dc2626; }
+      .success-text { color: #16a34a; }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+
+      .inline-count-input {
+        width: 80px;
+        padding: 4px 6px;
+        text-align: center;
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html" class="active">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <nav class="sidebar" id="verification-tabs">
+        <button type="button" data-tab="single" aria-selected="true">Single Item Count</button>
+        <button type="button" data-tab="bulk">Audit Verification List</button>
+        <button type="button" data-tab="history">Audit Log Trail</button>
+      </nav>
+
+      <section>
+        <p id="message" role="status"></p>
+
+        <!-- Tab 1: Single Item Count -->
+        <div id="tab-single">
+          <h2 style="margin-top: 0; color: #0f766e;">Single Item Stock Reconciliation</h2>
+          <form id="single-verify-form" style="max-width: 500px;">
+            <div class="form-group">
+              <label for="single-warehouse">Warehouse / Godown *</label>
+              <select id="single-warehouse" required>
+                <option value="">Select Warehouse</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="single-item">Inventory Item *</label>
+              <select id="single-item" required>
+                <option value="">Select Item</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="single-batch">Batch Number (Optional)</label>
+              <select id="single-batch">
+                <option value="">All Batches (Aggregate)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin: 16px 0; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+              <div>
+                <div style="font-size: 11px; color:#64748b; text-transform:uppercase;">System Stock</div>
+                <div id="system-stock-display" style="font-size: 20px; font-weight:bold; color:#0f766e;">0.00</div>
+              </div>
+              <div id="reconciliation-info" style="display:none;">
+                <div style="font-size: 11px; color:#64748b; text-transform:uppercase;">Discrepancy Action</div>
+                <div id="reconciliation-action" style="font-size: 14px; font-weight:bold; margin-top:4px;">None</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="single-counted">Physical Counted Quantity *</label>
+              <input id="single-counted" type="number" step="0.01" min="0" required placeholder="Enter counted qty">
+            </div>
+
+            <div class="form-group">
+              <label for="single-notes">Verification Notes</label>
+              <textarea id="single-notes" rows="2" placeholder="Reason for audit / discrepancy..."></textarea>
+            </div>
+
+            <button type="submit" class="primary" style="margin-top: 10px;">Post Stock Reconciliation</button>
+          </form>
+        </div>
+
+        <!-- Tab 2: Bulk Audit Verification (Full Inventory or Warehouse verification) -->
+        <div id="tab-bulk" style="display: none;">
+          <h2 style="margin-top: 0; color: #0f766e;">Warehouse & Full Inventory Count Audit</h2>
+          
+          <div class="toolbar">
+            <select id="bulk-warehouse" style="width: auto; min-width: 200px;">
+              <option value="">Select Warehouse/Godown</option>
+            </select>
+            <select id="bulk-type" style="width: auto;">
+              <option value="Warehouse">Warehouse Verification</option>
+              <option value="Full Inventory Audit">Full Inventory Audit</option>
+            </select>
+            <button id="load-audit-btn" class="primary">Start Count Audit</button>
+            <button id="post-bulk-btn" class="primary" disabled style="background:#16a34a; border-color:#16a34a;">Submit count audit reconciliation</button>
+          </div>
+
+          <div id="audit-table-container" style="overflow-x: auto; display: none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Item Name</th>
+                  <th>Warehouse</th>
+                  <th>Batch</th>
+                  <th style="text-align: center;">System Qty</th>
+                  <th style="text-align: center; width: 120px;">Physical Counted</th>
+                  <th style="text-align: center;">Difference</th>
+                  <th>Audit Notes</th>
+                </tr>
+              </thead>
+              <tbody id="audit-table-body">
+                <!-- Render list dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 3: History Trail Log -->
+        <div id="tab-history" style="display: none;">
+          <h2 style="margin-top: 0; color: #0f766e;">Stock Verification Log Audit Trail</h2>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Verification ID</th>
+                  <th>Audit Session</th>
+                  <th>Type</th>
+                  <th>Item (SKU)</th>
+                  <th>Warehouse</th>
+                  <th>Batch</th>
+                  <th>Previous Qty</th>
+                  <th>Counted Qty</th>
+                  <th>Difference</th>
+                  <th>Adjustment Ref</th>
+                  <th>User</th>
+                  <th>Verified At</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr>
+                  <td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading verification history...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/stock-verification.js"></script>
+  </body>
+</html>

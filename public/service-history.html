@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOLDY AUTOMOBILE - Service History</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #172033;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #d8dee8;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 16px 24px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .nav-links a {
+        font-weight: 700;
+        text-decoration: none;
+        color: #4b5563;
+        margin-right: 20px;
+      }
+
+      .nav-links a.active {
+        color: #0f766e;
+      }
+
+      main {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 320px 1fr;
+        padding: 20px;
+      }
+
+      @media (max-width: 1024px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      nav.sidebar {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 16px;
+        height: fit-content;
+      }
+
+      section {
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      input {
+        border: 1px solid #b8c1ce;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 9px 10px;
+        width: 100%;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+        width: 100%;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      .search-results-list {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 0 0;
+        max-height: 400px;
+        overflow-y: auto;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .search-results-list li {
+        padding: 10px;
+        border-bottom: 1px solid #e1e7ef;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .search-results-list li:hover {
+        background: #f0fdfa;
+      }
+
+      .search-results-list li.selected {
+        background: #0f766e;
+        color: #ffffff;
+      }
+
+      .search-results-list li .reg-no {
+        font-weight: bold;
+        font-size: 14px;
+        display: block;
+      }
+
+      .search-results-list li .sub {
+        font-size: 11px;
+        color: #64748b;
+      }
+
+      .search-results-list li.selected .sub {
+        color: #ccfbf1;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 640px) {
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .summary-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px;
+      }
+
+      .summary-card h4 {
+        margin: 0 0 6px 0;
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .summary-card .value {
+        font-size: 20px;
+        font-weight: bold;
+        color: #0f766e;
+      }
+
+      .card {
+        border: 1px solid #e1e7ef;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        background: #ffffff;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        font-size: 15px;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 6px;
+        color: #0f766e;
+      }
+
+      .timeline-item {
+        border-left: 3px solid #0f766e;
+        padding-left: 16px;
+        margin-bottom: 24px;
+        position: relative;
+      }
+
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 2px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #0f766e;
+        border: 2px solid #ffffff;
+      }
+
+      .timeline-date {
+        font-weight: bold;
+        color: #0f766e;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .timeline-details {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 14px;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 12px;
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      th, td {
+        border-bottom: 1px solid #cbd5e1;
+        padding: 6px;
+        text-align: left;
+      }
+
+      th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 700;
+      }
+
+      #message {
+        min-height: 20px;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .badge-completed { background: #dcfce7; color: #15803d; }
+      .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+      .badge-draft { background: #f1f5f9; color: #475569; }
+      .badge-in_progress { background: #fef3c7; color: #d97706; }
+    </style>
+    <script src="/navigation.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+        <nav class="nav-links">
+          <a href="/masters.html">Masters</a>
+          <a href="/job-cards.html">Job Cards</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/stock-verification.html">Stock Verification</a>
+          <a href="/assets.html">Asset Register</a>
+          <a href="/invoices.html">Invoices</a>
+          <a href="/expenses.html">Expenses</a>
+          <a href="/gst-reports.html">GST Reports</a>
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/service-history.html" class="active">Service History</a>
+          <a href="/supplier-ledger.html">Supplier Ledger</a>
+          <a href="/technicians.html">Technicians</a>
+          <a href="/audit-logs.html">Audit Logs</a>
+          <a href="/tally-export.html">Tally Export</a>
+          <a href="/settings.html">Settings</a>
+        </nav>
+      </div>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+    </header>
+
+    <main>
+      <!-- Left sidebar: Vehicle search -->
+      <nav class="sidebar" aria-label="Vehicle search panel">
+        <h3 style="margin-top:0; color:#0f766e; font-size:16px;">Search Vehicles</h3>
+        <form id="search-form" class="toolbar">
+          <input id="search-query" placeholder="Reg No, Chassis, Engine...">
+          <button type="submit" class="primary">Search Vehicles</button>
+        </form>
+        <ul class="search-results-list" id="search-results">
+          <!-- Dynamically populated vehicles -->
+          <li style="text-align:center; color:#64748b; cursor:default; background:none;">Enter query to search...</li>
+        </ul>
+      </nav>
+
+      <!-- Right main display area: Timeline -->
+      <section>
+        <p id="message" role="status"></p>
+
+        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b;">
+          <h3>Select a vehicle from the search panel to view complete service history.</h3>
+        </div>
+
+        <div id="history-view" style="display: none;">
+          <!-- Vehicle Header & Info -->
+          <div class="card">
+            <h3 style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+              <span>Vehicle Details</span>
+              <span id="detail-reg" style="font-size: 18px; font-weight: bold; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px;"></span>
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 14px; margin-bottom: 16px;">
+              <div><strong>Owner Name:</strong> <span id="detail-owner-name">-</span></div>
+              <div><strong>Owner Phone:</strong> <span id="detail-owner-phone">-</span></div>
+              <div><strong>Make / Model:</strong> <span id="detail-model">-</span></div>
+              <div><strong>Engine Number:</strong> <span id="detail-engine-no">-</span></div>
+              <div><strong>Chassis Number:</strong> <span id="detail-chassis-no">-</span></div>
+              <div><strong>Fuel Type / Year:</strong> <span id="detail-fuel-year">-</span></div>
+            </div>
+
+            <!-- Summary metrics -->
+            <div class="summary-grid">
+              <div class="summary-card">
+                <h4>Total Workshop Visits</h4>
+                <div class="value" id="sum-visits">0</div>
+              </div>
+              <div class="summary-card">
+                <h4>Total Billed Revenue</h4>
+                <div class="value" id="sum-revenue">Rs. 0.00</div>
+              </div>
+              <div class="summary-card">
+                <h4>Last Service Date</h4>
+                <div class="value" id="sum-last-date">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chronological Maintenance Timeline -->
+          <h3 style="color: #0f766e; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; margin-top: 24px;"> chronological Service Timeline</h3>
+          <div id="timeline-container">
+            <!-- Timeline items rendered dynamically -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/service-history.js"></script>
+  </body>
+</html>

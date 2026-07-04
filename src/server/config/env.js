@@ -49,10 +49,10 @@ const getLogLevel = () => {
 };
 
 export const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  get nodeEnv() { return process.env.NODE_ENV || 'development'; },
   port: Number(process.env.PORT || 4321),
   appDataPath,
-  dbFile,
+  get dbFile() { return getDatabaseFilePath(); },
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   sessionTtlHours: Number(process.env.SESSION_TTL_HOURS || 12),
   logLevel: getLogLevel(),

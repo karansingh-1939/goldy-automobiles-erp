@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Print Job Card - GOLDY AUTOMOBILE</title>
+    <style>
+      :root {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Toolbar styles (Screen only) */
+      .toolbar {
+        background: #ffffff;
+        border-bottom: 1px solid #cbd5e1;
+        padding: 12px 24px;
+        position: sticky;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+
+      .toolbar-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #0f766e;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      button {
+        border: 1px solid #c5ceda;
+        border-radius: 6px;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 9px 15px;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+
+      button:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+      }
+
+      button.primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+
+      button.primary:hover {
+        background: #0d5c56;
+      }
+
+      /* Paper sheet layout (Screen preview) */
+      .sheet {
+        background: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-sizing: border-box;
+        margin: 30px auto;
+        max-width: 800px;
+        min-height: 297mm;
+        padding: 20mm;
+        border-radius: 8px;
+      }
+
+      /* Document header */
+      .company-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid #0f766e;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+      }
+
+      .company-details h1 {
+        margin: 0 0 4px 0;
+        color: #0f766e;
+        font-size: 26px;
+        letter-spacing: -0.5px;
+      }
+
+      .company-details p {
+        margin: 0;
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.4;
+      }
+
+      .document-title {
+        text-align: right;
+      }
+
+      .document-title h2 {
+        margin: 0 0 6px 0;
+        color: #0f766e;
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .document-title p {
+        margin: 0;
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.4;
+      }
+
+      /* Double-entry grid for Customer and Vehicle */
+      .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+        font-size: 13px;
+      }
+
+      .meta-box {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 12px;
+        background: #f8fafc;
+      }
+
+      .meta-box h3 {
+        margin: 0 0 8px 0;
+        color: #0f766e;
+        font-size: 14px;
+        font-weight: bold;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 4px;
+      }
+
+      .meta-row {
+        display: flex;
+        margin-bottom: 4px;
+      }
+
+      .meta-label {
+        width: 110px;
+        font-weight: bold;
+        color: #475569;
+      }
+
+      .meta-value {
+        flex: 1;
+      }
+
+      /* Complaint Section */
+      .complaint-section {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 12px;
+        background: #ffffff;
+        margin-bottom: 20px;
+        font-size: 13px;
+      }
+
+      .complaint-section h3 {
+        margin: 0 0 8px 0;
+        color: #0f766e;
+        font-size: 14px;
+        font-weight: bold;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 4px;
+      }
+
+      .complaint-text {
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+
+      /* Table layout matching paper invoice */
+      .section-heading {
+        color: #0f766e;
+        margin: 20px 0 8px 0;
+        font-size: 14px;
+        font-weight: bold;
+        border-bottom: 1px solid #0f766e;
+        padding-bottom: 4px;
+        text-transform: uppercase;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-bottom: 16px;
+      }
+
+      th, td {
+        border: 1px solid #cbd5e1;
+        padding: 7px 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f8fafc;
+        font-weight: bold;
+        color: #475569;
+      }
+
+      .number-col {
+        text-align: right;
+      }
+
+      /* Totals box */
+      .totals-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .totals-table {
+        width: 320px;
+        margin-bottom: 0;
+      }
+
+      .totals-table td {
+        padding: 5px 9px;
+      }
+
+      .totals-table tr.grand-total td {
+        font-size: 16px;
+        font-weight: bold;
+        color: #0f766e;
+        background: #f0fdf4;
+        border-top: 2px solid #0f766e;
+      }
+
+      /* Signatures section */
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+        padding-top: 20px;
+        font-size: 13px;
+        page-break-inside: avoid;
+      }
+
+      .signature-block {
+        width: 250px;
+        text-align: center;
+      }
+
+      .signature-line {
+        border-top: 1px dashed #475569;
+        margin-bottom: 6px;
+      }
+
+      .signature-label {
+        font-weight: bold;
+        color: #475569;
+      }
+
+      #pdf-tip {
+        font-size: 12px;
+        color: #15803d;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        display: none;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* Print CSS Rules */
+      @media print {
+        @page {
+          size: A4;
+          margin: 15mm;
+        }
+
+        body {
+          background: #ffffff;
+          color: #000000;
+        }
+
+        .toolbar, #pdf-tip {
+          display: none !important;
+        }
+
+        .sheet {
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          min-height: auto !important;
+          border-radius: 0 !important;
+        }
+
+        .meta-box {
+          background: #ffffff !important;
+          border: 1px solid #000000 !important;
+        }
+
+        th {
+          background: #ffffff !important;
+          color: #000000 !important;
+        }
+
+        th, td {
+          border: 1px solid #000000 !important;
+        }
+
+        .section-heading {
+          border-bottom: 1px solid #000000 !important;
+          color: #000000 !important;
+        }
+
+        .totals-table tr.grand-total td {
+          background: #ffffff !important;
+          color: #000000 !important;
+          border-top: 2px solid #000000 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top toolbar for controls (hidden in print) -->
+    <div class="toolbar">
+      <div class="toolbar-title">Job Card Print Preview</div>
+      <div class="actions">
+        <button onclick="window.close()" id="back-btn">Close Preview</button>
+        <button id="download-pdf-btn">Download PDF</button>
+        <button id="print-btn" class="primary">Print Job Card</button>
+      </div>
+    </div>
+
+    <!-- Main Sheet -->
+    <div class="sheet">
+      <!-- Tip box for PDF download -->
+      <div id="pdf-tip">
+        <strong>Tip:</strong> In the print prompt, select "Save as PDF" as the Destination, then click Save.
+      </div>
+
+      <div id="print-content">
+        <!-- Company Header -->
+        <div class="company-header">
+          <div class="company-details">
+            <h1 id="lbl-company-name">GOLDY AUTOMOBILE</h1>
+            <p id="lbl-company-address">Opp. Randhir Cinema, Kunjpura Road, KARNAL-132001</p>
+            <p id="lbl-company-contact">Ph. : 0184-2206673, 94160-30673</p>
+          </div>
+          <div class="document-title">
+            <h2>JOB CARD</h2>
+            <p><strong>Job Card No:</strong> <span id="lbl-job-number">-</span></p>
+            <p><strong>Date:</strong> <span id="lbl-job-date">-</span></p>
+            <p><strong>Status:</strong> <span id="lbl-job-status" style="font-weight:bold;">-</span></p>
+          </div>
+        </div>
+
+        <!-- Meta Grid -->
+        <div class="meta-grid">
+          <!-- Customer Box -->
+          <div class="meta-box">
+            <h3>Customer Information</h3>
+            <div class="meta-row">
+              <span class="meta-label">Customer Name:</span>
+              <span class="meta-value" id="lbl-customer-name">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Phone Number:</span>
+              <span class="meta-value" id="lbl-customer-phone">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Address:</span>
+              <span class="meta-value" id="lbl-customer-address">-</span>
+            </div>
+          </div>
+
+          <!-- Vehicle Box -->
+          <div class="meta-box">
+            <h3>Vehicle Information</h3>
+            <div class="meta-row">
+              <span class="meta-label">Registration No:</span>
+              <span class="meta-value" id="lbl-vehicle-reg" style="font-weight:bold;">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Make & Model:</span>
+              <span class="meta-value" id="lbl-vehicle-model">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">KM / Odometer:</span>
+              <span class="meta-value" id="lbl-vehicle-odo">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Engine No:</span>
+              <span class="meta-value" id="lbl-vehicle-engine">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Chassis No:</span>
+              <span class="meta-value" id="lbl-vehicle-chassis">-</span>
+            </div>
+          </div>
+
+          <!-- Checklist & Metadata Box -->
+          <div class="meta-box" style="grid-column: span 2;">
+            <h3>Inventory Checklist & Repair Details</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div>
+                <span class="meta-label" style="font-weight: bold; color: #475569;">Fuel Level:</span>
+                <span class="meta-value" id="lbl-fuel-level">-</span>
+              </div>
+              <div>
+                <span class="meta-label" style="font-weight: bold; color: #475569;">Promised Delivery:</span>
+                <span class="meta-value" id="lbl-promised-delivery">-</span>
+              </div>
+              <div>
+                <span class="meta-label" style="font-weight: bold; color: #475569;">Battery Brand:</span>
+                <span class="meta-value" id="lbl-battery-brand">-</span>
+              </div>
+            </div>
+            <div style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 8px; display: flex; gap: 20px;">
+              <span class="meta-label" style="font-weight: bold; color: #475569; width: auto; margin-right: 12px;">Accessories Present:</span>
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
+                <input type="checkbox" id="chk-toolkit" disabled style="width: auto;"> Toolkit
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
+                <input type="checkbox" id="chk-spare-wheel" disabled style="width: auto;"> Spare Wheel
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
+                <input type="checkbox" id="chk-jack" disabled style="width: auto;"> Jack
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
+                <input type="checkbox" id="chk-stereo" disabled style="width: auto;"> Stereo
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complaint / Instructions -->
+        <div class="complaint-section">
+          <h3>CUSTOMER COMPLAINT / CUSTOMER INSTRUCTIONS</h3>
+          <div class="complaint-text" id="lbl-complaint">-</div>
+        </div>
+
+        <!-- Workshop Remarks -->
+        <div class="complaint-section" id="print-remarks-section">
+          <h3>WORKSHOP REMARKS</h3>
+          <div class="complaint-text" id="lbl-diagnosis">No workshop remarks recorded.</div>
+        </div>
+
+        <!-- Parts Consumption -->
+        <div id="print-parts-section">
+          <div class="section-heading">Parts Consumption</div>
+          <table id="tbl-parts">
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 15%">SKU</th>
+                <th>Part Description</th>
+                <th style="width: 10%" class="number-col">Qty</th>
+                <th style="width: 15%" class="number-col">Rate</th>
+                <th style="width: 15%" class="number-col">GST</th>
+                <th style="width: 15%" class="number-col">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody id="body-parts">
+              <!-- Dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Lubricants -->
+        <div id="print-lubricants-section">
+          <div class="section-heading">Lubricants</div>
+          <table id="tbl-lubricants">
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 15%">SKU</th>
+                <th>Lubricant Item</th>
+                <th style="width: 10%" class="number-col">Qty</th>
+                <th style="width: 15%" class="number-col">Rate</th>
+                <th style="width: 15%" class="number-col">GST</th>
+                <th style="width: 15%" class="number-col">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody id="body-lubricants">
+              <!-- Dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Labour -->
+        <div id="print-labour-section">
+          <div class="section-heading">Labour (In-House)</div>
+          <table id="tbl-labour">
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th>Labour Activity / Description</th>
+                <th style="width: 15%" class="number-col">Rate</th>
+                <th style="width: 15%" class="number-col">GST</th>
+                <th style="width: 15%" class="number-col">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody id="body-labour">
+              <!-- Dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Outside Jobs -->
+        <div id="print-outside-section">
+          <div class="section-heading">Outside Subcontracted Jobs</div>
+          <table id="tbl-outside">
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th>Subcontracted Activity / Description</th>
+                <th style="width: 15%" class="number-col">Rate</th>
+                <th style="width: 15%" class="number-col">GST</th>
+                <th style="width: 15%" class="number-col">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody id="body-outside">
+              <!-- Dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary & Totals -->
+        <div class="totals-container">
+          <table class="totals-table">
+            <tbody>
+              <tr>
+                <td>Parts Total (inc. Tax):</td>
+                <td class="number-col" id="sum-parts">Rs. 0.00</td>
+              </tr>
+              <tr>
+                <td>Lubricants Total (inc. Tax):</td>
+                <td class="number-col" id="sum-lubricants">Rs. 0.00</td>
+              </tr>
+              <tr>
+                <td>Labour Total (inc. Tax):</td>
+                <td class="number-col" id="sum-labour">Rs. 0.00</td>
+              </tr>
+              <tr>
+                <td>Outside Job Total (inc. Tax):</td>
+                <td class="number-col" id="sum-outside">Rs. 0.00</td>
+              </tr>
+              <tr class="grand-total">
+                <td>Grand Total:</td>
+                <td class="number-col" id="sum-grand">Rs. 0.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Terms & Conditions Section -->
+        <div class="complaint-section" id="print-terms-section" style="margin-top: 20px;">
+          <h3>TERMS & CONDITIONS</h3>
+          <div id="lbl-terms" style="font-size: 11px; color: #4b5563; font-weight: bold; line-height: 1.4;">Vehicle stored repaired & driven at customer's risk.</div>
+        </div>
+
+        <!-- Signatures Section -->
+        <div class="signature-section">
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Customer's Signature</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold;">Received vehicle duly repaired to my entire satisfaction.</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Assigned Technician</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;" id="lbl-technician">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/print-job-card.js"></script>
+  </body>
+</html>

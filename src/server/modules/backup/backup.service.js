@@ -121,7 +121,66 @@ export class BackupService {
   }
 
   updateSettings(settings) {
-    return this.repository.updateSchedulerSettings(settings);
+    if (!settings || typeof settings !== 'object') {
+      throw new AppError('Settings payload is required.', 400, 'VALIDATION_ERROR');
+    }
+
+    const cleanSettings = {};
+
+    if (settings['backup.auto_enabled'] !== undefined) {
+      cleanSettings['backup.auto_enabled'] = settings['backup.auto_enabled'] === true || settings['backup.auto_enabled'] === 'true' || settings['backup.auto_enabled'] === 1 || settings['backup.auto_enabled'] === '1' ? 'true' : 'false';
+    }
+
+    if (settings['backup.missed_recovery'] !== undefined) {
+      cleanSettings['backup.missed_recovery'] = settings['backup.missed_recovery'] === true || settings['backup.missed_recovery'] === 'true' || settings['backup.missed_recovery'] === 1 || settings['backup.missed_recovery'] === '1' ? 'true' : 'false';
+    }
+
+    if (settings['backup.retention_count'] !== undefined) {
+      const count = Number(settings['backup.retention_count']);
+      if (!Number.isInteger(count) || count < 1) {
+        throw new AppError('Retention count must be an integer greater than or equal to 1.', 400, 'VALIDATION_ERROR');
+      }
+      cleanSettings['backup.retention_count'] = count;
+    }
+
+    if (settings['backup.interval_hours'] !== undefined) {
+      const hours = Number(settings['backup.interval_hours']);
+      if (!Number.isInteger(hours) || hours < 1) {
+        throw new AppError('Interval hours must be an integer greater than or equal to 1.', 400, 'VALIDATION_ERROR');
+      }
+      cleanSettings['backup.interval_hours'] = hours;
+    }
+
+    if (settings['backup.preferred_time'] !== undefined) {
+      const time = String(settings['backup.preferred_time']).trim();
+      if (!/^\d{2}:\d{2}$/.test(time)) {
+        throw new AppError('Preferred time must be in HH:MM format.', 400, 'VALIDATION_ERROR');
+      }
+      cleanSettings['backup.preferred_time'] = time;
+    }
+
+    if (settings['backup.schedule_type'] !== undefined) {
+      const st = String(settings['backup.schedule_type']).toUpperCase();
+      if (!['DAILY', 'WEEKLY', 'INTERVAL'].includes(st)) {
+        throw new AppError('Schedule type must be DAILY, WEEKLY, or INTERVAL.', 400, 'VALIDATION_ERROR');
+      }
+      cleanSettings['backup.schedule_type'] = st;
+    }
+
+    if (settings['backup.weekly_day'] !== undefined) {
+      const day = String(settings['backup.weekly_day']).trim();
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      if (!days.includes(day)) {
+        throw new AppError('Weekly day is invalid.', 400, 'VALIDATION_ERROR');
+      }
+      cleanSettings['backup.weekly_day'] = day;
+    }
+
+    if (settings['backup.last_run_at'] !== undefined) {
+      cleanSettings['backup.last_run_at'] = settings['backup.last_run_at'] ? String(settings['backup.last_run_at']).trim() : null;
+    }
+
+    return this.repository.updateSchedulerSettings(cleanSettings);
   }
 
   recordSuccessfulRun(timestamp) {
