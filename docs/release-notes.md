@@ -1,4 +1,20 @@
-# Release Notes - GOLDY AUTOMOBILE ERP 0.1.0
+# Release Notes - GOLDY AUTOMOBILE ERP
+
+## 0.2.0 workshop milestone ? 11 October 2026
+
+- Expenses, technician maintenance and job assignment, audit history, and backup scheduling now have React screens in the main application shell. Other maintained static workshop pages remain accessible during migration.
+
+- Current receivable ageing reconciles invoice dues against posted customer ledger balances, applies unmatched credits to the oldest invoice ages for reporting, and shows unaged ledger dues separately. It is a current-state report, not a historical as-of reconstruction.
+- Daily cash reconciliation calculates opening cash, inflows, outflows and closing cash from active vouchers. Cash counts retain the book balance, physical count, variance, explanation and staff identity at the time of recording; saving a count does not create a financial adjustment.
+
+- Mechanic timers persist across restarts, prevent concurrent timers for one mechanic and must be stopped before a job is billed. Recorded time is operational data and does not automatically change invoice charges or payroll.
+- The React reminder screen schedules vehicle follow-ups and lists overdue reminders with customer contact details. Handled reminders can be dismissed; no messages are sent automatically.
+
+- The React workshop queue lists open jobs by promised delivery, flags overdue work and records revised estimates with customer contact evidence. Requested or rejected estimates block billing; invoices cannot exceed the latest approved tax-inclusive amount. Older jobs without requested estimates keep their existing workflow.
+
+- Manual and scheduled backups can keep a second copy in a configured existing USB or network folder. A disconnected destination reports a failure while retaining the successful local backup. External copies are never removed by local retention.
+- Administrators can verify a saved snapshot without restoring it. Verification checks SQLite integrity and foreign keys, then migrates an isolated copy and validates the ERP schema.
+- Restoring through React settings clears cached data and requires signing in again.
 
 ## Workshop workflow fixes — 11 October 2026
 
@@ -60,19 +76,3 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 - Earlier automated checks were superseded by the dated stabilization evidence linked above.
 - Vite code chunking is optimized under 200 kB per bundle.
 - Pre-migration backup routines run automatically before schema changes, with automatic restoration rollback protocols.
-
-# Workshop improvements
-
-- Expenses, technician maintenance and job assignment, audit history, and backup scheduling now have React screens in the main application shell. Other maintained static workshop pages remain accessible during migration.
-
-- Current receivable ageing reconciles invoice dues against posted customer ledger balances, applies unmatched credits to the oldest invoice ages for reporting, and shows unaged ledger dues separately. It is a current-state report, not a historical as-of reconstruction.
-- Daily cash reconciliation calculates opening cash, inflows, outflows and closing cash from active vouchers. Cash counts retain the book balance, physical count, variance, explanation and staff identity at the time of recording; saving a count does not create a financial adjustment.
-
-- Mechanic timers persist across restarts, prevent concurrent timers for one mechanic and must be stopped before a job is billed. Recorded time is operational data and does not automatically change invoice charges or payroll.
-- The React reminder screen schedules vehicle follow-ups and lists overdue reminders with customer contact details. Handled reminders can be dismissed; no messages are sent automatically.
-
-- The React workshop queue lists open jobs by promised delivery, flags overdue work and records revised estimates with customer contact evidence. Requested or rejected estimates block billing; invoices cannot exceed the latest approved tax-inclusive amount. Older jobs without requested estimates keep their existing workflow.
-
-- Manual and scheduled backups can keep a second copy in a configured existing USB or network folder. A disconnected destination reports a failure while retaining the successful local backup. External copies are never removed by local retention.
-- Administrators can verify a saved snapshot without restoring it. Verification checks SQLite integrity and foreign keys, then migrates an isolated copy and validates the ERP schema.
-- Restoring through React settings clears cached data and requires signing in again.

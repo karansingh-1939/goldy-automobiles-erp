@@ -1,5 +1,7 @@
 # Goldy Automobiles ERP
 
+[![Windows quality checks](https://github.com/karansingh-1939/goldy-automobiles-erp/actions/workflows/ci.yml/badge.svg)](https://github.com/karansingh-1939/goldy-automobiles-erp/actions/workflows/ci.yml)
+
 An offline-first Windows desktop ERP for a single-laptop automobile repair workshop. It connects vehicle intake, job cards, spare-parts inventory, purchasing, billing and workshop accounts in one local application.
 
 ## Why this exists
@@ -49,16 +51,28 @@ See [architecture](docs/architecture.md), [administrator guide](docs/admin-guide
 
 ## Status and verification
 
-The stabilization baseline on 11 October 2026 passes 196 backend tests and 27 renderer tests, formatting, lint, production compilation and packaged backend/assets smoke checks. This is a release candidate. Actual installer use on a clean laptop, visual workflow review, a workshop trial and a real TallyPrime test-company import remain release gates. The installer is unsigned.
+The 0.2.0 workshop milestone passes 202 backend tests and 35 renderer tests, formatting, lint and production compilation. Windows installer packaging and packaged backend/assets checks are recorded separately. This is a release candidate. Actual installer use on a clean laptop, visual workflow review, a workshop trial and a real TallyPrime test-company import remain release gates. The installer is unsigned.
 
 The repository contains application source, migrations, synthetic test fixtures, dependency lockfiles and engineering documentation. Customer records, tax-invoice scans, workshop photos, live databases, backups, credentials and generated installers are excluded, including from published history.
 
-## Development roadmap
+## Workshop improvements
 
-1. External backup copies and restore verification.
-2. Estimate approvals and promised-delivery tracking.
-3. Mechanic time tracking and a service-reminder interface.
-4. Receivable ageing and daily cash reconciliation.
-5. A consistent React interface for the remaining workshop tools.
+- Verified USB/network backup copies and a configurable automatic backup schedule.
+- Customer estimate decisions, revision history and overdue delivery tracking. Requested estimates require approval before billing; the final bill cannot exceed the approved amount.
+- Persistent mechanic timers and vehicle service reminders.
+- Current receivable ageing reconciled to customer ledgers, plus recorded daily cash counts and variance explanations.
+- React screens for expenses, technicians and audit history alongside the existing application modules.
+
+See the [workshop operating guide](docs/workshop-improvements.md) for these workflows, acceptance checks and their limits.
+
+## Next development milestones
+
+1. Run a workshop trial with synthetic data, then verify installation on a clean Windows laptop.
+2. Test Tally XML with a real TallyPrime test company and resolve compatibility findings.
+3. Migrate the remaining billing, warehouse, service-history and stock-verification tools to React.
+4. Add installer signing and a tested upgrade/recovery procedure.
+5. Use actual workshop feedback to choose the next feature and commit it with tests and release notes.
+
+GitHub runs the Windows quality checks on pushes and pull requests. The workflow pins the [official checkout](https://github.com/actions/checkout) and [Node setup](https://github.com/actions/setup-node) actions to reviewed commit IDs and grants read-only repository access.
 
 [Workshop review and priorities](docs/reviews/workshop-readiness-2026-10-11.md) describes the evidence and known limits. Development commits represent actual changes; historical source commits retain their original dates. No activity is backdated.
