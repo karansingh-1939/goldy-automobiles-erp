@@ -24,6 +24,7 @@ import { createSalesOrdersRouter } from './modules/sales-orders/sales-order.rout
 import { createReturnsRouter } from './modules/returns/returns.routes.js';
 import { createWarrantyRouter } from './modules/warranties/warranty.routes.js';
 import { createCrmRouter } from './modules/crm/crm.routes.js';
+import { createWorkshopRouter } from './modules/workshop/workshop.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/error-handler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -158,6 +159,7 @@ export function createApp({ db: rawDb = getDatabase(), backupScheduler } = {}) {
   app.use('/api/v1/returns', createReturnsRouter(db));
   app.use('/api/v1/warranties', createWarrantyRouter(db));
   app.use('/api/v1/crm', createCrmRouter(db));
+  app.use('/api/v1/workshop', createWorkshopRouter(db));
   registerMasterRoutes(app, db);
   app.use(notFoundHandler);
   app.use(errorHandler);

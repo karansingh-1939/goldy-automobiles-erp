@@ -63,6 +63,8 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 
 # Workshop improvements
 
+- The React workshop queue lists open jobs by promised delivery, flags overdue work and records revised estimates with customer contact evidence. Requested or rejected estimates block billing; invoices cannot exceed the latest approved tax-inclusive amount. Older jobs without requested estimates keep their existing workflow.
+
 - Manual and scheduled backups can keep a second copy in a configured existing USB or network folder. A disconnected destination reports a failure while retaining the successful local backup. External copies are never removed by local retention.
 - Administrators can verify a saved snapshot without restoring it. Verification checks SQLite integrity and foreign keys, then migrates an isolated copy and validates the ERP schema.
 - Restoring through React settings clears cached data and requires signing in again.

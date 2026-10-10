@@ -567,6 +567,18 @@ export class JobCardService {
         const jobCard = this.getMutableJobCard(jobCardId);
         const parts = this.repository.listParts(jobCard.id);
         const labourRows = this.repository.listLabour(jobCard.id);
+        const approval = this.db
+          .prepare(
+            'SELECT * FROM estimate_approvals WHERE job_card_id = ? ORDER BY id DESC LIMIT 1',
+          )
+          .get(jobCard.id);
+        if (approval && approval.status !== 'APPROVED') {
+          throw new AppError(
+            'Customer estimate approval is required before billing.',
+            409,
+            'ESTIMATE_APPROVAL_REQUIRED',
+          );
+        }
 
         if (parts.length === 0 && labourRows.length === 0) {
           throw new AppError(
@@ -654,6 +666,13 @@ export class JobCardService {
 
         const invoiceLines = [...partLines, ...labourLines];
         const totals = this.calculateInvoiceTotals(invoiceLines);
+        if (approval && totals.grandTotal > approval.amount + 0.005) {
+          throw new AppError(
+            'Invoice exceeds the approved estimate. Request approval for the revised amount.',
+            409,
+            'ESTIMATE_AMOUNT_EXCEEDED',
+          );
+        }
 
         // Assert Customer Credit Limit (Company ID = 1 by default in job card flow)
         this.assertCreditLimit(1, jobCard.customer_id, totals.grandTotal);

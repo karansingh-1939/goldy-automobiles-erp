@@ -20,6 +20,7 @@ import ReturnsManager from './modules/returns/ReturnsManager.jsx';
 import AccountingPortal from './modules/accounting/AccountingPortal.jsx';
 import ReportsManager from './modules/reports/ReportsManager.jsx';
 import SettingsPortal from './modules/settings/SettingsPortal.jsx';
+import WorkshopBoard from './modules/workshop/WorkshopBoard.jsx';
 
 export default function App() {
   const token = useAppStore((state) => state.token);
@@ -33,6 +34,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<SalesDashboardContainer />} />
               <Route path="/job-cards" element={<JobCardManager />} />
+              <Route path="/workshop" element={<WorkshopBoard />} />
               <Route path="/sales-orders" element={<SalesOrderManager />} />
               <Route path="/inventory" element={<InventoryManager />} />
               <Route path="/purchasing" element={<PurchasingManager />} />
