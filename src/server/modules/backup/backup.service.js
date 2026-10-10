@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { getBackupDirectory, isManagedBackup } from '../../database/backup-service.js';
 import { BackupRepository } from './backup.repository.js';
 import { AppError } from '../../shared/errors/app-error.js';
+import { verifyBackupSnapshot } from './snapshot-verification.js';
 
 export class BackupService {
   constructor(db) {
@@ -123,6 +124,9 @@ export class BackupService {
         }
       }
 
+      if (!customPath && type !== 'PRE_MIGRATION') {
+        logRecord.external = await this.copyToExternalDestination(targetPath);
+      }
       return logRecord;
     } catch (err) {
       try {
@@ -147,6 +151,39 @@ export class BackupService {
     return { data };
   }
 
+  async copyToExternalDestination(sourcePath) {
+    const destination = this.getSettings()['backup.external_directory'];
+    if (!destination) return { status: 'DISABLED' };
+    try {
+      // Require an existing destination: a disconnected drive must not silently
+      // turn into another directory on the laptop.
+      if (!fs.statSync(destination).isDirectory()) throw new Error('Destination is not a folder.');
+      const target = path.join(destination, path.basename(sourcePath));
+      fs.copyFileSync(sourcePath, target, fs.constants.COPYFILE_EXCL);
+      await verifyBackupSnapshot(target);
+      this.repository.updateSchedulerSettings({
+        'backup.external_last_success': new Date().toISOString(),
+        'backup.external_last_error': '',
+      });
+      return { status: 'SUCCESS', filepath: target };
+    } catch (error) {
+      this.repository.updateSchedulerSettings({ 'backup.external_last_error': error.message });
+      return { status: 'FAILED', message: error.message };
+    }
+  }
+
+  async verifyBackup(id) {
+    const log = this.repository.findById(id);
+    if (!log || log.status !== 'SUCCESS' || log.purged) {
+      throw new AppError('Successful backup not found.', 404, 'BACKUP_NOT_FOUND');
+    }
+    try {
+      return await verifyBackupSnapshot(log.filepath);
+    } catch (error) {
+      throw new AppError(`Backup verification failed: ${error.message}`, 400, 'BACKUP_INVALID');
+    }
+  }
+
   getSettings() {
     return this.repository.getSchedulerSettings();
   }
@@ -157,6 +194,40 @@ export class BackupService {
     }
 
     const cleanSettings = {};
+
+    if (settings['backup.external_directory'] !== undefined) {
+      const directory = settings['backup.external_directory'];
+      if (typeof directory !== 'string' || directory.length > 1024) {
+        throw new AppError('External backup folder must be a path.', 400, 'VALIDATION_ERROR');
+      }
+      const trimmed = directory.trim();
+      if (trimmed) {
+        if (
+          !path.isAbsolute(trimmed) ||
+          !fs.existsSync(trimmed) ||
+          !fs.statSync(trimmed).isDirectory()
+        ) {
+          throw new AppError(
+            'Select an existing absolute external backup folder.',
+            400,
+            'VALIDATION_ERROR',
+          );
+        }
+        const localDirectory = getBackupDirectory(this.db.name);
+        if (
+          path.resolve(trimmed) === path.resolve(localDirectory) ||
+          (fs.existsSync(localDirectory) &&
+            fs.realpathSync(trimmed) === fs.realpathSync(localDirectory))
+        ) {
+          throw new AppError(
+            'External folder must differ from the local backup folder.',
+            400,
+            'VALIDATION_ERROR',
+          );
+        }
+      }
+      cleanSettings['backup.external_directory'] = trimmed ? path.resolve(trimmed) : '';
+    }
 
     if (settings['backup.auto_enabled'] !== undefined) {
       cleanSettings['backup.auto_enabled'] =

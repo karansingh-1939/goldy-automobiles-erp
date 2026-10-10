@@ -60,3 +60,9 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 - Earlier automated checks were superseded by the dated stabilization evidence linked above.
 - Vite code chunking is optimized under 200 kB per bundle.
 - Pre-migration backup routines run automatically before schema changes, with automatic restoration rollback protocols.
+
+# Workshop improvements
+
+- Manual and scheduled backups can keep a second copy in a configured existing USB or network folder. A disconnected destination reports a failure while retaining the successful local backup. External copies are never removed by local retention.
+- Administrators can verify a saved snapshot without restoring it. Verification checks SQLite integrity and foreign keys, then migrates an isolated copy and validates the ERP schema.
+- Restoring through React settings clears cached data and requires signing in again.

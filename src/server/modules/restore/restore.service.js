@@ -11,7 +11,7 @@ import {
 import { runMigrations } from '../../database/migration-runner.js';
 import { AppError } from '../../shared/errors/app-error.js';
 
-function verifySnapshot(db) {
+export function verifySnapshot(db) {
   const check = db.pragma('integrity_check');
   if (check.length !== 1 || check[0].integrity_check !== 'ok')
     throw new Error('Database integrity scan failed.');
@@ -23,7 +23,7 @@ function auditActor(db, userId) {
   return userId && db.prepare('SELECT id FROM users WHERE id = ?').get(userId) ? userId : null;
 }
 
-function verifySchema(db) {
+export function verifySchema(db) {
   const expected = new Database(':memory:');
   try {
     runMigrations(expected);

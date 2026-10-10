@@ -30,6 +30,13 @@ export class BackupController {
       next(error);
     }
   };
+  verifyBackup = async (req, res, next) => {
+    try {
+      res.json({ data: await this.backupService.verifyBackup(Number(req.params.id)) });
+    } catch (error) {
+      next(error);
+    }
+  };
   getSettings = (req, res, next) => {
     try {
       res.status(200).json({ status: 'success', data: this.backupService.getSettings() });

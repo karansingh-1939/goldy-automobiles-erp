@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
@@ -7,6 +7,33 @@ import { Settings, Database, RefreshCw, Play } from 'lucide-react';
 export default function SettingsPortal() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
+  const [externalDirectory, setExternalDirectory] = useState(null);
+  const { data: backupSettings } = useQuery({
+    queryKey: ['backup-settings'],
+    queryFn: () => api.get('/api/v1/backups/settings'),
+  });
+  const settings = backupSettings?.data || {};
+  const saveDestination = useMutation({
+    mutationFn: () =>
+      api.patch('/api/v1/backups/settings', {
+        'backup.external_directory':
+          externalDirectory ?? settings['backup.external_directory'] ?? '',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backup-settings'] });
+      addNotification('External backup folder saved.', 'success');
+    },
+    onError: (error) => addNotification(error.message, 'error'),
+  });
+  const verifyMutation = useMutation({
+    mutationFn: (id) => api.post(`/api/v1/backups/${id}/verify`, {}, { timeout: 120000 }),
+    onSuccess: () =>
+      addNotification(
+        'Backup passed integrity, relationships and restore migration checks.',
+        'success',
+      ),
+    onError: (error) => addNotification(error.message, 'error'),
+  });
 
   const { data: companyResponse } = useQuery({
     queryKey: ['company-profile'],
@@ -28,13 +55,20 @@ export default function SettingsPortal() {
 
   // Manual Backup Mutation
   const backupMutation = useMutation({
-    mutationFn: () => api.post('/api/v1/backups/manual'),
+    mutationFn: () => api.post('/api/v1/backups/manual', {}, { timeout: 120000 }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['backups-history'] });
+      queryClient.invalidateQueries({ queryKey: ['backup-settings'] });
       addNotification(
         `Manual backup snapshot generated successfully: ${res.data.filename}`,
         'success',
       );
+      if (res.data.external?.status === 'FAILED') {
+        addNotification(
+          `Local backup saved. External copy failed: ${res.data.external.message}`,
+          'error',
+        );
+      }
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to create backup.', 'error');
@@ -43,9 +77,10 @@ export default function SettingsPortal() {
 
   // Restore Latest Mutation
   const restoreLatestMutation = useMutation({
-    mutationFn: () => api.post('/api/v1/backups/restore-latest'),
+    mutationFn: () => api.post('/api/v1/backups/restore-latest', {}, { timeout: 120000 }),
     onSuccess: () => {
-      addNotification('Database successfully rolled back to latest verified snapshot.', 'success');
+      queryClient.clear();
+      useAppStore.getState().logout();
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to restore database.', 'error');
@@ -63,7 +98,7 @@ export default function SettingsPortal() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Side - Company Profile */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3">
@@ -176,6 +211,45 @@ export default function SettingsPortal() {
             </button>
           </div>
 
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              saveDestination.mutate();
+            }}
+            className="space-y-2"
+          >
+            <label htmlFor="external-backup-folder" className="block text-sm font-semibold">
+              External backup folder
+            </label>
+            <input
+              id="external-backup-folder"
+              className="w-full rounded border p-2 dark:bg-gray-800"
+              value={externalDirectory ?? settings['backup.external_directory'] ?? ''}
+              onChange={(event) => setExternalDirectory(event.target.value)}
+              placeholder="E:\\WorkshopBackups"
+            />
+            <p className="text-xs text-gray-500">
+              Use an existing USB or network folder. Every manual and scheduled backup also copies
+              there. Empty disables the copy. External copies are kept until you remove them.
+            </p>
+            <button
+              disabled={saveDestination.isPending}
+              className="rounded border px-3 py-2 text-sm"
+            >
+              Save backup folder
+            </button>
+            {settings['backup.external_last_success'] && (
+              <p className="text-xs">
+                Last external copy: {settings['backup.external_last_success']}
+              </p>
+            )}
+            {settings['backup.external_last_error'] && (
+              <p role="alert" className="text-sm text-red-600">
+                External copy failed: {settings['backup.external_last_error']}
+              </p>
+            )}
+          </form>
+
           {/* Backups List */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
@@ -200,6 +274,16 @@ export default function SettingsPortal() {
                     <span className="text-[10px] text-gray-400 font-mono">
                       {(b.file_size / 1024).toFixed(1)} KB | {b.created_at || b.timestamp}
                     </span>
+                    <span>{b.status}</span>
+                    {b.status === 'SUCCESS' && !b.purged && (
+                      <button
+                        disabled={verifyMutation.isPending}
+                        onClick={() => verifyMutation.mutate(b.id)}
+                        className="rounded border px-2 py-1"
+                      >
+                        Verify
+                      </button>
+                    )}
                   </div>
                 ))
               )}

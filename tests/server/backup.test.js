@@ -2,8 +2,64 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import fs from 'node:fs';
+import path from 'node:path';
 import { createTestContext } from './helpers.js';
 import { BackupService } from '../../src/server/modules/backup/backup.service.js';
+
+test('external backups verify restore compatibility and retain local copies when disconnected', async () => {
+  const context = await createTestContext();
+  const directory = path.join(path.dirname(context.db.name), 'external');
+  fs.mkdirSync(directory);
+  try {
+    const service = new BackupService(context.db);
+    service.updateSettings({ 'backup.external_directory': directory });
+    const before = context.db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
+    const backup = await service.backupDatabase({ type: 'MANUAL', userId: 1 });
+    assert.equal(backup.external.status, 'SUCCESS');
+    assert.ok(fs.existsSync(backup.external.filepath));
+    assert.equal((await service.verifyBackup(backup.id)).verified, true);
+    assert.equal(context.db.prepare('SELECT COUNT(*) AS n FROM users').get().n, before);
+    fs.rmSync(directory, { recursive: true });
+    const disconnected = await service.backupDatabase({ type: 'AUTO', userId: 1 });
+    assert.equal(disconnected.status, 'SUCCESS');
+    assert.equal(disconnected.external.status, 'FAILED');
+    assert.ok(fs.existsSync(disconnected.filepath));
+    assert.ok(!fs.existsSync(directory));
+    fs.writeFileSync(disconnected.filepath, 'corrupted snapshot');
+    await assert.rejects(() => service.verifyBackup(disconnected.id), { code: 'BACKUP_INVALID' });
+  } finally {
+    await context.close();
+  }
+});
+
+test('external backup settings reject relative folders and verification is administrator-only', async () => {
+  const context = await createTestContext();
+  try {
+    const service = new BackupService(context.db);
+    assert.throws(
+      () => service.updateSettings({ 'backup.external_directory': 'relative-folder' }),
+      { code: 'VALIDATION_ERROR' },
+    );
+    const unauthenticated = await context.request('/api/v1/backups/1/verify', { method: 'POST' });
+    assert.equal(unauthenticated.response.status, 401);
+    const login = await context.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'Admin@12345' }),
+    });
+    const backup = await context.request('/api/v1/backups/manual', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${login.body.token}` },
+    });
+    const verified = await context.request(`/api/v1/backups/${backup.body.data.id}/verify`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${login.body.token}` },
+    });
+    assert.equal(verified.response.status, 200);
+    assert.equal(verified.body.data.verified, true);
+  } finally {
+    await context.close();
+  }
+});
 
 test('backup engine - manual backup API integration and file validation', async () => {
   const context = await createTestContext();
