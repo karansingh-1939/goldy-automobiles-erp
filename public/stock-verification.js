@@ -1,15 +1,14 @@
 // Stock Verification client logic
 let warehouses = [];
 let itemsList = [];
-let activeTab = 'single';
 let auditItemsData = []; // Store items loaded in bulk audit count sheet
 
 async function api(url, options = {}) {
   const token = sessionStorage.getItem('goldy_auth_token');
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    ...(options.headers || {})
+    Authorization: `Bearer ${token}`,
+    ...(options.headers || {}),
   };
   const response = await fetch(url, { ...options, headers });
   if (response.status === 401) {
@@ -60,13 +59,15 @@ function setupTabs() {
       btn.setAttribute('aria-selected', 'true');
 
       const targetTab = btn.getAttribute('data-tab');
-      activeTab = targetTab;
+
       clearMessage();
 
       // Show/Hide tabs
-      document.querySelector('#tab-single').style.display = targetTab === 'single' ? 'block' : 'none';
+      document.querySelector('#tab-single').style.display =
+        targetTab === 'single' ? 'block' : 'none';
       document.querySelector('#tab-bulk').style.display = targetTab === 'bulk' ? 'block' : 'none';
-      document.querySelector('#tab-history').style.display = targetTab === 'history' ? 'block' : 'none';
+      document.querySelector('#tab-history').style.display =
+        targetTab === 'history' ? 'block' : 'none';
 
       if (targetTab === 'history') {
         loadVerificationHistory();
@@ -79,7 +80,7 @@ async function loadCommonData() {
   try {
     // Load warehouses
     const whRes = await api('/api/v1/warehouses?pageSize=100');
-    warehouses = whRes.data.filter(w => w.is_active);
+    warehouses = whRes.data.filter((w) => w.is_active);
 
     const singleWh = document.querySelector('#single-warehouse');
     const bulkWh = document.querySelector('#bulk-warehouse');
@@ -102,7 +103,7 @@ async function loadCommonData() {
     // We only want normal inventory items, not equipment.
     // However, in the DB, is there any equipment in the catalog?
     // Let's filter out assets if we have category = 'Equipment'
-    itemsList = itemsRes.data.filter(i => i.is_active && i.category !== 'Equipment');
+    itemsList = itemsRes.data.filter((i) => i.is_active && i.category !== 'Equipment');
 
     const singleItemSelect = document.querySelector('#single-item');
     while (singleItemSelect.children.length > 1) {
@@ -114,7 +115,6 @@ async function loadCommonData() {
       opt.textContent = `${i.item_name} (SKU: ${i.sku})`;
       singleItemSelect.appendChild(opt);
     });
-
   } catch (err) {
     showMessage('Failed to load initial data: ' + err.message, true);
   }
@@ -153,7 +153,8 @@ function setupSingleVerifyForm() {
       const batchesRes = await api(`/api/v1/batches?pageSize=500`);
       // Filter batches for this item and warehouse
       const relevantBatches = batchesRes.data.filter(
-        b => Number(b.item_id) === Number(itemId) && Number(b.warehouse_id) === Number(warehouseId)
+        (b) =>
+          Number(b.item_id) === Number(itemId) && Number(b.warehouse_id) === Number(warehouseId),
       );
 
       // Populate batches dropdown
@@ -172,12 +173,14 @@ function setupSingleVerifyForm() {
       });
 
       // Restore selection if possible, otherwise trigger calculate qty
-      if (selectedBatchVal && relevantBatches.some(b => Number(b.id) === Number(selectedBatchVal))) {
+      if (
+        selectedBatchVal &&
+        relevantBatches.some((b) => Number(b.id) === Number(selectedBatchVal))
+      ) {
         batchSelect.value = selectedBatchVal;
       }
 
       calculateSystemQty();
-
     } catch (err) {
       console.error(err);
     }
@@ -240,13 +243,13 @@ function setupSingleVerifyForm() {
       item_id: itemSelect.value,
       batch_id: batchSelect.value || null,
       counted_quantity: countInput.value,
-      notes: document.querySelector('#single-notes').value.trim()
+      notes: document.querySelector('#single-notes').value.trim(),
     };
 
     try {
       await api('/api/v1/inventory/verifications', {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       showMessage('Reconciliation posted successfully. Stock levels have been reconciled.', false);
@@ -279,7 +282,8 @@ function setupBulkVerifyForm() {
     clearMessage();
     container.style.display = 'none';
     postBtn.disabled = true;
-    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Fetching count list...</td></tr>';
+    tableBody.innerHTML =
+      '<tr><td colspan="8" style="text-align: center; padding: 20px;">Fetching count list...</td></tr>';
 
     try {
       // We load all batches to get item/warehouse locations
@@ -287,14 +291,17 @@ function setupBulkVerifyForm() {
       let relevantBatches = batchesRes.data;
 
       if (type === 'Warehouse' && warehouseId) {
-        relevantBatches = relevantBatches.filter(b => Number(b.warehouse_id) === Number(warehouseId));
+        relevantBatches = relevantBatches.filter(
+          (b) => Number(b.warehouse_id) === Number(warehouseId),
+        );
       }
 
       // Filter out fixed equipment categories
-      relevantBatches = relevantBatches.filter(b => b.category !== 'Equipment');
+      relevantBatches = relevantBatches.filter((b) => b.category !== 'Equipment');
 
       if (relevantBatches.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No batches found in the selected scope. Perform opening stock or purchasing first.</td></tr>';
+        tableBody.innerHTML =
+          '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No batches found in the selected scope. Perform opening stock or purchasing first.</td></tr>';
         container.style.display = 'block';
         return;
       }
@@ -303,7 +310,6 @@ function setupBulkVerifyForm() {
       renderAuditSheet(relevantBatches);
       container.style.display = 'block';
       postBtn.disabled = false;
-
     } catch (err) {
       showMessage('Failed to load count sheet: ' + err.message, true);
     }
@@ -353,7 +359,11 @@ function setupBulkVerifyForm() {
   }
 
   postBtn.addEventListener('click', async () => {
-    if (!window.confirm('Are you sure you want to submit this count audit reconciliation? Stock levels will be adjusted to match physical counts.')) {
+    if (
+      !window.confirm(
+        'Are you sure you want to submit this count audit reconciliation? Stock levels will be adjusted to match physical counts.',
+      )
+    ) {
       return;
     }
 
@@ -371,7 +381,6 @@ function setupBulkVerifyForm() {
     countInputs.forEach((input) => {
       const idx = Number(input.getAttribute('data-idx'));
       const counted = Number(input.value);
-      const original = auditItemsData[idx].quantity;
       const note = noteInputs[idx]?.value.trim() || '';
 
       // We only post verifications where there is a difference or if we want to log the audit
@@ -380,7 +389,7 @@ function setupBulkVerifyForm() {
         item_id: auditItemsData[idx].item_id,
         batch_id: auditItemsData[idx].id,
         counted_quantity: counted,
-        notes: note || `${auditType} reconciliation count`
+        notes: note || `${auditType} reconciliation count`,
       });
     });
 
@@ -388,16 +397,19 @@ function setupBulkVerifyForm() {
       verification_type: auditType,
       audit_session_id: auditSessionId,
       warehouse_id: warehouseId || 1, // Default warehouse ID if null
-      verifications: verifications
+      verifications: verifications,
     };
 
     try {
       await api('/api/v1/inventory/verifications', {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      showMessage(`Audit session ${auditSessionId} posted successfully. Stock levels reconciled.`, false);
+      showMessage(
+        `Audit session ${auditSessionId} posted successfully. Stock levels reconciled.`,
+        false,
+      );
       container.style.display = 'none';
       auditItemsData = [];
     } catch (err) {
@@ -409,12 +421,14 @@ function setupBulkVerifyForm() {
 
 async function loadVerificationHistory() {
   const tableBody = document.querySelector('#history-table-body');
-  tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading verification history...</td></tr>';
+  tableBody.innerHTML =
+    '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading verification history...</td></tr>';
 
   try {
     const res = await api('/api/v1/inventory/verifications?pageSize=100');
     if (!res.data || res.data.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">No verification records found.</td></tr>';
+      tableBody.innerHTML =
+        '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">No verification records found.</td></tr>';
       return;
     }
 
@@ -448,7 +462,6 @@ async function loadVerificationHistory() {
       `;
       tableBody.appendChild(tr);
     });
-
   } catch (err) {
     showMessage(err.message, true);
     tableBody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: #dc2626; padding: 20px;">Error: ${err.message}</td></tr>`;

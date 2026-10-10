@@ -64,7 +64,7 @@ export class BackupScheduler {
     } else {
       if (scheduleType === 'DAILY') {
         const [prefHour, prefMin] = preferredTime.split(':').map(Number);
-        
+
         const todayScheduled = new Date(now);
         todayScheduled.setHours(prefHour, prefMin, 0, 0);
 
@@ -81,13 +81,21 @@ export class BackupScheduler {
         }
       } else if (scheduleType === 'WEEKLY') {
         const [prefHour, prefMin] = preferredTime.split(':').map(Number);
-        
+
         const getWeeklyScheduledDate = (refDate) => {
-          const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const daysOfWeek = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+          ];
           const targetDayIndex = daysOfWeek.indexOf(weeklyDay);
           const resDate = new Date(refDate);
           resDate.setHours(prefHour, prefMin, 0, 0);
-          
+
           const currentDayIndex = resDate.getDay();
           resDate.setDate(resDate.getDate() - currentDayIndex + targetDayIndex);
           return resDate;
@@ -147,7 +155,15 @@ export class BackupScheduler {
       delayMs = nextScheduled.getTime() - now.getTime();
     } else if (scheduleType === 'WEEKLY') {
       const [prefHour, prefMin] = preferredTime.split(':').map(Number);
-      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const daysOfWeek = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
       const targetDayIndex = daysOfWeek.indexOf(weeklyDay);
 
       const nextScheduled = new Date(now);

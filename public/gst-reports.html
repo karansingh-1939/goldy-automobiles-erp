@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - GST Reports</title>
     <style>
       :root {
@@ -69,7 +69,7 @@
         width: 100%;
       }
 
-      nav.sidebar button[aria-selected="true"] {
+      nav.sidebar button[aria-selected='true'] {
         background: #0f766e;
         border-color: #0f766e;
         color: #ffffff;
@@ -94,12 +94,14 @@
         padding: 12px;
       }
 
-      .toolbar select, .toolbar input {
+      .toolbar select,
+      .toolbar input {
         width: auto;
         padding: 6px 10px;
       }
 
-      input, select {
+      input,
+      select {
         border: 1px solid #b8c1ce;
         border-radius: 6px;
         box-sizing: border-box;
@@ -140,7 +142,8 @@
         margin-top: 10px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 8px;
         text-align: left;
@@ -165,7 +168,7 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .comparison-card h3 {
@@ -212,8 +215,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -232,7 +235,9 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
@@ -250,8 +255,8 @@
 
         <!-- Dynamic Date Period Filter Toolbar -->
         <div class="toolbar">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 14px; font-weight:700; color:#475569;">Period:</span>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="font-size: 14px; font-weight: 700; color: #475569">Period:</span>
             <select id="filter-period">
               <option value="this_month">This Month</option>
               <option value="this_year">This Year</option>
@@ -262,12 +267,12 @@
           </div>
 
           <!-- Month Selector (Hidden by default) -->
-          <div id="month-selector-container" style="display: none;">
-            <input id="filter-month" type="month">
+          <div id="month-selector-container" style="display: none">
+            <input id="filter-month" type="month" />
           </div>
 
           <!-- Financial Year Selector (Hidden by default) -->
-          <div id="fy-selector-container" style="display: none;">
+          <div id="fy-selector-container" style="display: none">
             <select id="filter-fy">
               <option value="2026">FY 2026-27 (Apr 2026 - Mar 2027)</option>
               <option value="2025">FY 2025-26 (Apr 2025 - Mar 2026)</option>
@@ -275,87 +280,147 @@
           </div>
 
           <!-- Custom Date Range (Hidden by default) -->
-          <div id="custom-date-container" style="display: none; align-items: center; gap: 6px;">
-            <span style="font-size: 14px; color:#475569;">From:</span>
-            <input id="filter-date-from" type="date">
-            <span style="font-size: 14px; color:#475569;">To:</span>
-            <input id="filter-date-to" type="date">
+          <div id="custom-date-container" style="display: none; align-items: center; gap: 6px">
+            <span style="font-size: 14px; color: #475569">From:</span>
+            <input id="filter-date-from" type="date" />
+            <span style="font-size: 14px; color: #475569">To:</span>
+            <input id="filter-date-to" type="date" />
           </div>
 
           <button id="generate-btn" class="primary">Generate Report</button>
-          <button id="export-csv-btn" class="secondary" style="display: none;">Export GSTR-1 CSV</button>
+          <button id="export-csv-btn" class="secondary" style="display: none">
+            Export GSTR-1 CSV
+          </button>
         </div>
 
         <!-- Tab 1: GST Summary -->
         <div id="tab-summary">
-          <h2 style="color:#0f766e; margin-top: 0; font-size: 18px; margin-bottom: 12px;">Consolidated GST Liability</h2>
-          
+          <h2 style="color: #0f766e; margin-top: 0; font-size: 18px; margin-bottom: 12px">
+            Consolidated GST Liability
+          </h2>
+
           <div class="comparison-grid">
             <!-- Output tax -->
             <div class="comparison-card">
               <h3>Output GST (Sales)</h3>
-              <div class="tax-row"><span>Taxable Turnover</span> <strong id="sales-taxable">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Central Tax (CGST)</span> <strong id="sales-cgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>State Tax (SGST)</span> <strong id="sales-sgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Integrated Tax (IGST)</span> <strong id="sales-igst">Rs. 0.00</strong></div>
-              <div class="tax-row total"><span>Total Output GST</span> <strong id="sales-total">Rs. 0.00</strong></div>
+              <div class="tax-row">
+                <span>Taxable Turnover</span> <strong id="sales-taxable">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Central Tax (CGST)</span> <strong id="sales-cgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>State Tax (SGST)</span> <strong id="sales-sgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Integrated Tax (IGST)</span> <strong id="sales-igst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row total">
+                <span>Total Output GST</span> <strong id="sales-total">Rs. 0.00</strong>
+              </div>
             </div>
 
             <!-- Input Tax Credit -->
             <div class="comparison-card">
               <h3>Input Tax Credit (ITC)</h3>
-              <div class="tax-row"><span>Purchase Volume</span> <strong id="itc-taxable">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Central Tax (CGST)</span> <strong id="itc-cgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>State Tax (SGST)</span> <strong id="itc-sgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Integrated Tax (IGST)</span> <strong id="itc-igst">Rs. 0.00</strong></div>
-              <div class="tax-row total"><span>Total Purchase ITC</span> <strong id="itc-total">Rs. 0.00</strong></div>
+              <div class="tax-row">
+                <span>Purchase Volume</span> <strong id="itc-taxable">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Central Tax (CGST)</span> <strong id="itc-cgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>State Tax (SGST)</span> <strong id="itc-sgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Integrated Tax (IGST)</span> <strong id="itc-igst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row total">
+                <span>Total Purchase ITC</span> <strong id="itc-total">Rs. 0.00</strong>
+              </div>
             </div>
 
             <!-- Net Payable -->
-            <div class="comparison-card" style="background: #faf5ff; border-color: #d8b4fe;">
-              <h3 style="color: #6b21a8; border-bottom-color: #f3e8ff;">Net GST Liability</h3>
-              <div class="tax-row"><span>Net CGST Payable</span> <strong id="liability-cgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Net SGST Payable</span> <strong id="liability-sgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Net IGST Payable</span> <strong id="liability-igst">Rs. 0.00</strong></div>
-              <div class="tax-row total" style="color: #6b21a8; border-top-color: #e9d5ff;"><span>Net Payable GST</span> <strong id="liability-total">Rs. 0.00</strong></div>
+            <div class="comparison-card" style="background: #faf5ff; border-color: #d8b4fe">
+              <h3 style="color: #6b21a8; border-bottom-color: #f3e8ff">Net GST Liability</h3>
+              <div class="tax-row">
+                <span>Net CGST Payable</span> <strong id="liability-cgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Net SGST Payable</span> <strong id="liability-sgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Net IGST Payable</span> <strong id="liability-igst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row total" style="color: #6b21a8; border-top-color: #e9d5ff">
+                <span>Net Payable GST</span> <strong id="liability-total">Rs. 0.00</strong>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Tab 2: GSTR-1 -->
-        <div id="tab-gstr1" style="display: none;">
-          <h2 style="color:#0f766e; margin-top: 0; font-size: 18px;">GSTR-1 Outward Supplies Ledger</h2>
-          <div id="gstr1-container" style="overflow-x: auto;">
+        <div id="tab-gstr1" style="display: none">
+          <h2 style="color: #0f766e; margin-top: 0; font-size: 18px">
+            GSTR-1 Outward Supplies Ledger
+          </h2>
+          <div id="gstr1-container" style="overflow-x: auto">
             <!-- Render GSTR1 Table -->
           </div>
         </div>
 
         <!-- Tab 3: GSTR-3B -->
-        <div id="tab-gstr3b" style="display: none;">
-          <h2 style="color:#0f766e; margin-top: 0; font-size: 18px;">GSTR-3B Monthly Returns Summary</h2>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
-            <div class="comparison-card" style="width: auto;">
+        <div id="tab-gstr3b" style="display: none">
+          <h2 style="color: #0f766e; margin-top: 0; font-size: 18px">
+            GSTR-3B Monthly Returns Summary
+          </h2>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px">
+            <div class="comparison-card" style="width: auto">
               <h3>3.1 Outward Taxable Supplies (Sales)</h3>
-              <div class="tax-row"><span>Invoices count:</span> <strong id="gstr3b-sales-count">0</strong></div>
-              <div class="tax-row"><span>Total Taxable Value:</span> <strong id="gstr3b-sales-taxable">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Integrated Tax (IGST):</span> <strong id="gstr3b-sales-igst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Central Tax (CGST):</span> <strong id="gstr3b-sales-cgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>State/UT Tax (SGST):</span> <strong id="gstr3b-sales-sgst">Rs. 0.00</strong></div>
-              <div class="tax-row total"><span>Total Tax Liability:</span> <strong id="gstr3b-sales-total">Rs. 0.00</strong></div>
+              <div class="tax-row">
+                <span>Invoices count:</span> <strong id="gstr3b-sales-count">0</strong>
+              </div>
+              <div class="tax-row">
+                <span>Total Taxable Value:</span>
+                <strong id="gstr3b-sales-taxable">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Integrated Tax (IGST):</span> <strong id="gstr3b-sales-igst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Central Tax (CGST):</span> <strong id="gstr3b-sales-cgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>State/UT Tax (SGST):</span> <strong id="gstr3b-sales-sgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row total">
+                <span>Total Tax Liability:</span> <strong id="gstr3b-sales-total">Rs. 0.00</strong>
+              </div>
             </div>
 
-            <div class="comparison-card" style="width: auto;">
+            <div class="comparison-card" style="width: auto">
               <h3>4. Eligible Input Tax Credit (ITC Purchases)</h3>
-              <div class="tax-row"><span>Inward Supplies Taxable:</span> <strong id="gstr3b-itc-taxable">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Integrated Tax (IGST):</span> <strong id="gstr3b-itc-igst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>Central Tax (CGST):</span> <strong id="gstr3b-itc-cgst">Rs. 0.00</strong></div>
-              <div class="tax-row"><span>State/UT Tax (SGST):</span> <strong id="gstr3b-itc-sgst">Rs. 0.00</strong></div>
-              <div class="tax-row total"><span>Total Eligible ITC:</span> <strong id="gstr3b-itc-total">Rs. 0.00</strong></div>
+              <div class="tax-row">
+                <span>Inward Supplies Taxable:</span>
+                <strong id="gstr3b-itc-taxable">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Integrated Tax (IGST):</span> <strong id="gstr3b-itc-igst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>Central Tax (CGST):</span> <strong id="gstr3b-itc-cgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row">
+                <span>State/UT Tax (SGST):</span> <strong id="gstr3b-itc-sgst">Rs. 0.00</strong>
+              </div>
+              <div class="tax-row total">
+                <span>Total Eligible ITC:</span> <strong id="gstr3b-itc-total">Rs. 0.00</strong>
+              </div>
             </div>
           </div>
 
-          <div class="comparison-card" style="margin-top: 16px; width: auto;">
+          <div class="comparison-card" style="margin-top: 16px; width: auto">
             <h3>Rate-wise Outward Tax Breakdown</h3>
             <div id="gstr3b-rate-container">
               <!-- Render rate table -->
@@ -364,15 +429,15 @@
         </div>
 
         <!-- Tab 4: HSN Summary -->
-        <div id="tab-hsn" style="display: none;">
-          <h2 style="color:#0f766e; margin-top: 0; font-size: 18px;">HSN/SAC Codewise Summary</h2>
-          <div id="hsn-container" style="overflow-x: auto;">
+        <div id="tab-hsn" style="display: none">
+          <h2 style="color: #0f766e; margin-top: 0; font-size: 18px">HSN/SAC Codewise Summary</h2>
+          <div id="hsn-container" style="overflow-x: auto">
             <!-- Render HSN Table -->
           </div>
         </div>
       </section>
     </main>
 
-    <script src="/gst-reports.js"></script>
+    <script type="module" src="/gst-reports.js"></script>
   </body>
 </html>

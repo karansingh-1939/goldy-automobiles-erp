@@ -1,5 +1,5 @@
 import { createDatabase } from './connection.js';
-import { runSeeds } from './seedRunner.js';
+import { runSeeds } from './seed-runner.js';
 
 const db = createDatabase();
 

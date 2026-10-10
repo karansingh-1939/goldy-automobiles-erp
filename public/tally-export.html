@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Tally Export</title>
     <style>
       :root {
@@ -133,8 +133,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -153,45 +153,73 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
       <section>
-        <h2 style="margin-top: 0; color:#0f766e; font-size: 22px; border-bottom: 1px solid #e1e7ef; padding-bottom: 10px;">Export Invoices to Tally</h2>
-        
+        <h2
+          style="
+            margin-top: 0;
+            color: #0f766e;
+            font-size: 22px;
+            border-bottom: 1px solid #e1e7ef;
+            padding-bottom: 10px;
+          "
+        >
+          Export Invoices to Tally
+        </h2>
+
         <p id="message" role="status"></p>
 
-        <form id="tally-form" style="margin-top: 15px;">
+        <form id="tally-form" style="margin-top: 15px">
           <div class="form-grid">
             <div>
-              <label style="display: block; font-weight: bold; margin-bottom: 6px; color: #475569;">From Date *</label>
-              <input type="date" id="date-from" required>
+              <label style="display: block; font-weight: bold; margin-bottom: 6px; color: #475569"
+                >From Date *</label
+              >
+              <input type="date" id="date-from" required />
             </div>
             <div>
-              <label style="display: block; font-weight: bold; margin-bottom: 6px; color: #475569;">To Date *</label>
-              <input type="date" id="date-to" required>
+              <label style="display: block; font-weight: bold; margin-bottom: 6px; color: #475569"
+                >To Date *</label
+              >
+              <input type="date" id="date-to" required />
             </div>
           </div>
 
-          <div style="display: flex; gap: 10px;">
-            <button type="submit" class="primary" id="export-btn">Generate & Download Tally XML</button>
+          <div style="display: flex; gap: 10px">
+            <button type="submit" class="primary" id="export-btn">
+              Generate & Download Tally XML
+            </button>
           </div>
         </form>
 
         <div class="info-box">
           <h3>Tally XML Import Guide</h3>
-          <p>This export generates a standard Tally XML format containing Sales Vouchers. To import this file into Tally ERP 9 or TallyPrime, follow these steps:</p>
+          <p>
+            This export generates a standard Tally XML format containing Sales Vouchers. To import
+            this file into Tally ERP 9 or TallyPrime, follow these steps:
+          </p>
           <ul>
-            <li>Ensure the ledgers <strong>Sales Account</strong>, <strong>CGST Ledger</strong>, <strong>SGST Ledger</strong>, and <strong>IGST Ledger</strong> exist in your Tally company or are configured to match.</li>
+            <li>
+              Ensure the ledgers <strong>Sales Account</strong>, <strong>CGST Ledger</strong>,
+              <strong>SGST Ledger</strong>, and <strong>IGST Ledger</strong> exist in your Tally
+              company or are configured to match.
+            </li>
             <li>In Tally, go to <strong>Import of Data</strong> &gt; <strong>Vouchers</strong>.</li>
             <li>Select the downloaded XML file and specify the file path.</li>
-            <li>Tally will import all invoices as Sales Vouchers with appropriate debit/credit allocations.</li>
+            <li>
+              Tally will import all invoices as Sales Vouchers with appropriate debit/credit
+              allocations.
+            </li>
           </ul>
         </div>
       </section>
     </main>
 
-    <script src="/tally-export.js"></script>
+    <script type="module" src="/tally-export.js"></script>
   </body>
 </html>

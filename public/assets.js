@@ -1,3 +1,4 @@
+import { localDate } from './local-date.js';
 // Capital assets registration and rendering module
 let currentPage = 1;
 const pageSize = 20;
@@ -6,8 +7,8 @@ async function api(url, options = {}) {
   const token = sessionStorage.getItem('goldy_auth_token');
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    ...(options.headers || {})
+    Authorization: `Bearer ${token}`,
+    ...(options.headers || {}),
   };
   const response = await fetch(url, { ...options, headers });
   if (response.status === 401) {
@@ -58,7 +59,7 @@ function initPage() {
   document.querySelector('#add-asset-btn').addEventListener('click', () => {
     // Reset form and set default date to today
     document.querySelector('#asset-form').reset();
-    document.querySelector('#asset-date').value = new Date().toISOString().slice(0, 10);
+    document.querySelector('#asset-date').value = localDate();
     modal.style.display = 'flex';
   });
 
@@ -125,7 +126,8 @@ function initPage() {
 
 async function loadAssets() {
   const tableBody = document.querySelector('#assets-list-body');
-  tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading fixed assets...</td></tr>';
+  tableBody.innerHTML =
+    '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">Loading fixed assets...</td></tr>';
 
   const query = document.querySelector('#search-query').value.trim();
   const url = `/api/v1/inventory/assets?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(query)}`;
@@ -143,7 +145,8 @@ async function loadAssets() {
 function renderAssetsTable(assets) {
   const tableBody = document.querySelector('#assets-list-body');
   if (!assets || assets.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">No fixed assets registered yet.</td></tr>';
+    tableBody.innerHTML =
+      '<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 20px;">No fixed assets registered yet.</td></tr>';
     return;
   }
 

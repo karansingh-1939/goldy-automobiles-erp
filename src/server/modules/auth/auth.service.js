@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { env } from '../../config/env.js';
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { generateToken, hashToken } from '../../shared/utils/tokens.js';
 
 function getSetupDir(db) {
@@ -60,13 +60,25 @@ function validatePasswordComplexity(password) {
     throw new AppError('Password must be at least 8 characters long.', 400, 'PASSWORD_TOO_SHORT');
   }
   if (!/[A-Z]/.test(password)) {
-    throw new AppError('Password must contain at least one uppercase letter.', 400, 'PASSWORD_MISSING_UPPERCASE');
+    throw new AppError(
+      'Password must contain at least one uppercase letter.',
+      400,
+      'PASSWORD_MISSING_UPPERCASE',
+    );
   }
   if (!/[a-z]/.test(password)) {
-    throw new AppError('Password must contain at least one lowercase letter.', 400, 'PASSWORD_MISSING_LOWERCASE');
+    throw new AppError(
+      'Password must contain at least one lowercase letter.',
+      400,
+      'PASSWORD_MISSING_LOWERCASE',
+    );
   }
   if (!/[0-9]/.test(password)) {
-    throw new AppError('Password must contain at least one numeric digit.', 400, 'PASSWORD_MISSING_DIGIT');
+    throw new AppError(
+      'Password must contain at least one numeric digit.',
+      400,
+      'PASSWORD_MISSING_DIGIT',
+    );
   }
 }
 
@@ -76,7 +88,11 @@ function verifyLockout(user) {
     const now = Date.now();
     if (lockTime > now) {
       const remainingMinutes = Math.ceil((lockTime - now) / (1000 * 60));
-      throw new AppError(`Account is temporarily locked. Try again in ${remainingMinutes} minutes.`, 429, 'ACCOUNT_LOCKED');
+      throw new AppError(
+        `Account is temporarily locked. Try again in ${remainingMinutes} minutes.`,
+        429,
+        'ACCOUNT_LOCKED',
+      );
     }
   }
 }
@@ -93,7 +109,11 @@ export class AuthService {
 
   async setupAdmin({ username, password, email }) {
     if (this.authRepository.hasAdmin()) {
-      throw new AppError('Initial administrator setup has already been completed.', 400, 'SETUP_ALREADY_COMPLETED');
+      throw new AppError(
+        'Initial administrator setup has already been completed.',
+        400,
+        'SETUP_ALREADY_COMPLETED',
+      );
     }
 
     if (!username || !username.trim()) {
@@ -151,7 +171,11 @@ export class AuthService {
       if (newAttempts >= 5) {
         const lockUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         this.authRepository.lockUserAccount(user.id, lockUntil);
-        throw new AppError('Too many failed login attempts. Account locked for 15 minutes.', 429, 'ACCOUNT_LOCKED');
+        throw new AppError(
+          'Too many failed login attempts. Account locked for 15 minutes.',
+          429,
+          'ACCOUNT_LOCKED',
+        );
       }
 
       throw new AppError('Invalid username or password.', 401, 'INVALID_CREDENTIALS');
@@ -179,7 +203,11 @@ export class AuthService {
 
   async forgotPassword({ username, recoveryCode, newPassword }) {
     if (!username || !username.trim() || !recoveryCode || !recoveryCode.trim()) {
-      throw new AppError('Username and recovery code are required.', 400, 'RECOVERY_FIELDS_REQUIRED');
+      throw new AppError(
+        'Username and recovery code are required.',
+        400,
+        'RECOVERY_FIELDS_REQUIRED',
+      );
     }
 
     const user = this.authRepository.findUserByUsername(username.trim());
@@ -201,7 +229,11 @@ export class AuthService {
       if (newAttempts >= 5) {
         const lockUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         this.authRepository.lockUserAccount(user.id, lockUntil);
-        throw new AppError('Too many failed attempts. Account locked for 15 minutes.', 429, 'ACCOUNT_LOCKED');
+        throw new AppError(
+          'Too many failed attempts. Account locked for 15 minutes.',
+          429,
+          'ACCOUNT_LOCKED',
+        );
       }
 
       throw new AppError('Invalid username or recovery code.', 401, 'INVALID_RECOVERY');

@@ -1,5 +1,3 @@
-import { AppError } from '../../shared/errors/AppError.js';
-
 export class CrmRepository {
   constructor(db) {
     this.db = db;
@@ -16,46 +14,66 @@ export class CrmRepository {
   }
 
   getMembershipById(id) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT lm.*, c.name AS customer_name, c.phone AS customer_phone
       FROM loyalty_memberships lm
       JOIN customers c ON lm.customer_id = c.id
       WHERE lm.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
   }
 
   getMembershipByCustomerId(customerId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT lm.*, c.name AS customer_name, c.phone AS customer_phone
       FROM loyalty_memberships lm
       JOIN customers c ON lm.customer_id = c.id
       WHERE lm.customer_id = ?
-    `).get(customerId);
+    `,
+      )
+      .get(customerId);
   }
 
   updateMembershipPoints(id, newBalance) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE loyalty_memberships
       SET points_balance = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(newBalance, id);
+    `,
+      )
+      .run(newBalance, id);
   }
 
   updateMembershipTier(id, newTier) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE loyalty_memberships
       SET tier = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(newTier, id);
+    `,
+      )
+      .run(newTier, id);
   }
 
   listMemberships() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT lm.*, c.name AS customer_name, c.phone AS customer_phone
       FROM loyalty_memberships lm
       JOIN customers c ON lm.customer_id = c.id
       ORDER BY lm.id DESC
-    `).all();
+    `,
+      )
+      .all();
   }
 
   // 2. Loyalty Ledger
@@ -68,13 +86,17 @@ export class CrmRepository {
   }
 
   getLedgerByMembershipId(membershipId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT ll.*, u.name AS creator_name
       FROM loyalty_ledger ll
       LEFT JOIN users u ON ll.created_by = u.id
       WHERE ll.membership_id = ?
       ORDER BY ll.id DESC
-    `).all(membershipId);
+    `,
+      )
+      .all(membershipId);
   }
 
   // 3. Referrals
@@ -87,21 +109,31 @@ export class CrmRepository {
   }
 
   getReferralByCode(code) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM customer_referrals WHERE referral_code = ?
-    `).get(code);
+    `,
+      )
+      .get(code);
   }
 
   updateReferralStatus(id, status) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE customer_referrals
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(status, id);
+    `,
+      )
+      .run(status, id);
   }
 
   listReferrals() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT cr.*, 
              c1.name AS referrer_name, c1.phone AS referrer_phone,
              c2.name AS referred_name, c2.phone AS referred_phone
@@ -109,28 +141,58 @@ export class CrmRepository {
       JOIN customers c1 ON cr.referrer_customer_id = c1.id
       LEFT JOIN customers c2 ON cr.referred_customer_id = c2.id
       ORDER BY cr.id DESC
-    `).all();
+    `,
+      )
+      .all();
   }
 
   // 4. Promotions
-  createPromotion({ name, code, promoType, value, startDate, endDate, minPurchaseAmount, maxDiscountAmount, targetTier }) {
+  createPromotion({
+    name,
+    code,
+    promoType,
+    value,
+    startDate,
+    endDate,
+    minPurchaseAmount,
+    maxDiscountAmount,
+    targetTier,
+  }) {
     const stmt = this.db.prepare(`
       INSERT INTO promotions (name, code, promo_type, value, start_date, end_date, min_purchase_amount, max_discount_amount, target_tier)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(name, code, promoType, value, startDate, endDate, minPurchaseAmount || 0, maxDiscountAmount || 0, targetTier || null);
+    stmt.run(
+      name,
+      code,
+      promoType,
+      value,
+      startDate,
+      endDate,
+      minPurchaseAmount || 0,
+      maxDiscountAmount || 0,
+      targetTier || null,
+    );
   }
 
   getPromotionByCode(code) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM promotions WHERE code = ? AND is_active = 1
-    `).get(code);
+    `,
+      )
+      .get(code);
   }
 
   listPromotions() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM promotions ORDER BY id DESC
-    `).all();
+    `,
+      )
+      .all();
   }
 
   // 5. Service Reminders
@@ -143,7 +205,9 @@ export class CrmRepository {
   }
 
   getPendingReminders(asOfDate) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT sr.*, 
              c.name AS customer_name, c.phone AS customer_phone,
              v.registration_number, v.make, v.model
@@ -152,14 +216,20 @@ export class CrmRepository {
       JOIN vehicles v ON sr.vehicle_id = v.id
       WHERE sr.status = 'PENDING' AND DATE(sr.due_date) <= DATE(?)
       ORDER BY sr.due_date ASC
-    `).all(asOfDate);
+    `,
+      )
+      .all(asOfDate);
   }
 
   updateReminderStatus(id, status) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE service_reminders
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(status, id);
+    `,
+      )
+      .run(status, id);
   }
 }

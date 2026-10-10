@@ -4,7 +4,6 @@ const tabsContainer = document.querySelector('#invoice-tabs');
 const detailsTabBtn = document.querySelector('#details-tab-btn');
 const invoiceSheet = document.querySelector('#invoice-bill-sheet');
 
-let activeTab = 'list';
 let editingInvoiceId = null;
 let page = 1;
 
@@ -15,7 +14,28 @@ function showMessage(text, isError = false) {
 }
 
 function numberToWords(num) {
-  const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+  const a = [
+    '',
+    'One ',
+    'Two ',
+    'Three ',
+    'Four ',
+    'Five ',
+    'Six ',
+    'Seven ',
+    'Eight ',
+    'Nine ',
+    'Ten ',
+    'Eleven ',
+    'Twelve ',
+    'Thirteen ',
+    'Fourteen ',
+    'Fifteen ',
+    'Sixteen ',
+    'Seventeen ',
+    'Eighteen ',
+    'Nineteen ',
+  ];
   const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
   const n = Math.floor(num);
@@ -123,7 +143,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -144,7 +164,6 @@ function setupTabs() {
 }
 
 function switchTab(tab) {
-  activeTab = tab;
   tabsContainer.querySelectorAll('button').forEach((btn) => {
     btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
   });
@@ -199,7 +218,7 @@ function setupListeners() {
     modalConfirmBtn.disabled = true;
     try {
       await api(`/api/v1/invoices/${editingInvoiceId}/cancel`, {
-        method: 'POST'
+        method: 'POST',
       });
       cancelModal.style.display = 'none';
       showMessage('Invoice cancelled successfully.');
@@ -224,7 +243,8 @@ async function loadInvoices() {
   try {
     const res = await api(`/api/v1/invoices?${params}`);
     renderInvoicesTable(res.data);
-    document.querySelector('#page-info').textContent = `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
+    document.querySelector('#page-info').textContent =
+      `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -233,7 +253,8 @@ async function loadInvoices() {
 function renderInvoicesTable(rows) {
   const container = document.querySelector('#table-container');
   if (rows.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No Invoices found.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No Invoices found.</p>';
     return;
   }
 
@@ -300,9 +321,11 @@ async function viewInvoiceDetails(id) {
       const custRes = await api(`/api/v1/customers/${inv.customer_id}`);
       customerName = custRes.data.name;
       customerPhone = custRes.data.phone;
-      customerAddress = `${custRes.data.address || ''}, ${custRes.data.city || ''}`.trim().replace(/^,\s*/, '');
+      customerAddress = `${custRes.data.address || ''}, ${custRes.data.city || ''}`
+        .trim()
+        .replace(/^,\s*/, '');
     } catch (e) {
-      console.warn("Could not load customer header information");
+      console.warn('Could not load customer header information');
     }
 
     let vehicleReg = `Vehicle #${inv.vehicle_id}`;
@@ -316,7 +339,7 @@ async function viewInvoiceDetails(id) {
       vehicleEngine = vehRes.data.engine_number || '-';
       vehicleChassis = vehRes.data.chassis_number || '-';
     } catch (e) {
-      console.warn("Could not load vehicle header information");
+      console.warn('Could not load vehicle header information');
     }
 
     let company = {
@@ -324,17 +347,27 @@ async function viewInvoiceDetails(id) {
       address: 'Opp. Randhir Cinema, Kunjpura Road, KARNAL-132001',
       phone: '0184-2206673, 94160-30673',
       email: '',
-      gstin: ''
+      gstin: '',
     };
     try {
       const companyRes = await api('/api/v1/settings/company');
       company = companyRes.data;
     } catch (e) {
-      console.warn("Could not load company settings details");
+      console.warn('Could not load company settings details');
     }
 
-    renderInvoiceSheet(inv, customerName, customerPhone, customerAddress, vehicleReg, vehicleModel, vehicleEngine, vehicleChassis, company);
-    
+    renderInvoiceSheet(
+      inv,
+      customerName,
+      customerPhone,
+      customerAddress,
+      vehicleReg,
+      vehicleModel,
+      vehicleEngine,
+      vehicleChassis,
+      company,
+    );
+
     const cancelBtn = document.querySelector('#cancel-action-btn');
     if (inv.status === 'CANCELLED') {
       cancelBtn.style.display = 'none';
@@ -359,10 +392,8 @@ function renderInvoiceSectionTable(items, sectionTitle) {
     const taxableValue = unitPrice * qty;
     const gstRate = Number(item.gst_rate);
     const totalGst = lineTotal - taxableValue;
-    
-    const hsn = item.item_type === 'PART' 
-      ? (item.hsn_code || '8708')
-      : '9987';
+
+    const hsn = item.item_type === 'PART' ? item.hsn_code || '8708' : '9987';
 
     const displayDesc = String(item.description).startsWith('[Outside Job]')
       ? String(item.description).replace(/^\[Outside Job\]\s*/, '')
@@ -410,7 +441,17 @@ function renderInvoiceSectionTable(items, sectionTitle) {
   `;
 }
 
-function renderInvoiceSheet(inv, custName, custPhone, custAddress, vehReg, vehModel, vehEngine, vehChassis, company) {
+function renderInvoiceSheet(
+  inv,
+  custName,
+  custPhone,
+  custAddress,
+  vehReg,
+  vehModel,
+  vehEngine,
+  vehChassis,
+  company,
+) {
   // Split items
   const partsConsumption = [];
   const lubricants = [];

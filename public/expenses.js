@@ -1,3 +1,4 @@
+import { localDate } from './local-date.js';
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 
@@ -64,7 +65,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -200,18 +201,20 @@ async function loadExpensesList() {
       const offset = (page - 1) * 10;
       data = data.slice(offset, offset + 10);
 
-      document.querySelector('#page-info').textContent = `Page ${page} of ${totalPages} (Filtered total: ${data.length})`;
+      document.querySelector('#page-info').textContent =
+        `Page ${page} of ${totalPages} (Filtered total: ${data.length})`;
       document.querySelector('#prev-btn').style.display = totalPages > 1 ? 'inline-block' : 'none';
       document.querySelector('#next-btn').style.display = totalPages > 1 ? 'inline-block' : 'none';
-      document.querySelector('#prev-btn').disabled = (page <= 1);
-      document.querySelector('#next-btn').disabled = (page >= totalPages);
+      document.querySelector('#prev-btn').disabled = page <= 1;
+      document.querySelector('#next-btn').disabled = page >= totalPages;
     } else {
       totalPages = res.pagination.totalPages || 1;
-      document.querySelector('#page-info').textContent = `Page ${page} of ${totalPages} (Total: ${res.pagination.total})`;
+      document.querySelector('#page-info').textContent =
+        `Page ${page} of ${totalPages} (Total: ${res.pagination.total})`;
       document.querySelector('#prev-btn').style.display = 'inline-block';
       document.querySelector('#next-btn').style.display = 'inline-block';
-      document.querySelector('#prev-btn').disabled = (page <= 1);
-      document.querySelector('#next-btn').disabled = (page >= totalPages);
+      document.querySelector('#prev-btn').disabled = page <= 1;
+      document.querySelector('#next-btn').disabled = page >= totalPages;
     }
 
     renderTable(data);
@@ -223,7 +226,8 @@ async function loadExpensesList() {
 function renderTable(rows) {
   const container = document.querySelector('#table-container');
   if (rows.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No expenses found.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No expenses found.</p>';
     return;
   }
 
@@ -294,7 +298,7 @@ async function loadSummaryCards() {
     const res = await api('/api/v1/expenses?pageSize=1000');
     const expenses = res.data;
 
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = localDate();
     const currentMonthStr = todayStr.slice(0, 7); // YYYY-MM
 
     let todayTotal = 0;
@@ -327,7 +331,15 @@ async function loadSummaryCards() {
     const breakdownList = document.querySelector('#summary-categories');
     breakdownList.innerHTML = '';
 
-    const categories = ['Rent', 'Salary', 'Electricity', 'Internet', 'Fuel', 'Maintenance', 'Miscellaneous'];
+    const categories = [
+      'Rent',
+      'Salary',
+      'Electricity',
+      'Internet',
+      'Fuel',
+      'Maintenance',
+      'Miscellaneous',
+    ];
     categories.forEach((cat) => {
       const catTotal = categoryTotalsMap[cat] || 0;
       if (catTotal > 0) {
@@ -338,7 +350,8 @@ async function loadSummaryCards() {
     });
 
     if (breakdownList.children.length === 0) {
-      breakdownList.innerHTML = '<li style="color:#64748b; font-style:italic;">No expenses logged this month</li>';
+      breakdownList.innerHTML =
+        '<li style="color:#64748b; font-style:italic;">No expenses logged this month</li>';
     }
   } catch (err) {
     console.error('Failed to load summary analytics', err);
@@ -351,12 +364,12 @@ async function openExpenseModal(id = null) {
   const form = document.querySelector('#expense-form');
   const title = document.querySelector('#modal-title');
   const dateInput = document.querySelector('#modal-date');
-  
+
   form.reset();
   editingExpenseId = id;
 
   // Set default date as today
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDate();
   dateInput.value = todayStr;
 
   if (id) {
@@ -417,13 +430,17 @@ async function saveExpense() {
       body: JSON.stringify(payload),
     });
 
-    showMessage(editingExpenseId ? 'Expense updated successfully.' : 'Expense created successfully.');
+    showMessage(
+      editingExpenseId ? 'Expense updated successfully.' : 'Expense created successfully.',
+    );
     closeExpenseModal();
     loadSummaryCards();
     loadExpensesList();
   } catch (err) {
     if (err.details) {
-      const details = Object.entries(err.details).map(([k, v]) => `${k}: ${v}`).join(', ');
+      const details = Object.entries(err.details)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
       showMessage(`Validation error: ${details}`, true);
     } else {
       showMessage(err.message, true);

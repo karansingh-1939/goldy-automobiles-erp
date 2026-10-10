@@ -5,13 +5,13 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2
+  maximumFractionDigits: 2,
 });
 
 /**
  * Top Customers Card Component.
  * Visualizes customer revenue, cost, and profit breakdowns in a horizontal bar chart.
- * 
+ *
  * @param {object} props
  * @param {Array} props.customers - List of customer metric records from the API
  * @param {boolean} props.isLoading - Whether the component is in a loading state
@@ -34,16 +34,16 @@ export function TopCustomersCard({ customers, isLoading }) {
           data: revenueData,
           backgroundColor: '#3b82f6', // Tailwind blue-500
           borderRadius: 4,
-          barThickness: 12
+          barThickness: 12,
         },
         {
           label: 'Gross Profit',
           data: profitData,
           backgroundColor: '#10b981', // Tailwind emerald-500
           borderRadius: 4,
-          barThickness: 12
-        }
-      ]
+          barThickness: 12,
+        },
+      ],
     };
   }, [customers, hasData]);
 
@@ -59,17 +59,17 @@ export function TopCustomersCard({ customers, isLoading }) {
               if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
               if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`;
               return `₹${value}`;
-            }
-          }
+            },
+          },
         },
         y: {
-          grid: { display: false }
-        }
+          grid: { display: false },
+        },
       },
       plugins: {
         legend: {
           position: 'top',
-          labels: { boxWidth: 12, usePointStyle: true }
+          labels: { boxWidth: 12, usePointStyle: true },
         },
         tooltip: {
           callbacks: {
@@ -86,12 +86,12 @@ export function TopCustomersCard({ customers, isLoading }) {
               return [
                 `Revenue: ${inrFormatter.format(c.revenue)}`,
                 `Cost: ${inrFormatter.format(c.cost)}`,
-                `Profit: ${inrFormatter.format(c.profit)}`
+                `Profit: ${inrFormatter.format(c.profit)}`,
               ];
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     };
   }, [customers]);
 

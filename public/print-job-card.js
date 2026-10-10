@@ -60,7 +60,12 @@ async function init() {
     }
 
     // 3. Fetch Vehicle details
-    let vehicle = { registration_number: `Vehicle ID ${jc.vehicle_id}`, make: '', model: '', variant: '' };
+    let vehicle = {
+      registration_number: `Vehicle ID ${jc.vehicle_id}`,
+      make: '',
+      model: '',
+      variant: '',
+    };
     try {
       const vehRes = await api(`/api/v1/vehicles/${jc.vehicle_id}`);
       vehicle = vehRes.data;
@@ -75,9 +80,12 @@ async function init() {
       const companyRes = await api('/api/v1/settings/company');
       const company = companyRes.data;
       if (company.name) document.querySelector('#lbl-company-name').textContent = company.name;
-      if (company.address) document.querySelector('#lbl-company-address').textContent = company.address;
-      if (company.phone) document.querySelector('#lbl-company-contact').textContent = `Ph. : ${company.phone}`;
-      if (company.jobCardTerms) document.querySelector('#lbl-terms').textContent = company.jobCardTerms;
+      if (company.address)
+        document.querySelector('#lbl-company-address').textContent = company.address;
+      if (company.phone)
+        document.querySelector('#lbl-company-contact').textContent = `Ph. : ${company.phone}`;
+      if (company.jobCardTerms)
+        document.querySelector('#lbl-terms').textContent = company.jobCardTerms;
     } catch (e) {
       console.warn('Could not load company settings, using defaults from HTML', e);
     }
@@ -88,6 +96,7 @@ async function init() {
 }
 
 function setupListeners() {
+  document.querySelector('#back-btn').addEventListener('click', () => window.close());
   // Print button
   document.querySelector('#print-btn').addEventListener('click', () => {
     window.print();
@@ -106,32 +115,36 @@ function setupListeners() {
 function renderPrintLayout(jc, customer, vehicle) {
   // Set labels
   document.querySelector('#lbl-job-number').textContent = jc.job_card_number;
-  document.querySelector('#lbl-job-date').textContent = new Date(jc.opened_at || jc.created_at).toLocaleDateString();
+  document.querySelector('#lbl-job-date').textContent = new Date(
+    jc.opened_at || jc.created_at,
+  ).toLocaleDateString();
   document.querySelector('#lbl-job-status').textContent = jc.status;
   document.querySelector('#lbl-customer-name').textContent = customer.name;
   document.querySelector('#lbl-customer-phone').textContent = customer.phone;
-  document.querySelector('#lbl-customer-address').textContent = [customer.address, customer.city, customer.state, customer.pincode]
-    .filter(Boolean)
-    .join(', ') || '-';
+  document.querySelector('#lbl-customer-address').textContent =
+    [customer.address, customer.city, customer.state, customer.pincode]
+      .filter(Boolean)
+      .join(', ') || '-';
 
   document.querySelector('#lbl-vehicle-reg').textContent = vehicle.registration_number;
-  document.querySelector('#lbl-vehicle-model').textContent = [vehicle.make, vehicle.model, vehicle.variant]
-    .filter(Boolean)
-    .join(' ') || '-';
+  document.querySelector('#lbl-vehicle-model').textContent =
+    [vehicle.make, vehicle.model, vehicle.variant].filter(Boolean).join(' ') || '-';
   document.querySelector('#lbl-vehicle-odo').textContent = `${jc.odometer_reading} km`;
   document.querySelector('#lbl-vehicle-engine').textContent = vehicle.engine_number || '-';
   document.querySelector('#lbl-vehicle-chassis').textContent = vehicle.chassis_number || '-';
   document.querySelector('#lbl-fuel-level').textContent = jc.fuel_level || '-';
-  document.querySelector('#lbl-promised-delivery').textContent = jc.promised_delivery_at 
-    ? new Date(jc.promised_delivery_at).toLocaleString() 
+  document.querySelector('#lbl-promised-delivery').textContent = jc.promised_delivery_at
+    ? new Date(jc.promised_delivery_at).toLocaleString()
     : '-';
   document.querySelector('#lbl-battery-brand').textContent = jc.battery_brand || '-';
   document.querySelector('#chk-toolkit').checked = !!jc.toolkit_present;
   document.querySelector('#chk-spare-wheel').checked = !!jc.spare_wheel_present;
   document.querySelector('#chk-jack').checked = !!jc.jack_present;
   document.querySelector('#chk-stereo').checked = !!jc.stereo_present;
-  document.querySelector('#lbl-complaint').textContent = jc.complaint || 'No special complaint details provided.';
-  document.querySelector('#lbl-diagnosis').textContent = jc.diagnosis || 'No workshop remarks recorded.';
+  document.querySelector('#lbl-complaint').textContent =
+    jc.complaint || 'No special complaint details provided.';
+  document.querySelector('#lbl-diagnosis').textContent =
+    jc.diagnosis || 'No workshop remarks recorded.';
   document.querySelector('#lbl-technician').textContent = jc.assigned_mechanic_name || 'Unassigned';
 
   // Filter Parts & Lubricants
@@ -141,7 +154,9 @@ function renderPrintLayout(jc, customer, vehicle) {
 
   // Filter Labour & Outside Jobs
   const labourList = jc.labour || [];
-  const standardLabour = labourList.filter((l) => !String(l.description).startsWith('[Outside Job]'));
+  const standardLabour = labourList.filter(
+    (l) => !String(l.description).startsWith('[Outside Job]'),
+  );
   const outsideJobs = labourList.filter((l) => String(l.description).startsWith('[Outside Job]'));
 
   // Render lists
@@ -152,23 +167,23 @@ function renderPrintLayout(jc, customer, vehicle) {
 
   // Compute subtotals
   let partsTotal = 0;
-  partsConsumption.forEach((p) => partsTotal += Number(p.line_total));
+  partsConsumption.forEach((p) => (partsTotal += Number(p.line_total)));
 
   let lubricantsTotal = 0;
-  lubricants.forEach((p) => lubricantsTotal += Number(p.line_total));
+  lubricants.forEach((p) => (lubricantsTotal += Number(p.line_total)));
 
   let labourTotal = 0;
   standardLabour.forEach((l) => {
     const charge = Number(l.labour_charge);
     const tax = charge * (Number(l.gst_rate) / 100);
-    labourTotal += (charge + tax);
+    labourTotal += charge + tax;
   });
 
   let outsideTotal = 0;
   outsideJobs.forEach((l) => {
     const charge = Number(l.labour_charge);
     const tax = charge * (Number(l.gst_rate) / 100);
-    outsideTotal += (charge + tax);
+    outsideTotal += charge + tax;
   });
 
   const grandTotal = partsTotal + lubricantsTotal + labourTotal + outsideTotal;

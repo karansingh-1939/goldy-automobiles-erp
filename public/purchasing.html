@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Purchasing</title>
     <style>
       :root {
@@ -70,7 +70,7 @@
         transition: all 0.2s ease;
       }
 
-      nav.sidebar button[aria-selected="true"] {
+      nav.sidebar button[aria-selected='true'] {
         background: #0f766e;
         border-color: #0f766e;
         color: #ffffff;
@@ -81,7 +81,7 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       }
 
       .toolbar {
@@ -90,7 +90,9 @@
         margin-bottom: 14px;
       }
 
-      input, select, textarea {
+      input,
+      select,
+      textarea {
         border: 1px solid #b8c1ce;
         border-radius: 6px;
         box-sizing: border-box;
@@ -100,7 +102,8 @@
         background: #ffffff;
       }
 
-      input:disabled, select:disabled {
+      input:disabled,
+      select:disabled {
         background: #f1f5f9;
         cursor: not-allowed;
       }
@@ -144,7 +147,8 @@
         margin-top: 10px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 10px;
         text-align: left;
@@ -263,8 +267,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -283,14 +287,18 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
       <nav class="sidebar" id="purchasing-tabs" aria-label="Purchasing actions">
         <button type="button" data-tab="list" aria-selected="true">Invoice Registry</button>
         <button type="button" data-tab="create">Import Invoice</button>
-        <button type="button" data-tab="details" id="details-tab-btn" style="display: none;">Receipt Details</button>
+        <button type="button" data-tab="details" id="details-tab-btn" style="display: none">
+          Receipt Details
+        </button>
       </nav>
 
       <section>
@@ -299,12 +307,13 @@
         <!-- Tab 1: Invoice Registry -->
         <div id="tab-list">
           <h2>Supplier Invoice Registry</h2>
-          <p style="font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
-            View recorded supplier invoices and purchase receipts. Stock levels are automatically updated upon recording receipts.
+          <p style="font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 20px">
+            View recorded supplier invoices and purchase receipts. Stock levels are automatically
+            updated upon recording receipts.
           </p>
-          
+
           <div class="toolbar">
-            <input id="search-query" placeholder="Search by receipt/invoice number...">
+            <input id="search-query" placeholder="Search by receipt/invoice number..." />
             <button id="search-btn" class="primary">Search</button>
           </div>
 
@@ -312,18 +321,22 @@
             <!-- Dynamically populated table -->
           </div>
 
-          <div class="form-actions" style="margin-top: 14px; display: flex; gap: 8px;">
+          <div class="form-actions" style="margin-top: 14px; display: flex; gap: 8px">
             <button id="prev-btn">Previous</button>
             <button id="next-btn">Next</button>
-            <span id="page-info" style="align-self: center; font-size: 14px; margin-left: 8px;"></span>
+            <span
+              id="page-info"
+              style="align-self: center; font-size: 14px; margin-left: 8px"
+            ></span>
           </div>
         </div>
 
         <!-- Tab 2: Create / Import Invoice -->
-        <div id="tab-create" style="display: none;">
+        <div id="tab-create" style="display: none">
           <h2>Supplier Invoice Import</h2>
-          <p style="font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
-            Record a supplier invoice (purchase receipt). Selecting inventory items automatically retrieves their base metrics. Stock and batches will be updated on save.
+          <p style="font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 20px">
+            Record a supplier invoice (purchase receipt). Selecting inventory items automatically
+            retrieves their base metrics. Stock and batches will be updated on save.
           </p>
 
           <form id="invoice-import-form">
@@ -336,15 +349,20 @@
               </div>
               <div class="form-group">
                 <label for="form-supplier-gstin">GSTIN (Supplier)</label>
-                <input id="form-supplier-gstin" type="text" placeholder="GSTIN will load automatically" disabled>
+                <input
+                  id="form-supplier-gstin"
+                  type="text"
+                  placeholder="GSTIN will load automatically"
+                  disabled
+                />
               </div>
               <div class="form-group">
                 <label for="form-invoice-number">Supplier Invoice Number *</label>
-                <input id="form-invoice-number" type="text" placeholder="e.g. GST-99881" required>
+                <input id="form-invoice-number" type="text" placeholder="e.g. GST-99881" required />
               </div>
               <div class="form-group">
                 <label for="form-invoice-date">Supplier Invoice Date *</label>
-                <input id="form-invoice-date" type="date" required>
+                <input id="form-invoice-date" type="date" required />
               </div>
               <div class="form-group">
                 <label for="form-warehouse-id">Store/Godown Location *</label>
@@ -354,16 +372,27 @@
               </div>
               <div class="form-group">
                 <label for="form-notes">Notes / Remarks</label>
-                <input id="form-notes" type="text" placeholder="e.g. Goods received in good condition">
+                <input
+                  id="form-notes"
+                  type="text"
+                  placeholder="e.g. Goods received in good condition"
+                />
               </div>
             </div>
 
             <div class="grid-header">
               <h3>Item Grid (Invoice Spare Parts & Lubricants)</h3>
-              <button type="button" id="add-grid-row-btn" class="primary" style="padding: 6px 12px; font-size: 13px;">+ Add Line Item</button>
+              <button
+                type="button"
+                id="add-grid-row-btn"
+                class="primary"
+                style="padding: 6px 12px; font-size: 13px"
+              >
+                + Add Line Item
+              </button>
             </div>
 
-            <div style="overflow-x: auto;">
+            <div style="overflow-x: auto">
               <table id="items-grid-table">
                 <thead>
                   <tr>
@@ -399,16 +428,25 @@
               </div>
             </div>
 
-            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end">
               <button type="button" id="cancel-create-btn">Cancel</button>
-              <button type="submit" class="primary" id="save-invoice-btn">Save & Update Stock</button>
+              <button type="submit" class="primary" id="save-invoice-btn">
+                Save & Update Stock
+              </button>
             </div>
           </form>
         </div>
 
         <!-- Tab 3: Detail View -->
-        <div id="tab-details" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div id="tab-details" style="display: none">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
             <h2>Purchase Receipt Details</h2>
             <button type="button" id="back-to-list-btn">Back to Registry</button>
           </div>
@@ -416,31 +454,31 @@
           <div class="receipt-detail-card">
             <div class="receipt-detail-grid">
               <div>
-                <strong>Receipt No (Invoice No):</strong><br>
+                <strong>Receipt No (Invoice No):</strong><br />
                 <span id="detail-receipt-no">-</span>
               </div>
               <div>
-                <strong>Receipt Date:</strong><br>
+                <strong>Receipt Date:</strong><br />
                 <span id="detail-receipt-date">-</span>
               </div>
               <div>
-                <strong>Supplier Name:</strong><br>
+                <strong>Supplier Name:</strong><br />
                 <span id="detail-supplier-name">-</span>
               </div>
               <div>
-                <strong>Supplier GSTIN:</strong><br>
+                <strong>Supplier GSTIN:</strong><br />
                 <span id="detail-supplier-gstin">-</span>
               </div>
               <div>
-                <strong>Warehouse Location:</strong><br>
+                <strong>Warehouse Location:</strong><br />
                 <span id="detail-warehouse">-</span>
               </div>
               <div>
-                <strong>Status:</strong><br>
+                <strong>Status:</strong><br />
                 <span id="detail-status" class="badge">-</span>
               </div>
             </div>
-            <div style="font-size: 14px;">
+            <div style="font-size: 14px">
               <strong>Notes:</strong> <span id="detail-notes">-</span>
             </div>
           </div>
@@ -466,7 +504,7 @@
             </tbody>
           </table>
 
-          <div class="summary-container" style="margin-top: 20px;">
+          <div class="summary-container" style="margin-top: 20px">
             <div class="summary-box">
               <div class="summary-row">
                 <span>Subtotal:</span>
@@ -486,6 +524,6 @@
       </section>
     </main>
 
-    <script src="/purchasing.js"></script>
+    <script type="module" src="/purchasing.js"></script>
   </body>
 </html>

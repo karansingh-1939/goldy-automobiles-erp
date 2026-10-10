@@ -131,13 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Define helper to check active status
     const isDashboardActive = currentPath === '/dashboard.html';
-    const isJobCardsActive = currentPath === '/job-cards.html' || currentPath === '/print-job-card.html';
-    const isCustomersActive = currentPath === '/masters.html' && (!resourceParam || resourceParam === 'customers');
+    const isJobCardsActive =
+      currentPath === '/job-cards.html' || currentPath === '/print-job-card.html';
+    const isCustomersActive =
+      currentPath === '/masters.html' && (!resourceParam || resourceParam === 'customers');
     const isTechniciansActive = currentPath === '/technicians.html';
     const isInventoryActive = currentPath === '/inventory.html';
     const isInvoicesActive = currentPath === '/invoices.html';
 
-    const moreActive = !isDashboardActive && !isJobCardsActive && !isCustomersActive && !isTechniciansActive && !isInventoryActive && !isInvoicesActive;
+    const moreActive =
+      !isDashboardActive &&
+      !isJobCardsActive &&
+      !isCustomersActive &&
+      !isTechniciansActive &&
+      !isInventoryActive &&
+      !isInvoicesActive;
 
     // Create new navigation html
     let navHtml = `
@@ -171,8 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Fetch Demo Mode Status and render banner if active
   fetch('/api/v1/demo/status')
-    .then(res => res.json())
-    .then(body => {
+    .then((res) => res.json())
+    .then((body) => {
       if (body.status === 'success' && body.data.demoMode) {
         // Prepend warning banner at the top of the page body
         const banner = document.createElement('div');
@@ -189,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/v1/demo/toggle', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ enable: false })
+              body: JSON.stringify({ enable: false }),
             });
             const result = await res.json();
             if (result.status === 'success') {
@@ -203,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.warn('Failed to fetch demo status:', err);
     });
 });

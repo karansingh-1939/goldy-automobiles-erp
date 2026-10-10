@@ -77,7 +77,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -154,16 +154,18 @@ async function loadTechnicians() {
   const params = new URLSearchParams({
     page: String(techPage),
     pageSize: '10',
-    search: query
+    search: query,
   });
 
   try {
     const res = await api(`/api/v1/technicians?${params}`);
-    document.querySelector('#tech-count-summary').textContent = `Total Technicians: ${res.pagination.total}`;
+    document.querySelector('#tech-count-summary').textContent =
+      `Total Technicians: ${res.pagination.total}`;
     const data = res.data;
 
     if (data.length === 0) {
-      techList.innerHTML = '<li style="text-align:center; color:#64748b; cursor:default; background:none;">No mechanics found.</li>';
+      techList.innerHTML =
+        '<li style="text-align:center; color:#64748b; cursor:default; background:none;">No mechanics found.</li>';
       return;
     }
 
@@ -171,10 +173,10 @@ async function loadTechnicians() {
     data.forEach((tech, index) => {
       const li = document.createElement('li');
       li.dataset.id = tech.id;
-      
+
       const badgeClass = tech.is_active ? 'badge-active' : 'badge-inactive';
       const badgeLabel = tech.is_active ? 'Active' : 'Inactive';
-      
+
       const serialNumber = (techPage - 1) * 10 + index + 1;
       li.innerHTML = `
         <div>
@@ -183,7 +185,7 @@ async function loadTechnicians() {
         </div>
         <span class="badge ${badgeClass}" style="font-size: 9px; padding: 1px 4px;">${badgeLabel}</span>
       `;
-      
+
       if (selectedTechId === tech.id) {
         li.classList.add('selected');
       }
@@ -198,7 +200,6 @@ async function loadTechnicians() {
 
       techList.appendChild(li);
     });
-
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -215,12 +216,13 @@ async function loadTechnicianDetails() {
     document.querySelector('#detail-code').textContent = tech.id;
     document.querySelector('#detail-name').textContent = tech.full_name;
     document.querySelector('#detail-phone').textContent = tech.phone_number;
-    document.querySelector('#detail-spec').textContent = tech.specialization || 'General / Multi-Specialist';
+    document.querySelector('#detail-spec').textContent =
+      tech.specialization || 'General / Multi-Specialist';
     document.querySelector('#detail-notes').textContent = tech.notes || '-';
 
     const badge = document.querySelector('#detail-badge');
     const toggleBtn = document.querySelector('#toggle-active-btn');
-    
+
     if (tech.is_active) {
       badge.textContent = 'Active';
       badge.className = 'badge badge-active';
@@ -238,7 +240,6 @@ async function loadTechnicianDetails() {
 
     noSelectionView.style.display = 'none';
     detailsView.style.display = 'block';
-
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -247,12 +248,12 @@ async function loadTechnicianDetails() {
 async function loadHistory() {
   const params = new URLSearchParams({
     page: String(historyPage),
-    pageSize: '5'
+    pageSize: '5',
   });
 
   try {
     const res = await api(`/api/v1/technicians/${selectedTechId}/history?${params}`);
-    
+
     // Set KPI cards
     document.querySelector('#stat-assigned').textContent = res.metrics.totalAssignedJobs;
     document.querySelector('#stat-completed').textContent = res.metrics.completedJobs;
@@ -263,7 +264,8 @@ async function loadHistory() {
     const history = res.history;
 
     if (!history || history.length === 0) {
-      container.innerHTML = '<p style="padding:15px; background:#f8fafc; text-align:center; color:#64748b; font-size:13px;">No job assignments logged.</p>';
+      container.innerHTML =
+        '<p style="padding:15px; background:#f8fafc; text-align:center; color:#64748b; font-size:13px;">No job assignments logged.</p>';
       document.querySelector('#history-page-info').textContent = '';
       return;
     }
@@ -286,7 +288,7 @@ async function loadHistory() {
     history.forEach((row) => {
       const invTotal = row.invoice ? `Rs. ${Number(row.invoice.grandTotal).toFixed(2)}` : '-';
       const invNum = row.invoice ? ` / Inv ${row.invoice.invoiceNumber}` : '';
-      
+
       html += `
         <tr>
           <td>${row.openedAt ? row.openedAt.slice(0, 10) : '-'}</td>
@@ -303,7 +305,6 @@ async function loadHistory() {
     container.innerHTML = html;
 
     document.querySelector('#history-page-info').textContent = `Page ${historyPage}`;
-
   } catch (err) {
     console.error('Failed to load history', err);
   }
@@ -343,7 +344,6 @@ async function openModalForEdit() {
     modalActive.checked = Boolean(tech.is_active);
     modalActiveLabel.style.display = 'flex';
     techModal.style.display = 'flex';
-
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -377,19 +377,18 @@ async function saveTechnician() {
   try {
     const res = await api(endpoint, {
       method,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     closeModal();
     showMessage(id ? 'Technician updated successfully.' : 'Technician created successfully.');
-    
+
     if (!id) {
       selectedTechId = res.data.id;
     }
-    
+
     await loadTechnicians();
     await loadTechnicianDetails();
-
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -402,7 +401,11 @@ async function toggleActiveState() {
 
     if (tech.is_active) {
       // Deactivate via DELETE route
-      if (confirm(`Are you sure you want to deactivate ${tech.full_name}? They will no longer be assignable to new Job Cards.`)) {
+      if (
+        confirm(
+          `Are you sure you want to deactivate ${tech.full_name}? They will no longer be assignable to new Job Cards.`,
+        )
+      ) {
         await api(`/api/v1/technicians/${selectedTechId}`, { method: 'DELETE' });
         showMessage('Technician deactivated.');
       }
@@ -410,14 +413,13 @@ async function toggleActiveState() {
       // Reactivate via PATCH route
       await api(`/api/v1/technicians/${selectedTechId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ is_active: true })
+        body: JSON.stringify({ is_active: true }),
       });
       showMessage('Technician reactivated.');
     }
 
     await loadTechnicians();
     await loadTechnicianDetails();
-
   } catch (err) {
     showMessage(err.message, true);
   }

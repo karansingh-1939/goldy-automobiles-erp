@@ -1,7 +1,7 @@
 import { createDatabase } from './connection.js';
-import { MigrationRunner } from './migrationRunner.js';
-import { BackupService } from './backupService.js';
-import { runSeeds } from './seedRunner.js';
+import { MigrationRunner } from './migration-runner.js';
+import { BackupService } from './backup-service.js';
+import { runSeeds } from './seed-runner.js';
 import { pathToFileURL } from 'node:url';
 
 export async function initializeDatabase(db = createDatabase()) {

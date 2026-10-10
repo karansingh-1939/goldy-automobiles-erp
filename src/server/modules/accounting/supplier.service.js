@@ -1,4 +1,4 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 
 /**
  * Service to manage Supplier Master Registry and AP Ledgers.
@@ -28,10 +28,21 @@ export class SupplierService {
 
     return this.db.transaction(() => {
       // 1. Insert supplier base record
-      const result = this.db.prepare(`
+      const result = this.db
+        .prepare(
+          `
         INSERT INTO suppliers (name, phone, email, gstin, address, opening_balance)
         VALUES (?, ?, ?, ?, ?, ?)
-      `).run(name, phone || null, email || null, gstin || null, address || null, Number(openingBalance));
+      `,
+        )
+        .run(
+          name,
+          phone || null,
+          email || null,
+          gstin || null,
+          address || null,
+          Number(openingBalance),
+        );
 
       const supplierId = result.lastInsertRowid;
 
@@ -40,7 +51,13 @@ export class SupplierService {
 
       // If supplier has opening balance, we can optionally post a journal entry or record it in AP balance cache.
       if (Number(openingBalance) !== 0) {
-        this.postingEngine.updateRunningBalance(companyId, ledgerId, 'Credit', 'CREDIT', Math.abs(Number(openingBalance)));
+        this.postingEngine.updateRunningBalance(
+          companyId,
+          ledgerId,
+          'Credit',
+          'CREDIT',
+          Math.abs(Number(openingBalance)),
+        );
       }
 
       return this.getSupplier(supplierId);
@@ -51,14 +68,18 @@ export class SupplierService {
    * Retrieves a single supplier by ID.
    */
   getSupplier(id) {
-    const supplier = this.db.prepare(`
+    const supplier = this.db
+      .prepare(
+        `
       SELECT s.*, l.name AS ledger_name, 
         COALESCE(lb.running_balance, 0) AS current_balance
       FROM suppliers s
       LEFT JOIN ledgers l ON s.ledger_id = l.id
       LEFT JOIN ledger_balances lb ON s.ledger_id = lb.ledger_id
       WHERE s.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
 
     if (!supplier) {
       throw new AppError('Supplier not found.', 404, 'SUPPLIER_NOT_FOUND');
@@ -111,7 +132,9 @@ export class SupplierService {
     }
 
     return this.db.transaction(() => {
-      this.db.prepare(`
+      this.db
+        .prepare(
+          `
         UPDATE suppliers
         SET name = COALESCE(?, name),
             phone = COALESCE(?, phone),
@@ -121,20 +144,24 @@ export class SupplierService {
             is_active = COALESCE(?, is_active),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).run(
-        name || null,
-        phone || null,
-        email || null,
-        gstin || null,
-        address || null,
-        isActive !== undefined ? Number(isActive) : null,
-        id
-      );
+      `,
+        )
+        .run(
+          name || null,
+          phone || null,
+          email || null,
+          gstin || null,
+          address || null,
+          isActive !== undefined ? Number(isActive) : null,
+          id,
+        );
 
       // If supplier name has changed, rename the general ledger account
       if (name && name !== supplier.name) {
         const newLedgerName = `Supplier: ${name}`;
-        this.db.prepare('UPDATE ledgers SET name = ? WHERE id = ?').run(newLedgerName, supplier.ledger_id);
+        this.db
+          .prepare('UPDATE ledgers SET name = ? WHERE id = ?')
+          .run(newLedgerName, supplier.ledger_id);
       }
 
       return this.getSupplier(id);

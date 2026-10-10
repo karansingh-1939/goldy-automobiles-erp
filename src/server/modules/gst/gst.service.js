@@ -1,4 +1,5 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { GstRepository } from './gst.repository.js';
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -8,7 +9,7 @@ function money(value) {
 }
 
 function todayString() {
-  return new Date().toISOString().slice(0, 10);
+  return localDate();
 }
 
 function firstDayOfMonth(dateText) {
@@ -24,7 +25,10 @@ function normalizePeriod(period) {
     return null;
   }
 
-  return String(period).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return String(period)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
 }
 
 function normalizeDate(value, label) {
@@ -77,6 +81,7 @@ function parseFilters(query = {}) {
 function mapSummaryRow(row) {
   return {
     invoiceCount: row.invoice_count,
+    creditNoteCount: row.credit_note_count || 0,
     lineCount: row.line_count,
     taxableValue: money(row.taxable_value),
     cgstAmount: money(row.cgst_amount),
@@ -89,6 +94,8 @@ function mapSummaryRow(row) {
 
 function mapGstr1Row(row) {
   return {
+    documentType: row.document_type || 'INVOICE',
+    originalInvoiceNumber: row.original_invoice_number || null,
     invoiceId: row.invoice_id,
     invoiceNumber: row.invoice_number,
     invoiceDate: row.invoice_date,
@@ -202,11 +209,15 @@ export class GstService {
   }
 
   getPeriodLocks(companyId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM gst_period_locks 
       WHERE company_id = ? 
       ORDER BY tax_period DESC
-    `).all(companyId);
+    `,
+      )
+      .all(companyId);
   }
 
   updatePeriodLock(companyId, taxPeriod, isLocked, userId) {
@@ -215,14 +226,18 @@ export class GstService {
     }
 
     return this.db.transaction(() => {
-      this.db.prepare(`
+      this.db
+        .prepare(
+          `
         INSERT INTO gst_period_locks (company_id, tax_period, is_locked, locked_by, updated_at)
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(company_id, tax_period) DO UPDATE SET
           is_locked = excluded.is_locked,
           locked_by = excluded.locked_by,
           updated_at = CURRENT_TIMESTAMP
-      `).run(companyId, taxPeriod, Number(isLocked), userId);
+      `,
+        )
+        .run(companyId, taxPeriod, Number(isLocked), userId);
 
       return { companyId, taxPeriod, isLocked: Boolean(isLocked) };
     })();

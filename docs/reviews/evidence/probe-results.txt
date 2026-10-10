@@ -1,0 +1,8 @@
+REPORT_FILTER_PROBE {"expectedJuneRevenue":100,"actualJuneRevenue":600,"expectedJuneTrialBalanceCredit":100,"actualJuneTrialBalanceCredit":600}
+WAL_BACKUP_PROBE {"liveRows":1,"backupRows":0,"backupIntegrityAccepted":true}
+Skipping starter inventory seeding in test environment.
+API_CONTRACT_PROBE {"tallyUiPathStatus":404,"gstUiFilters":{"period":null,"dateFrom":null,"dateTo":null},"gstActualKeys":["invoiceCount","lineCount","taxableValue","cgstAmount","sgstAmount","igstAmount","totalTax","grossValue"],"authenticatedRootStatus":302,"authenticatedRootLocation":"/dashboard.html"}
+COSTING_PROBE {"invoiceCost":{"cost_price":100},"movementCost":{"unit_cost":150}}
+VEHICLE_DUPLICATE_PROBE {"firstStatus":201,"secondStatus":201,"normalizedCount":2}
+DEMO_AUTHORIZATION_PROBE {"mechanicExportStatus":200,"exportsUsers":true,"exportsSessions":true,"mechanicImportStatus":200,"remainingSettings":1}
+SCHEMA_PROBE {"tables":76,"migrations":34}

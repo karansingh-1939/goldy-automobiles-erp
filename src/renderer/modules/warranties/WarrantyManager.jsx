@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../shared/api/apiClient.js';
-import { useAppStore } from '../../shared/store/useAppStore.js';
-import { Search, ShieldAlert, Award, FileText, CheckCircle, X, ChevronRight } from 'lucide-react';
+import { api } from '../../shared/api/api-client.js';
+import { useAppStore } from '../../shared/store/use-app-store.js';
+import { Search, X } from 'lucide-react';
 
 export default function WarrantyManager() {
   const queryClient = useQueryClient();
@@ -10,7 +10,7 @@ export default function WarrantyManager() {
 
   const [activeTab, setActiveTab] = useState('registrations');
   const [search, setSearch] = useState('');
-  
+
   // Claim Settlement Dialog
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [settlementType, setSettlementType] = useState('REPLACEMENT');
@@ -27,21 +27,21 @@ export default function WarrantyManager() {
   const { data: regResponse, isLoading: loadingReg } = useQuery({
     queryKey: ['warranties', search],
     queryFn: () => api.get(`/api/v1/warranties?search=${encodeURIComponent(search)}`),
-    enabled: activeTab === 'registrations'
+    enabled: activeTab === 'registrations',
   });
 
   // Fetch Claims
   const { data: claimsResponse, isLoading: loadingClaims } = useQuery({
     queryKey: ['warranty-claims'],
     queryFn: () => api.get('/api/v1/warranties/claims'),
-    enabled: activeTab === 'claims'
+    enabled: activeTab === 'claims',
   });
 
   // Fetch replacement batches if settling
   const { data: batchesResponse } = useQuery({
     queryKey: ['replacement-batches', selectedClaim?.item_id],
     queryFn: () => api.get(`/api/v1/inventory/items/${selectedClaim?.item_id}/batches`),
-    enabled: !!selectedClaim && settlementType === 'REPLACEMENT'
+    enabled: !!selectedClaim && settlementType === 'REPLACEMENT',
   });
 
   const registrations = regResponse?.data || [];
@@ -52,37 +52,38 @@ export default function WarrantyManager() {
   const fileClaimMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/warranties/claims', payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['warranties']);
-      queryClient.invalidateQueries(['warranty-claims']);
+      queryClient.invalidateQueries({ queryKey: ['warranties'] });
+      queryClient.invalidateQueries({ queryKey: ['warranty-claims'] });
       addNotification('Warranty claim filed successfully.', 'success');
       setShowClaimModal(false);
       setClaimNotes('');
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to file claim.', 'error');
-    }
+    },
   });
 
   // Settle Claim Mutation
   const settleClaimMutation = useMutation({
-    mutationFn: (payload) => api.post(`/api/v1/warranties/claims/${selectedClaim.id}/approve`, payload),
+    mutationFn: (payload) =>
+      api.post(`/api/v1/warranties/claims/${selectedClaim.id}/approve`, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['warranties']);
-      queryClient.invalidateQueries(['warranty-claims']);
+      queryClient.invalidateQueries({ queryKey: ['warranties'] });
+      queryClient.invalidateQueries({ queryKey: ['warranty-claims'] });
       addNotification('Warranty claim settled and posted.', 'success');
       setShowSettleModal(false);
       setSelectedClaim(null);
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to settle claim.', 'error');
-    }
+    },
   });
 
   const handleFileClaim = (e) => {
     e.preventDefault();
     fileClaimMutation.mutate({
       registrationId: selectedReg.id,
-      notes: claimNotes
+      notes: claimNotes,
     });
   };
 
@@ -92,7 +93,7 @@ export default function WarrantyManager() {
       settlementType,
       notes: 'Claim approved and processed',
       replacementWarehouseId: settlementType === 'REPLACEMENT' ? Number(warehouseId) : undefined,
-      replacementBatchId: settlementType === 'REPLACEMENT' ? Number(batchId) : undefined
+      replacementBatchId: settlementType === 'REPLACEMENT' ? Number(batchId) : undefined,
     };
     settleClaimMutation.mutate(payload);
   };
@@ -101,8 +102,12 @@ export default function WarrantyManager() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Warranty & Claims Hub</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Track parts warranty expirations, look up active registrations, and process claims.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Warranty & Claims Hub
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Track parts warranty expirations, look up active registrations, and process claims.
+          </p>
         </div>
       </div>
 
@@ -148,7 +153,9 @@ export default function WarrantyManager() {
           loadingReg ? (
             <div className="p-12 text-center text-sm text-gray-500">Loading registrations...</div>
           ) : registrations.length === 0 ? (
-            <div className="p-12 text-center text-sm text-gray-500">No active warranty registrations found.</div>
+            <div className="p-12 text-center text-sm text-gray-500">
+              No active warranty registrations found.
+            </div>
           ) : (
             <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
               <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800">
@@ -169,24 +176,31 @@ export default function WarrantyManager() {
                       <p className="text-xs text-gray-400 font-mono">{r.sku}</p>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-800 dark:text-gray-200">{r.customer_name}</p>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200">
+                        {r.customer_name}
+                      </p>
                       <p className="text-xs text-gray-400 font-mono">{r.registration_number}</p>
                     </td>
                     <td className="px-4 py-4">{r.start_date}</td>
                     <td className="px-4 py-4">{r.end_date}</td>
                     <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        r.status === 'ACTIVE' 
-                          ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400' 
-                          : 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-400'
-                      }`}>
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          r.status === 'ACTIVE'
+                            ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400'
+                            : 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-400'
+                        }`}
+                      >
                         {r.status}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
                       {r.status === 'ACTIVE' && (
                         <button
-                          onClick={() => { setSelectedReg(r); setShowClaimModal(true); }}
+                          onClick={() => {
+                            setSelectedReg(r);
+                            setShowClaimModal(true);
+                          }}
                           className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
                         >
                           File Claim
@@ -198,57 +212,64 @@ export default function WarrantyManager() {
               </tbody>
             </table>
           )
+        ) : loadingClaims ? (
+          <div className="p-12 text-center text-sm text-gray-500">Loading claims...</div>
+        ) : claims.length === 0 ? (
+          <div className="p-12 text-center text-sm text-gray-500">
+            No active warranty claims found.
+          </div>
         ) : (
-          loadingClaims ? (
-            <div className="p-12 text-center text-sm text-gray-500">Loading claims...</div>
-          ) : claims.length === 0 ? (
-            <div className="p-12 text-center text-sm text-gray-500">No active warranty claims found.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
-              <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800">
-                <tr>
-                  <th className="px-4 py-3">Claim No.</th>
-                  <th className="px-4 py-3">Part Details</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Claim Date</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {claims.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-850">
-                    <td className="px-4 py-4 font-mono font-bold text-gray-950 dark:text-white">{c.claim_number}</td>
-                    <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-900 dark:text-white">{c.item_name}</p>
-                      <p className="text-xs text-gray-400 font-mono">{c.sku}</p>
-                    </td>
-                    <td className="px-4 py-4">{c.customer_name}</td>
-                    <td className="px-4 py-4">{c.claim_date}</td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        c.status === 'SETTLED' 
-                          ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400' 
+          <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
+            <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800">
+              <tr>
+                <th className="px-4 py-3">Claim No.</th>
+                <th className="px-4 py-3">Part Details</th>
+                <th className="px-4 py-3">Customer</th>
+                <th className="px-4 py-3">Claim Date</th>
+                <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+              {claims.map((c) => (
+                <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-850">
+                  <td className="px-4 py-4 font-mono font-bold text-gray-950 dark:text-white">
+                    {c.claim_number}
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="font-semibold text-gray-900 dark:text-white">{c.item_name}</p>
+                    <p className="text-xs text-gray-400 font-mono">{c.sku}</p>
+                  </td>
+                  <td className="px-4 py-4">{c.customer_name}</td>
+                  <td className="px-4 py-4">{c.claim_date}</td>
+                  <td className="px-4 py-4 text-center">
+                    <span
+                      className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        c.status === 'SETTLED'
+                          ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400'
                           : 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                      }`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {c.status === 'PENDING' && (
-                        <button
-                          onClick={() => { setSelectedClaim(c); setShowSettleModal(true); }}
-                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400"
-                        >
-                          Settle Claim
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
+                      }`}
+                    >
+                      {c.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {c.status === 'PENDING' && (
+                      <button
+                        onClick={() => {
+                          setSelectedClaim(c);
+                          setShowSettleModal(true);
+                        }}
+                        className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                      >
+                        Settle Claim
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
@@ -257,18 +278,32 @@ export default function WarrantyManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 className="text-base font-bold text-gray-950 dark:text-white">File Warranty Claim</h3>
-              <button onClick={() => setShowClaimModal(false)} className="p-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"><X className="h-4 w-4" /></button>
+              <h3 className="text-base font-bold text-gray-950 dark:text-white">
+                File Warranty Claim
+              </h3>
+              <button
+                onClick={() => setShowClaimModal(false)}
+                className="p-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            
+
             <form onSubmit={handleFileClaim} className="p-6 space-y-4">
               <div>
                 <p className="text-[10px] text-gray-500 font-semibold uppercase">Item to Claim</p>
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{selectedReg?.item_name} ({selectedReg?.sku})</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                  {selectedReg?.item_name} ({selectedReg?.sku})
+                </p>
               </div>
 
               <div>
-                <label htmlFor="modal-claim-notes" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Failure description / Notes *</label>
+                <label
+                  htmlFor="modal-claim-notes"
+                  className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                >
+                  Failure description / Notes *
+                </label>
                 <textarea
                   id="modal-claim-notes"
                   required
@@ -305,13 +340,25 @@ export default function WarrantyManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 className="text-base font-bold text-gray-950 dark:text-white">Approve & Settle Claim</h3>
-              <button onClick={() => setShowSettleModal(false)} className="p-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"><X className="h-4 w-4" /></button>
+              <h3 className="text-base font-bold text-gray-950 dark:text-white">
+                Approve & Settle Claim
+              </h3>
+              <button
+                onClick={() => setShowSettleModal(false)}
+                className="p-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            
+
             <form onSubmit={handleSettleClaim} className="p-6 space-y-4">
               <div>
-                <label htmlFor="modal-settle-select" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Settlement Action *</label>
+                <label
+                  htmlFor="modal-settle-select"
+                  className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                >
+                  Settlement Action *
+                </label>
                 <select
                   id="modal-settle-select"
                   value={settlementType}
@@ -327,7 +374,12 @@ export default function WarrantyManager() {
               {settlementType === 'REPLACEMENT' && (
                 <div className="space-y-4 bg-gray-50 dark:bg-gray-850/50 p-4 border border-gray-200 dark:border-gray-800 rounded-xl animate-fade-in">
                   <div>
-                    <label htmlFor="modal-settle-warehouse" className="block text-[10px] font-bold text-gray-500 uppercase">Warehouse Source *</label>
+                    <label
+                      htmlFor="modal-settle-warehouse"
+                      className="block text-[10px] font-bold text-gray-500 uppercase"
+                    >
+                      Warehouse Source *
+                    </label>
                     <select
                       id="modal-settle-warehouse"
                       required={settlementType === 'REPLACEMENT'}
@@ -340,9 +392,14 @@ export default function WarrantyManager() {
                       <option value="2">Delhi Godown</option>
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="modal-settle-batch" className="block text-[10px] font-bold text-gray-500 uppercase">Replacement Batch *</label>
+                    <label
+                      htmlFor="modal-settle-batch"
+                      className="block text-[10px] font-bold text-gray-500 uppercase"
+                    >
+                      Replacement Batch *
+                    </label>
                     <select
                       id="modal-settle-batch"
                       required={settlementType === 'REPLACEMENT'}
@@ -352,10 +409,15 @@ export default function WarrantyManager() {
                     >
                       <option value="">Select batch...</option>
                       {batches
-                        .filter(b => !warehouseId || Number(b.warehouse_id) === Number(warehouseId))
+                        .filter(
+                          (b) => !warehouseId || Number(b.warehouse_id) === Number(warehouseId),
+                        )
                         .map((b) => (
-                          <option key={b.id} value={b.id}>{`${b.batch_number} (Qty: ${b.quantity})`}</option>
-                      ))}
+                          <option
+                            key={b.id}
+                            value={b.id}
+                          >{`${b.batch_number} (Qty: ${b.quantity})`}</option>
+                        ))}
                     </select>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { CrmRepository } from './crm.repository.js';
 
 export class CrmService {
@@ -10,14 +11,18 @@ export class CrmService {
   registerMembership({ customerId, tier }) {
     const existing = this.repository.getMembershipByCustomerId(customerId);
     if (existing) {
-      throw new AppError('Customer already registered in loyalty program.', 400, 'LOYALTY_MEMBER_EXISTS');
+      throw new AppError(
+        'Customer already registered in loyalty program.',
+        400,
+        'LOYALTY_MEMBER_EXISTS',
+      );
     }
 
-    const joinedAt = new Date().toISOString().slice(0, 10);
+    const joinedAt = localDate();
     return this.repository.createMembership({
       customerId,
       tier: tier || 'Standard',
-      joinedAt
+      joinedAt,
     });
   }
 
@@ -45,7 +50,7 @@ export class CrmService {
       transactionType,
       points,
       notes,
-      createdBy: userId
+      createdBy: userId,
     });
 
     // Auto tier upgrades based on lifetime points accruals
@@ -80,7 +85,7 @@ export class CrmService {
       referrerId: customerId,
       referredId: null,
       referralCode: code,
-      rewardPoints: 500 // 500 bonus points on referral
+      rewardPoints: 500, // 500 bonus points on referral
     });
     return code;
   }
@@ -96,21 +101,27 @@ export class CrmService {
     }
 
     this.repository.updateReferralStatus(referral.id, 'COMPLETED');
-    this.repository.db.prepare(`
+    this.repository.db
+      .prepare(
+        `
       UPDATE customer_referrals
       SET referred_customer_id = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(referredCustomerId, referral.id);
+    `,
+      )
+      .run(referredCustomerId, referral.id);
 
     // Reward the referrer
-    const referrerMembership = this.repository.getMembershipByCustomerId(referral.referrer_customer_id);
+    const referrerMembership = this.repository.getMembershipByCustomerId(
+      referral.referrer_customer_id,
+    );
     if (referrerMembership) {
       this.adjustPoints(
-        referrerMembership.id, 
-        referral.reward_points, 
-        'EARNED', 
-        `Referral reward for code ${referralCode}`, 
-        null
+        referrerMembership.id,
+        referral.reward_points,
+        'EARNED',
+        `Referral reward for code ${referralCode}`,
+        null,
       );
     }
   }
@@ -135,20 +146,28 @@ export class CrmService {
       throw new AppError('Promotion code is invalid or expired.', 404, 'PROMO_INVALID');
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDate();
     if (today < promo.start_date || today > promo.end_date) {
       throw new AppError('Promotion has expired or is not yet active.', 400, 'PROMO_EXPIRED');
     }
 
     if (cartTotal < promo.min_purchase_amount) {
-      throw new AppError(`Minimum purchase of ₹${promo.min_purchase_amount} is required to apply this code.`, 400, 'PROMO_MIN_PURCHASE');
+      throw new AppError(
+        `Minimum purchase of ₹${promo.min_purchase_amount} is required to apply this code.`,
+        400,
+        'PROMO_MIN_PURCHASE',
+      );
     }
 
     // Check membership tier discount validation
     if (promo.target_tier) {
       const membership = this.repository.getMembershipByCustomerId(customerId);
       if (!membership || membership.tier !== promo.target_tier) {
-        throw new AppError(`This promotion is exclusive to ${promo.target_tier} members.`, 403, 'PROMO_TIER_EXCLUSIVE');
+        throw new AppError(
+          `This promotion is exclusive to ${promo.target_tier} members.`,
+          403,
+          'PROMO_TIER_EXCLUSIVE',
+        );
       }
     }
 
@@ -166,7 +185,7 @@ export class CrmService {
       code: promo.code,
       name: promo.name,
       promoType: promo.promo_type,
-      discountAmount: Math.round(discount)
+      discountAmount: Math.round(discount),
     };
   }
 
@@ -181,12 +200,12 @@ export class CrmService {
       vehicleId,
       reminderType,
       dueDate,
-      notes
+      notes,
     });
   }
 
   listReminders() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDate();
     return this.repository.getPendingReminders(today);
   }
 

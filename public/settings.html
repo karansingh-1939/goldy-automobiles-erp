@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Settings</title>
     <style>
       :root {
@@ -76,12 +76,14 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
       }
 
       .panel-card:hover {
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
       }
 
       .panel-card h3 {
@@ -108,9 +110,9 @@
         margin-bottom: 6px;
       }
 
-      .form-group input[type="text"],
-      .form-group input[type="number"],
-      .form-group input[type="time"],
+      .form-group input[type='text'],
+      .form-group input[type='number'],
+      .form-group input[type='time'],
       .form-group select {
         width: 100%;
         padding: 8px 12px;
@@ -120,7 +122,7 @@
         box-sizing: border-box;
       }
 
-      .form-group input[type="checkbox"] {
+      .form-group input[type='checkbox'] {
         width: 16px;
         height: 16px;
         margin-right: 8px;
@@ -179,7 +181,8 @@
         width: 100%;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 10px 12px;
         text-align: left;
@@ -262,7 +265,9 @@
       .modal-card {
         background: #ffffff;
         border-radius: 12px;
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
         padding: 24px;
         width: 100%;
         max-width: 500px;
@@ -300,16 +305,20 @@
       }
 
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     </style>
     <script src="/navigation.js" defer></script>
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -328,28 +337,43 @@
           <a href="/settings.html" class="active">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; color:#0f766e; font-size: 20px;">System Settings & Utilities</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; color: #0f766e; font-size: 20px">System Settings & Utilities</h2>
       </div>
 
       <div id="message-banner">
         <span id="message-text"></span>
-        <button onclick="document.getElementById('message-banner').style.display='none'" style="background:transparent; border:0; font-size:16px; font-weight:bold; cursor:pointer; color:inherit;">&times;</button>
+        <button
+          id="dismiss-message-btn"
+          aria-label="Dismiss message"
+          style="
+            background: transparent;
+            border: 0;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: inherit;
+          "
+        >
+          &times;
+        </button>
       </div>
 
       <div class="settings-grid">
         <!-- Left Column: Scheduler & Database Admin Options -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 24px">
           <!-- Automatic Backup Settings Card -->
           <div class="panel-card">
             <h3>Automated Backup Scheduler</h3>
             <form id="scheduler-form">
               <div class="form-group checkbox-group">
-                <input type="checkbox" id="auto_enabled" name="backup.auto_enabled">
+                <input type="checkbox" id="auto_enabled" name="backup.auto_enabled" />
                 <label for="auto_enabled">Enable Automatic Backups</label>
               </div>
 
@@ -365,7 +389,7 @@
 
                 <div class="form-group" id="preferred-time-group">
                   <label for="preferred_time">Preferred Run Time</label>
-                  <input type="time" id="preferred_time" name="backup.preferred_time">
+                  <input type="time" id="preferred_time" name="backup.preferred_time" />
                 </div>
 
                 <div class="form-group" id="weekly-day-group">
@@ -383,179 +407,73 @@
 
                 <div class="form-group" id="interval-hours-group">
                   <label for="interval_hours">Interval hours</label>
-                  <input type="number" id="interval_hours" name="backup.interval_hours" min="1" max="168">
+                  <input
+                    type="number"
+                    id="interval_hours"
+                    name="backup.interval_hours"
+                    min="1"
+                    max="168"
+                  />
                 </div>
 
                 <div class="form-group">
                   <label for="retention_count">Retention Count (Backups to Keep)</label>
-                  <input type="number" id="retention_count" name="backup.retention_count" min="1" max="50">
+                  <input
+                    type="number"
+                    id="retention_count"
+                    name="backup.retention_count"
+                    min="1"
+                    max="50"
+                  />
                 </div>
 
                 <div class="form-group checkbox-group">
-                  <input type="checkbox" id="missed_recovery" name="backup.missed_recovery">
+                  <input type="checkbox" id="missed_recovery" name="backup.missed_recovery" />
                   <label for="missed_recovery">Run catch-up if backup missed during downtime</label>
                 </div>
               </div>
 
               <button type="submit" class="btn" id="save-settings-btn">Save Configurations</button>
             </form>
-          </div>
-
-          <!-- System Utilities / Purge Card -->
-          <div class="panel-card">
-            <h3>System Maintenance & Cleanups</h3>
-            <p style="font-size: 13px; color: #64748b; line-height: 1.4; margin-bottom: 16px;">
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Restore Confirmation Modal -->
-    <div class="modal-overlay" id="restore-modal">
-      <div class="modal-card">
-        <h4 style="color: #b91c1c;">⚠️ Confirm Database Restoration</h4>
-        <p>
-          You are about to overwrite the active database. Current transactions will be replaced by the contents of the uploaded file.
-          <br><br>
-          An emergency backup of your active database will be created automatically before execution.
-        </p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="cancel-restore-btn">Cancel</button>
-          <button class="btn btn-danger" id="confirm-restore-btn">Confirm & Restore</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Purge Confirmation Modal -->
-    <div class="modal-overlay" id="purge-modal">
-      <div class="modal-card">
-        <h4 style="color: #b91c1c;">⚠️ Purge Demo Data Confirmation</h4>
-  </head>
-  <body>
-    <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
-        <nav class="nav-links">
-          <a href="/masters.html">Masters</a>
-          <a href="/job-cards.html">Job Cards</a>
-          <a href="/inventory.html">Inventory</a>
-          <a href="/stock-verification.html">Stock Verification</a>
-          <a href="/assets.html">Asset Register</a>
-          <a href="/invoices.html">Invoices</a>
-          <a href="/expenses.html">Expenses</a>
-          <a href="/gst-reports.html">GST Reports</a>
-          <a href="/dashboard.html">Dashboard</a>
-          <a href="/service-history.html">Service History</a>
-          <a href="/supplier-ledger.html">Supplier Ledger</a>
-          <a href="/technicians.html">Technicians</a>
-          <a href="/audit-logs.html">Audit Logs</a>
-          <a href="/tally-export.html">Tally Export</a>
-          <a href="/settings.html" class="active">Settings</a>
-        </nav>
-      </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
-    </header>
-
-    <main>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; color:#0f766e; font-size: 20px;">System Settings & Utilities</h2>
-      </div>
-
-      <div id="message-banner">
-        <span id="message-text"></span>
-        <button onclick="document.getElementById('message-banner').style.display='none'" style="background:transparent; border:0; font-size:16px; font-weight:bold; cursor:pointer; color:inherit;">&times;</button>
-      </div>
-
-      <div class="settings-grid">
-        <!-- Left Column: Scheduler & Database Admin Options -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
-          <!-- Automatic Backup Settings Card -->
-          <div class="panel-card">
-            <h3>Automated Backup Scheduler</h3>
-            <form id="scheduler-form">
-              <div class="form-group checkbox-group">
-                <input type="checkbox" id="auto_enabled" name="backup.auto_enabled">
-                <label for="auto_enabled">Enable Automatic Backups</label>
-              </div>
-
-              <div id="scheduler-config-fields">
-                <div class="form-group">
-                  <label for="schedule_type">Schedule Type</label>
-                  <select id="schedule_type" name="backup.schedule_type">
-                    <option value="DAILY">Daily</option>
-                    <option value="WEEKLY">Weekly</option>
-                    <option value="INTERVAL">Hourly Interval</option>
-                  </select>
-                </div>
-
-                <div class="form-group" id="preferred-time-group">
-                  <label for="preferred_time">Preferred Run Time</label>
-                  <input type="time" id="preferred_time" name="backup.preferred_time">
-                </div>
-
-                <div class="form-group" id="weekly-day-group">
-                  <label for="weekly_day">Weekly Run Day</label>
-                  <select id="weekly_day" name="backup.weekly_day">
-                    <option value="Sunday">Sunday</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                  </select>
-                </div>
-
-                <div class="form-group" id="interval-hours-group">
-                  <label for="interval_hours">Interval hours</label>
-                  <input type="number" id="interval_hours" name="backup.interval_hours" min="1" max="168">
-                </div>
-
-                <div class="form-group">
-                  <label for="retention_count">Retention Count (Backups to Keep)</label>
-                  <input type="number" id="retention_count" name="backup.retention_count" min="1" max="50">
-                </div>
-
-                <div class="form-group checkbox-group">
-                  <input type="checkbox" id="missed_recovery" name="backup.missed_recovery">
-                  <label for="missed_recovery">Run catch-up if backup missed during downtime</label>
-                </div>
-              </div>
-
-              <button type="submit" class="btn" id="save-settings-btn">Save Configurations</button>
-            </form>
-          </div>
-
-          <!-- System Utilities / Purge Card -->
-          <div class="panel-card">
-            <h3>System Maintenance & Cleanups</h3>
-            <p style="font-size: 13px; color: #64748b; line-height: 1.4; margin-bottom: 16px;">
-              Perform database maintenance operations to remove demo data or clear temporary files.
-            </p>
-            <button class="btn btn-danger" id="purge-demo-btn">Purge Demo Data</button>
           </div>
         </div>
 
         <!-- Right Column: Database Backups History & Restore -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 24px">
           <div class="panel-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">
-              <h3 style="margin: 0; border: 0; padding: 0;">Database Backup History & Actions</h3>
-              <div style="display: flex; gap: 8px;">
-                <label class="btn btn-secondary" style="margin: 0;">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 8px;
+                margin-bottom: 16px;
+              "
+            >
+              <h3 style="margin: 0; border: 0; padding: 0">Database Backup History & Actions</h3>
+              <div style="display: flex; gap: 8px">
+                <label class="btn btn-secondary" style="margin: 0">
                   Upload & Restore File
-                  <input type="file" id="restore-file-input" accept=".sqlite,.db" style="display: none;">
+                  <input
+                    type="file"
+                    id="restore-file-input"
+                    accept=".sqlite,.db"
+                    style="display: none"
+                  />
                 </label>
-                <button class="btn btn-secondary" id="restore-latest-btn" style="background-color: #ea580c; color: white; border: 0;">Restore Latest Backup</button>
+                <button
+                  class="btn btn-secondary"
+                  id="restore-latest-btn"
+                  style="background-color: #ea580c; color: white; border: 0"
+                >
+                  Restore Latest Backup
+                </button>
                 <button class="btn" id="backup-now-btn">Backup Now</button>
               </div>
             </div>
 
-            <div style="overflow-x: auto;">
+            <div style="overflow-x: auto">
               <table id="backups-table">
                 <thead>
                   <tr>
@@ -579,11 +497,13 @@
     <!-- Restore Confirmation Modal -->
     <div class="modal-overlay" id="restore-modal">
       <div class="modal-card">
-        <h4 style="color: #b91c1c;">⚠️ Confirm Database Restoration</h4>
+        <h4 style="color: #b91c1c">⚠️ Confirm Database Restoration</h4>
         <p>
-          You are about to overwrite the active database. Current transactions will be replaced by the contents of the uploaded file.
-          <br><br>
-          An emergency backup of your active database will be created automatically before execution.
+          You are about to overwrite the active database. Current transactions will be replaced by
+          the contents of the uploaded file.
+          <br /><br />
+          An emergency backup of your active database will be created automatically before
+          execution.
         </p>
         <div class="modal-actions">
           <button class="btn btn-secondary" id="cancel-restore-btn">Cancel</button>
@@ -591,27 +511,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Purge Confirmation Modal -->
-    <div class="modal-overlay" id="purge-modal">
-      <div class="modal-card">
-        <h4 style="color: #b91c1c;">⚠️ Purge Demo Data Confirmation</h4>
-        <p>
-          This operation will delete all demo customers, demo vehicles, demo suppliers, and demo job cards/invoices. 
-          The master inventory catalog items will remain, but their quantities will be updated to match only active transactions.
-          <br><br>
-          To protect your data, an automatic database backup will be created first.
-          <br><br>
-          Type <strong>CONFIRM</strong> to proceed with the deletion:
-          <input type="text" id="purge-confirm-input" placeholder="Type CONFIRM here..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 8px; font-weight: bold;">
-        </p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="cancel-purge-btn">Cancel</button>
-          <button class="btn btn-danger" id="confirm-purge-btn" disabled>Purge Demo Data</button>
-        </div>
-      </div>
-    </div>
-
     <script src="/settings.js"></script>
   </body>
 </html>

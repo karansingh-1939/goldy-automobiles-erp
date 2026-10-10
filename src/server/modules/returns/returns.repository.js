@@ -9,7 +9,9 @@ export class ReturnsRepository {
 
   // CUSTOMER RETURNS
   createCustomerReturn(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO customer_returns (
         return_number,
         company_id,
@@ -31,13 +33,17 @@ export class ReturnsRepository {
         @credit_note_id,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return this.findCustomerReturnById(result.lastInsertRowid);
   }
 
   createCustomerReturnItem(data) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO customer_return_items (
         customer_return_id,
         item_id,
@@ -47,6 +53,9 @@ export class ReturnsRepository {
         unit_price,
         gst_rate,
         gst_amount,
+        cgst_amount,
+        sgst_amount,
+        igst_amount,
         line_total,
         condition
       ) VALUES (
@@ -58,31 +67,44 @@ export class ReturnsRepository {
         @unit_price,
         @gst_rate,
         @gst_amount,
+        @cgst_amount,
+        @sgst_amount,
+        @igst_amount,
         @line_total,
         @condition
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
   }
 
   findCustomerReturnById(id) {
-    const ret = this.db.prepare(`
+    const ret = this.db
+      .prepare(
+        `
       SELECT r.*, c.name AS customer_name, inv.invoice_number
       FROM customer_returns r
       JOIN customers c ON r.customer_id = c.id
       JOIN invoices inv ON r.invoice_id = inv.id
       WHERE r.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
 
     if (!ret) return null;
 
-    ret.items = this.db.prepare(`
+    ret.items = this.db
+      .prepare(
+        `
       SELECT ri.*, item.item_name, item.sku, wh.name AS warehouse_name, b.batch_number
       FROM customer_return_items ri
       JOIN inventory_items item ON ri.item_id = item.id
       JOIN warehouses wh ON ri.warehouse_id = wh.id
       JOIN inventory_batches b ON ri.batch_id = b.id
       WHERE ri.customer_return_id = ?
-    `).all(id);
+    `,
+      )
+      .all(id);
 
     return ret;
   }
@@ -113,41 +135,55 @@ export class ReturnsRepository {
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT r.*, c.name AS customer_name, inv.invoice_number
       FROM customer_returns r
       JOIN customers c ON r.customer_id = c.id
       JOIN invoices inv ON r.invoice_id = inv.id
       ${where}
       ORDER BY r.return_date DESC, r.id DESC
-    `).all(params);
+    `,
+      )
+      .all(params);
   }
 
   updateCustomerReturn(id, data) {
     const columns = Object.keys(data);
-    const setClause = columns.map(col => `${col} = @${col}`).join(', ');
-    this.db.prepare(`
+    const setClause = columns.map((col) => `${col} = @${col}`).join(', ');
+    this.db
+      .prepare(
+        `
       UPDATE customer_returns
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
       WHERE id = @id
-    `).run({ ...data, id });
+    `,
+      )
+      .run({ ...data, id });
 
     return this.findCustomerReturnById(id);
   }
 
   getAlreadyReturnedQuantity(invoiceId, itemId) {
-    const row = this.db.prepare(`
+    const row = this.db
+      .prepare(
+        `
       SELECT COALESCE(SUM(ri.quantity), 0) AS total
       FROM customer_return_items ri
       JOIN customer_returns r ON ri.customer_return_id = r.id
       WHERE r.invoice_id = ? AND ri.item_id = ? AND r.status <> 'CANCELLED'
-    `).get(invoiceId, itemId);
+    `,
+      )
+      .get(invoiceId, itemId);
     return row ? row.total : 0;
   }
 
   // SUPPLIER RETURNS
   createSupplierReturn(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO supplier_returns (
         return_number,
         company_id,
@@ -169,13 +205,17 @@ export class ReturnsRepository {
         @debit_note_id,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return this.findSupplierReturnById(result.lastInsertRowid);
   }
 
   createSupplierReturnItem(data) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO supplier_return_items (
         supplier_return_id,
         item_id,
@@ -197,28 +237,38 @@ export class ReturnsRepository {
         @gst_amount,
         @line_total
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
   }
 
   findSupplierReturnById(id) {
-    const ret = this.db.prepare(`
+    const ret = this.db
+      .prepare(
+        `
       SELECT r.*, s.name AS supplier_name, p.purchase_number
       FROM supplier_returns r
       JOIN suppliers s ON r.supplier_id = s.id
       LEFT JOIN purchases p ON r.purchase_id = p.id
       WHERE r.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
 
     if (!ret) return null;
 
-    ret.items = this.db.prepare(`
+    ret.items = this.db
+      .prepare(
+        `
       SELECT ri.*, item.item_name, item.sku, wh.name AS warehouse_name, b.batch_number
       FROM supplier_return_items ri
       JOIN inventory_items item ON ri.item_id = item.id
       JOIN warehouses wh ON ri.warehouse_id = wh.id
       JOIN inventory_batches b ON ri.batch_id = b.id
       WHERE ri.supplier_return_id = ?
-    `).all(id);
+    `,
+      )
+      .all(id);
 
     return ret;
   }
@@ -249,24 +299,32 @@ export class ReturnsRepository {
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT r.*, s.name AS supplier_name, p.purchase_number
       FROM supplier_returns r
       JOIN suppliers s ON r.supplier_id = s.id
       LEFT JOIN purchases p ON r.purchase_id = p.id
       ${where}
       ORDER BY r.return_date DESC, r.id DESC
-    `).all(params);
+    `,
+      )
+      .all(params);
   }
 
   updateSupplierReturn(id, data) {
     const columns = Object.keys(data);
-    const setClause = columns.map(col => `${col} = @${col}`).join(', ');
-    this.db.prepare(`
+    const setClause = columns.map((col) => `${col} = @${col}`).join(', ');
+    this.db
+      .prepare(
+        `
       UPDATE supplier_returns
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
       WHERE id = @id
-    `).run({ ...data, id });
+    `,
+      )
+      .run({ ...data, id });
 
     return this.findSupplierReturnById(id);
   }
@@ -277,10 +335,14 @@ export class ReturnsRepository {
   }
 
   findInvoiceItem(invoiceId, itemId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM invoice_items
       WHERE invoice_id = ? AND inventory_item_id = ?
-    `).get(invoiceId, itemId);
+    `,
+      )
+      .get(invoiceId, itemId);
   }
 
   findPurchaseById(id) {
@@ -288,9 +350,13 @@ export class ReturnsRepository {
   }
 
   findPurchaseItem(purchaseId, itemId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT * FROM purchase_receipt_items
       WHERE purchase_id = ? AND item_id = ?
-    `).get(purchaseId, itemId);
+    `,
+      )
+      .get(purchaseId, itemId);
   }
 }

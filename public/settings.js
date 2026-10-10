@@ -13,9 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-      } catch (err) {}
+      } catch (err) {
+        // Best-effort cleanup; preserve the original operation result.
+      }
       sessionStorage.removeItem('goldy_auth_token');
       window.location.replace('/index.html');
     });
@@ -29,11 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const weeklyDayGroup = document.getElementById('weekly-day-group');
   const intervalHoursGroup = document.getElementById('interval-hours-group');
   const backupsList = document.getElementById('backups-list');
-  
+
   // Banner message helper
   const banner = document.getElementById('message-banner');
   const bannerText = document.getElementById('message-text');
-  
+  document.getElementById('dismiss-message-btn').addEventListener('click', () => {
+    banner.style.display = 'none';
+  });
+
   function showBanner(text, type = 'success') {
     bannerText.textContent = text;
     banner.className = type === 'success' ? 'success' : 'error';
@@ -45,9 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle schedule type select layout updates
   function updateScheduleTypeFields() {
     const selectedType = scheduleTypeSelect.value;
-    preferredTimeGroup.style.display = (selectedType === 'DAILY' || selectedType === 'WEEKLY') ? 'block' : 'none';
-    weeklyDayGroup.style.display = (selectedType === 'WEEKLY') ? 'block' : 'none';
-    intervalHoursGroup.style.display = (selectedType === 'INTERVAL') ? 'block' : 'none';
+    preferredTimeGroup.style.display =
+      selectedType === 'DAILY' || selectedType === 'WEEKLY' ? 'block' : 'none';
+    weeklyDayGroup.style.display = selectedType === 'WEEKLY' ? 'block' : 'none';
+    intervalHoursGroup.style.display = selectedType === 'INTERVAL' ? 'block' : 'none';
   }
 
   scheduleTypeSelect.addEventListener('change', updateScheduleTypeFields);
@@ -60,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadSettings() {
     try {
       const res = await fetch('/api/v1/backups/settings', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const payload = await res.json();
       if (res.ok && payload.status === 'success') {
@@ -72,8 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('weekly_day').value = data['backup.weekly_day'] || 'Sunday';
         document.getElementById('interval_hours').value = data['backup.interval_hours'] || 24;
         document.getElementById('retention_count').value = data['backup.retention_count'] || 7;
-        document.getElementById('missed_recovery').checked = data['backup.missed_recovery'] === true;
-        
+        document.getElementById('missed_recovery').checked =
+          data['backup.missed_recovery'] === true;
+
         updateScheduleTypeFields();
       } else {
         showBanner('Failed to load scheduler configurations.', 'error');
@@ -87,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadBackupLogs() {
     try {
       const res = await fetch('/api/v1/backups', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const payload = await res.json();
       if (res.ok) {
@@ -96,9 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
           backupsList.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b;">No backup logs found in registry.</td></tr>`;
           return;
         }
-        
+
         backupsList.innerHTML = '';
-        data.forEach(log => {
+        data.forEach((log) => {
           const size = log.file_size !== null ? `${(log.file_size / 1024).toFixed(2)} KB` : 'N/A';
           let badgeClass = 'pending';
           if (log.status === 'SUCCESS') badgeClass = 'success';
@@ -126,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const btn = document.getElementById('save-settings-btn');
     btn.disabled = true;
-    
+
     const settings = {
       'backup.auto_enabled': autoEnabledCheckbox.checked,
       'backup.schedule_type': scheduleTypeSelect.value,
@@ -134,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'backup.weekly_day': document.getElementById('weekly_day').value,
       'backup.interval_hours': parseInt(document.getElementById('interval_hours').value, 10),
       'backup.retention_count': parseInt(document.getElementById('retention_count').value, 10),
-      'backup.missed_recovery': document.getElementById('missed_recovery').checked
+      'backup.missed_recovery': document.getElementById('missed_recovery').checked,
     };
 
     try {
@@ -142,9 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(settings),
       });
       const payload = await res.json();
       if (res.ok && payload.status === 'success') {
@@ -168,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/v1/backups/manual', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const payload = await res.json();
       if (res.ok) {
@@ -207,16 +214,19 @@ document.addEventListener('DOMContentLoaded', () => {
   confirmRestoreBtn.addEventListener('click', async () => {
     if (!selectedRestoreFile) return;
     restoreModal.classList.remove('active');
-    showBanner('Initiating database restoration. Performing emergency pre-restore backup, please wait...', 'pending');
+    showBanner(
+      'Initiating database restoration. Performing emergency pre-restore backup, please wait...',
+      'pending',
+    );
 
     try {
       const res = await fetch('/api/v1/backups/restore/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: selectedRestoreFile
+        body: selectedRestoreFile,
       });
       const payload = await res.json();
       if (res.ok && payload.status === 'success') {
@@ -237,19 +247,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const restoreLatestBtn = document.getElementById('restore-latest-btn');
   if (restoreLatestBtn) {
     restoreLatestBtn.addEventListener('click', async () => {
-      const confirmed = confirm("Are you sure you want to restore the latest backup? All changes made after the backup will be lost. The system will restart and refresh automatically after completion.");
+      const confirmed = confirm(
+        'Are you sure you want to restore the latest backup? All changes made after the backup will be lost. The system will restart and refresh automatically after completion.',
+      );
       if (!confirmed) return;
 
       restoreLatestBtn.disabled = true;
-      showBanner('Initiating database restoration from the latest backup, please wait...', 'pending');
+      showBanner(
+        'Initiating database restoration from the latest backup, please wait...',
+        'pending',
+      );
 
       try {
         const res = await fetch('/api/v1/backups/restore-latest', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         const payload = await res.json();
         if (res.ok && payload.status === 'success') {
@@ -267,50 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
-  // Demo Purge Flow
-  const purgeBtn = document.getElementById('purge-demo-btn');
-  const purgeModal = document.getElementById('purge-modal');
-  const cancelPurgeBtn = document.getElementById('cancel-purge-btn');
-  const confirmPurgeBtn = document.getElementById('confirm-purge-btn');
-  const purgeConfirmInput = document.getElementById('purge-confirm-input');
-
-  purgeBtn.addEventListener('click', () => {
-    purgeModal.classList.add('active');
-    purgeConfirmInput.value = '';
-    confirmPurgeBtn.disabled = true;
-  });
-
-  purgeConfirmInput.addEventListener('input', () => {
-    confirmPurgeBtn.disabled = (purgeConfirmInput.value.trim() !== 'CONFIRM');
-  });
-
-  cancelPurgeBtn.addEventListener('click', () => {
-    purgeModal.classList.remove('active');
-    purgeConfirmInput.value = '';
-  });
-
-  confirmPurgeBtn.addEventListener('click', async () => {
-    if (purgeConfirmInput.value.trim() !== 'CONFIRM') return;
-    purgeModal.classList.remove('active');
-    showBanner('Taking automatic pre-deletion backup and purging demo data, please wait...', 'pending');
-
-    try {
-      const res = await fetch('/api/v1/backups/purge-demo', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const payload = await res.json();
-      if (res.ok && payload.status === 'success') {
-        showBanner(`Demo data purged successfully. Pre-delete backup file created: ${payload.backup.filename}`);
-        loadBackupLogs();
-      } else {
-        showBanner(payload.message || 'Purge operation failed.', 'error');
-      }
-    } catch (err) {
-      showBanner('Purge request failed: ' + err.message, 'error');
-    }
-  });
 
   // Init
   loadSettings();

@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../shared/api/apiClient.js';
-import { useAppStore } from '../../shared/store/useAppStore.js';
-import { validateRequired, validateEmail, validatePhone, validateGstin } from '../../shared/utils/validation.js';
-import { usePermissions } from '../../shared/hooks/usePermissions.js';
+import { api } from '../../shared/api/api-client.js';
+import { useAppStore } from '../../shared/store/use-app-store.js';
+import {
+  validateRequired,
+  validateEmail,
+  validatePhone,
+  validateGstin,
+} from '../../shared/utils/validation.js';
+import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import DataTable from '../../shared/components/DataTable.jsx';
 import { Search, Plus, UserPlus, X, Edit2, Trash2 } from 'lucide-react';
 
 export default function CustomerManager() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
-  const showConfirm = useAppStore((state) => state.showConfirm);
+  const openDialog = useAppStore((state) => state.openDialog);
   const { hasPermission } = usePermissions();
 
   const canWrite = hasPermission('customers.write');
@@ -19,8 +24,8 @@ export default function CustomerManager() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const sortBy = 'name';
+  const sortOrder = 'asc';
 
   // Modal Control States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -38,10 +43,16 @@ export default function CustomerManager() {
   const [creditLimit, setCreditLimit] = useState('');
 
   // Fetch Customers Query
-  const { data: response, isLoading, error } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['customers', search, page, sortBy, sortOrder],
-    queryFn: () => 
-      api.get(`/api/v1/customers?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`),
+    queryFn: () =>
+      api.get(
+        `/api/v1/customers?search=${encodeURIComponent(search)}&page=${page}&pageSize=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+      ),
   });
 
   const customers = response?.data || [];
@@ -51,32 +62,32 @@ export default function CustomerManager() {
   const createMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/customers', payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customers']);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       addNotification('Customer profile registered.', 'success');
       setShowAddModal(false);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to create customer.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to create customer.', 'error'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => api.patch(`/api/v1/customers/${id}`, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customers']);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       addNotification('Customer profile updated.', 'success');
       setEditingCustomer(null);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to update customer.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to update customer.', 'error'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.del(`/api/v1/customers/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customers']);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       addNotification('Customer profile deleted.', 'success');
     },
-    onError: (err) => addNotification(err.message || 'Failed to delete customer.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to delete customer.', 'error'),
   });
 
   const resetForm = () => {
@@ -131,7 +142,7 @@ export default function CustomerManager() {
       city: city || undefined,
       state: state || undefined,
       pincode: pincode || undefined,
-      credit_limit: creditLimit ? Number(creditLimit) : undefined
+      credit_limit: creditLimit ? Number(creditLimit) : undefined,
     };
 
     if (editingCustomer) {
@@ -142,11 +153,11 @@ export default function CustomerManager() {
   };
 
   const handleDelete = (customer) => {
-    showConfirm(
-      'Delete Customer Profile',
-      `Are you sure you want to permanently delete customer "${customer.name}"? This action cannot be undone.`,
-      () => deleteMutation.mutate(customer.id)
-    );
+    openDialog({
+      title: 'Delete Customer Profile',
+      message: `Are you sure you want to permanently delete customer "${customer.name}"? This action cannot be undone.`,
+      onConfirm: () => deleteMutation.mutate(customer.id),
+    });
   };
 
   // TanStack Columns mapping
@@ -154,17 +165,19 @@ export default function CustomerManager() {
     {
       accessorKey: 'name',
       header: 'Client Name',
-      cell: (info) => <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
+      cell: (info) => (
+        <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
+      ),
     },
     {
       accessorKey: 'phone',
       header: 'Phone',
-      cell: (info) => info.getValue() || '-'
+      cell: (info) => info.getValue() || '-',
     },
     {
       accessorKey: 'gstin',
       header: 'GSTIN',
-      cell: (info) => <span className="font-mono text-xs">{info.getValue() || '-'}</span>
+      cell: (info) => <span className="font-mono text-xs">{info.getValue() || '-'}</span>,
     },
     {
       accessorKey: 'city',
@@ -172,7 +185,7 @@ export default function CustomerManager() {
       cell: (info) => {
         const row = info.row.original;
         return row.city ? `${row.city}, ${row.state || ''}` : '-';
-      }
+      },
     },
     {
       accessorKey: 'credit_limit',
@@ -180,7 +193,7 @@ export default function CustomerManager() {
       cell: (info) => {
         const val = info.getValue();
         return val ? `₹${val.toLocaleString('en-IN')}` : 'No Limit';
-      }
+      },
     },
     {
       id: 'actions',
@@ -188,7 +201,10 @@ export default function CustomerManager() {
       cell: (info) => {
         const c = info.row.original;
         return (
-          <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => handleOpenEdit(c)}
               disabled={!canWrite}
@@ -205,19 +221,27 @@ export default function CustomerManager() {
             </button>
           </div>
         );
-      }
-    }
+      },
+    },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Customer Directory</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Complete fleet management, lookup search, and credit limit configuration.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Customer Directory
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Complete fleet management, lookup search, and credit limit configuration.
+          </p>
         </div>
         <button
-          onClick={() => { resetForm(); setEditingCustomer(null); setShowAddModal(true); }}
+          onClick={() => {
+            resetForm();
+            setEditingCustomer(null);
+            setShowAddModal(true);
+          }}
           disabled={!canWrite}
           className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
         >
@@ -231,7 +255,10 @@ export default function CustomerManager() {
         <input
           type="text"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Filter by name, phone, or GSTIN..."
           className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
         />
@@ -252,15 +279,17 @@ export default function CustomerManager() {
         <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-800 pt-4">
           <button
             disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
+            onClick={() => setPage((p) => p - 1)}
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="text-xs text-gray-500">Page {page} of {pagination.totalPages}</span>
+          <span className="text-xs text-gray-500">
+            Page {page} of {pagination.totalPages}
+          </span>
           <button
             disabled={page === pagination.totalPages}
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
           >
             Next
@@ -275,20 +304,30 @@ export default function CustomerManager() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                 <UserPlus className="h-5 w-5" />
-                <h3 className="text-lg font-bold">{editingCustomer ? 'Edit Customer Settings' : 'New Customer Profile'}</h3>
+                <h3 className="text-lg font-bold">
+                  {editingCustomer ? 'Edit Customer Settings' : 'New Customer Profile'}
+                </h3>
               </div>
               <button
-                onClick={() => { setShowAddModal(false); setEditingCustomer(null); }}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingCustomer(null);
+                }}
                 className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label htmlFor="customer-name-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Client Name *</label>
+                  <label
+                    htmlFor="customer-name-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Client Name *
+                  </label>
                   <input
                     id="customer-name-field"
                     type="text"
@@ -299,7 +338,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-phone-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Phone Number</label>
+                  <label
+                    htmlFor="customer-phone-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Phone Number
+                  </label>
                   <input
                     id="customer-phone-field"
                     type="text"
@@ -309,7 +353,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-email-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Email Address</label>
+                  <label
+                    htmlFor="customer-email-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Email Address
+                  </label>
                   <input
                     id="customer-email-field"
                     type="email"
@@ -319,7 +368,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label htmlFor="customer-gstin-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">GSTIN Number (15-digit)</label>
+                  <label
+                    htmlFor="customer-gstin-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    GSTIN Number (15-digit)
+                  </label>
                   <input
                     id="customer-gstin-field"
                     type="text"
@@ -329,7 +383,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label htmlFor="customer-address-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Billing Address</label>
+                  <label
+                    htmlFor="customer-address-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Billing Address
+                  </label>
                   <input
                     id="customer-address-field"
                     type="text"
@@ -339,7 +398,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-city-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">City</label>
+                  <label
+                    htmlFor="customer-city-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    City
+                  </label>
                   <input
                     id="customer-city-field"
                     type="text"
@@ -349,7 +413,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-state-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">State</label>
+                  <label
+                    htmlFor="customer-state-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    State
+                  </label>
                   <input
                     id="customer-state-field"
                     type="text"
@@ -359,7 +428,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-pincode-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">PIN Code</label>
+                  <label
+                    htmlFor="customer-pincode-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    PIN Code
+                  </label>
                   <input
                     id="customer-pincode-field"
                     type="text"
@@ -369,7 +443,12 @@ export default function CustomerManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="customer-limit-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Credit Limit (₹)</label>
+                  <label
+                    htmlFor="customer-limit-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Credit Limit (₹)
+                  </label>
                   <input
                     id="customer-limit-field"
                     type="number"
@@ -379,11 +458,14 @@ export default function CustomerManager() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <button
                   type="button"
-                  onClick={() => { setShowAddModal(false); setEditingCustomer(null); }}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingCustomer(null);
+                  }}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel

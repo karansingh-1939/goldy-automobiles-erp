@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createAuthService } from '../auth/auth.routes.js';
-import { authenticate, requirePermission } from '../../shared/middleware/authMiddleware.js';
+import { authenticate, requirePermission } from '../../shared/middleware/auth-middleware.js';
 import { WarrantyController } from './warranty.controller.js';
 
 export function createWarrantyRouter(db) {
@@ -12,8 +12,16 @@ export function createWarrantyRouter(db) {
   router.use(requireAuth);
 
   // Reports
-  router.get('/reports/status-count', requirePermission('warranty.read'), controller.getStatusCountReport);
-  router.get('/reports/failure-analysis', requirePermission('warranty.read'), controller.getFailureAnalysisReport);
+  router.get(
+    '/reports/status-count',
+    requirePermission('warranty.read'),
+    controller.getStatusCountReport,
+  );
+  router.get(
+    '/reports/failure-analysis',
+    requirePermission('warranty.read'),
+    controller.getFailureAnalysisReport,
+  );
 
   // Lookup
   router.get('/lookup', requirePermission('warranty.read'), controller.lookupWarranty);

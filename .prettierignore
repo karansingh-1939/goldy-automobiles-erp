@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+data/
+backups/
+logs/
+resources/
+graphify-out/
+docs/reviews/evidence/
+package-lock.json
+src/server/database/migrations/

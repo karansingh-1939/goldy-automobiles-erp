@@ -1,7 +1,8 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { WarrantyRepository } from './warranty.repository.js';
 import { InventoryService } from '../inventory/inventory.service.js';
-import { AccountingPostingEngine } from '../accounting/postingEngine.service.js';
+import { AccountingPostingEngine } from '../accounting/posting-engine.service.js';
 
 function code(prefix) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -16,9 +17,24 @@ export class WarrantyService {
   }
 
   registerWarranty(data) {
-    const { companyId, customerId, vehicleId, invoiceId, invoiceItemId, itemId, batchNumber, serialNumber, startDate, warrantyPeriodMonths } = data;
+    const {
+      companyId,
+      customerId,
+      vehicleId,
+      invoiceId,
+      invoiceItemId,
+      itemId,
+      batchNumber,
+      serialNumber,
+      startDate,
+      warrantyPeriodMonths,
+    } = data;
     if (!companyId || !customerId || !itemId || !startDate || warrantyPeriodMonths === undefined) {
-      throw new AppError('Company, customer, item, start date, and warranty period are required.', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        'Company, customer, item, start date, and warranty period are required.',
+        400,
+        'VALIDATION_ERROR',
+      );
     }
 
     const start = new Date(startDate);
@@ -37,7 +53,7 @@ export class WarrantyService {
       serial_number: serialNumber || null,
       start_date: startDate,
       end_date: endDateStr,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
     });
   }
 
@@ -47,7 +63,7 @@ export class WarrantyService {
       throw new AppError('Warranty registration ID is required.', 400, 'VALIDATION_ERROR');
     }
 
-    const date = claimDate || new Date().toISOString().slice(0, 10);
+    const date = claimDate || localDate();
 
     return this.repository.transaction(() => {
       const reg = this.repository.findWarrantyRegistrationById(registrationId);
@@ -56,7 +72,11 @@ export class WarrantyService {
       }
 
       if (reg.status !== 'ACTIVE') {
-        throw new AppError(`Cannot file a claim. Warranty registration is ${reg.status}.`, 400, 'VALIDATION_ERROR');
+        throw new AppError(
+          `Cannot file a claim. Warranty registration is ${reg.status}.`,
+          400,
+          'VALIDATION_ERROR',
+        );
       }
 
       // Verify not expired
@@ -79,7 +99,7 @@ export class WarrantyService {
         replacement_item_id: null,
         replacement_batch_id: null,
         replacement_qty: null,
-        created_by: userId
+        created_by: userId,
       });
     });
   }
@@ -96,25 +116,43 @@ export class WarrantyService {
         throw new AppError('Warranty claim not found.', 404, 'ITEM_NOT_FOUND');
       }
       if (claim.status !== 'PENDING') {
-        throw new AppError(`Cannot settle a claim with status ${claim.status}.`, 400, 'VALIDATION_ERROR');
+        throw new AppError(
+          `Cannot settle a claim with status ${claim.status}.`,
+          400,
+          'VALIDATION_ERROR',
+        );
       }
 
       const reg = this.repository.findWarrantyRegistrationById(claim.warranty_registration_id);
       const companyId = claim.company_id || 1;
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const dateStr = localDate();
 
       if (settlementType === 'REPLACEMENT') {
         if (!replacementWarehouseId || !replacementBatchId) {
-          throw new AppError('Replacement warehouse and batch selection are required.', 400, 'VALIDATION_ERROR');
+          throw new AppError(
+            'Replacement warehouse and batch selection are required.',
+            400,
+            'VALIDATION_ERROR',
+          );
         }
 
         // 1. Process Stock Out of Replacement Part
-        const batch = this.db.prepare('SELECT quantity, purchase_cost FROM inventory_batches WHERE id = ?').get(replacementBatchId);
+        const batch = this.db
+          .prepare('SELECT quantity, purchase_cost FROM inventory_batches WHERE id = ?')
+          .get(replacementBatchId);
         if (!batch) {
-          throw new AppError('Selected inventory batch not found.', 404, 'RELATED_RECORD_NOT_FOUND');
+          throw new AppError(
+            'Selected inventory batch not found.',
+            404,
+            'RELATED_RECORD_NOT_FOUND',
+          );
         }
         if (Number(batch.quantity) < 1) {
-          throw new AppError('Selected batch has insufficient quantity.', 400, 'INSUFFICIENT_STOCK');
+          throw new AppError(
+            'Selected batch has insufficient quantity.',
+            400,
+            'INSUFFICIENT_STOCK',
+          );
         }
 
         this.inventoryService.stockOut({
@@ -125,12 +163,18 @@ export class WarrantyService {
           transactionType: 'Consumption',
           referenceType: 'warranty_claims',
           referenceId: claim.id,
-          userId
+          userId,
         });
 
         // 2. Post Warranty Expense Voucher
-        const warrantyExpenseLedgerId = this.postingEngine.ledgerResolver.getLedgerId(companyId, 'warranty_expense');
-        const inventoryLedgerId = this.postingEngine.ledgerResolver.getLedgerId(companyId, 'inventory_stock');
+        const warrantyExpenseLedgerId = this.postingEngine.ledgerResolver.getLedgerId(
+          companyId,
+          'warranty_expense',
+        );
+        const inventoryLedgerId = this.postingEngine.ledgerResolver.getLedgerId(
+          companyId,
+          'inventory_stock',
+        );
         const itemCost = Math.round(Number(batch.purchase_cost) * 100) / 100;
 
         this.postingEngine.post({
@@ -143,14 +187,16 @@ export class WarrantyService {
           created_by: userId,
           entries: [
             { ledgerId: warrantyExpenseLedgerId, type: 'DEBIT', amount: itemCost },
-            { ledgerId: inventoryLedgerId, type: 'CREDIT', amount: itemCost }
-          ]
+            { ledgerId: inventoryLedgerId, type: 'CREDIT', amount: itemCost },
+          ],
         });
 
         // 3. Mark old registration as claimed & create new warranty registration for the replaced part
         this.repository.updateWarrantyRegistration(reg.id, { status: 'CLAIMED' });
 
-        const itemObj = this.db.prepare('SELECT warranty_period_months FROM inventory_items WHERE id = ?').get(claim.item_id);
+        const itemObj = this.db
+          .prepare('SELECT warranty_period_months FROM inventory_items WHERE id = ?')
+          .get(claim.item_id);
         const wMonths = itemObj ? Number(itemObj.warranty_period_months) : 0;
 
         if (wMonths > 0) {
@@ -164,7 +210,7 @@ export class WarrantyService {
             batchNumber: `REP-${claim.claim_number}`,
             serialNumber: reg.serial_number,
             startDate: dateStr,
-            warrantyPeriodMonths: wMonths
+            warrantyPeriodMonths: wMonths,
           });
         }
 
@@ -175,7 +221,7 @@ export class WarrantyService {
           replacement_item_id: claim.item_id,
           replacement_batch_id: replacementBatchId,
           replacement_qty: 1,
-          notes: notes || claim.notes
+          notes: notes || claim.notes,
         });
       } else if (settlementType === 'REFUND') {
         // Issuing refund (Credit Note)
@@ -186,7 +232,7 @@ export class WarrantyService {
           status: 'SETTLED',
           settlement_type: 'REFUND',
           settlement_date: dateStr,
-          notes: notes || claim.notes
+          notes: notes || claim.notes,
         });
       } else {
         // Repair
@@ -194,7 +240,7 @@ export class WarrantyService {
           status: 'SETTLED',
           settlement_type: 'REPAIR',
           settlement_date: dateStr,
-          notes: notes || claim.notes
+          notes: notes || claim.notes,
         });
       }
     });
@@ -206,12 +252,16 @@ export class WarrantyService {
       throw new AppError('Warranty claim not found.', 404, 'ITEM_NOT_FOUND');
     }
     if (claim.status !== 'PENDING') {
-      throw new AppError(`Cannot reject a claim with status ${claim.status}.`, 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        `Cannot reject a claim with status ${claim.status}.`,
+        400,
+        'VALIDATION_ERROR',
+      );
     }
 
     return this.repository.updateWarrantyClaim(claim.id, {
       status: 'REJECTED',
-      notes: payload.notes || 'Claim rejected.'
+      notes: payload.notes || 'Claim rejected.',
     });
   }
 
@@ -226,11 +276,15 @@ export class WarrantyService {
       if (cust) customerId = cust.id;
     }
     if (vehicleRegistration) {
-      const veh = this.db.prepare('SELECT id FROM vehicles WHERE registration_number = ? COLLATE NOCASE').get(vehicleRegistration);
+      const veh = this.db
+        .prepare('SELECT id FROM vehicles WHERE registration_number = ? COLLATE NOCASE')
+        .get(vehicleRegistration);
       if (veh) vehicleId = veh.id;
     }
     if (itemSku) {
-      const item = this.db.prepare('SELECT id FROM inventory_items WHERE sku = ? COLLATE NOCASE').get(itemSku);
+      const item = this.db
+        .prepare('SELECT id FROM inventory_items WHERE sku = ? COLLATE NOCASE')
+        .get(itemSku);
       if (item) itemId = item.id;
     }
 
@@ -255,7 +309,9 @@ export class WarrantyService {
     }
 
     const where = `WHERE ${clauses.join(' AND ')}`;
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT w.*, c.name AS customer_name, v.registration_number, item.item_name, item.sku
       FROM warranty_registrations w
       JOIN customers c ON w.customer_id = c.id
@@ -263,6 +319,8 @@ export class WarrantyService {
       JOIN inventory_items item ON w.item_id = item.id
       ${where}
       ORDER BY w.end_date DESC
-    `).all(params);
+    `,
+      )
+      .all(params);
   }
 }

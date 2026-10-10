@@ -3,7 +3,6 @@ const message = document.querySelector('#message');
 const tabsContainer = document.querySelector('#job-card-tabs');
 const detailsTabBtn = document.querySelector('#details-tab-btn');
 
-let activeTab = 'list';
 let editingJobCardId = null;
 let page = 1;
 
@@ -65,7 +64,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -87,7 +86,6 @@ function setupTabs() {
 }
 
 function switchTab(tab) {
-  activeTab = tab;
   tabsContainer.querySelectorAll('button').forEach((btn) => {
     btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
   });
@@ -103,7 +101,7 @@ function switchTab(tab) {
     document.querySelector('#vehicle-history-panel').style.display = 'none';
     loadTechniciansDropdown();
     loadRecentVisits();
-    
+
     // Toggle quick entry elements reset
     document.querySelector('#quick-entry-toggle').checked = false;
     triggerQuickEntryUI(false);
@@ -124,9 +122,9 @@ function setupListeners() {
     document.querySelector('#filter-from-date').value = '';
     document.querySelector('#filter-to-date').value = '';
     document.querySelector('#filter-exact-match').checked = true;
-    
+
     // Reset quick filter buttons style
-    document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    document.querySelectorAll('.quick-filter-btn').forEach((btn) => {
       if (btn.dataset.range === 'all') {
         btn.style.background = '#f1f5f9';
         btn.style.color = '#172033';
@@ -166,17 +164,17 @@ function setupListeners() {
     prevVisitsBadge.addEventListener('click', () => {
       const phone = prevVisitsBadge.dataset.phone;
       const reg = prevVisitsBadge.dataset.reg;
-      
+
       // Prioritize registration number for historical search
       const searchVal = reg || phone || '';
       document.querySelector('#search-query').value = searchVal;
-      
+
       // Reset other filters
       document.querySelector('#filter-status').value = '';
       document.querySelector('#filter-from-date').value = '';
       document.querySelector('#filter-to-date').value = '';
       document.querySelector('#filter-exact-match').checked = true;
-      
+
       page = 1;
       switchTab('list');
       loadJobCards();
@@ -301,25 +299,40 @@ function setupListeners() {
   });
 
   // Setup Autocomplete
-  setupAutocomplete('form-registration-number', 'reg-suggestions', '/api/v1/autocomplete/vehicles?q=', (vehicle) => {
-    selectCustomer({
-      id: vehicle.customer_id,
-      name: vehicle.customer_name,
-      phone: vehicle.customer_phone,
-      address: vehicle.customer_address,
-      city: vehicle.customer_city,
-      notes: vehicle.customer_notes
-    });
-    selectVehicle(vehicle);
-  });
+  setupAutocomplete(
+    'form-registration-number',
+    'reg-suggestions',
+    '/api/v1/autocomplete/vehicles?q=',
+    (vehicle) => {
+      selectCustomer({
+        id: vehicle.customer_id,
+        name: vehicle.customer_name,
+        phone: vehicle.customer_phone,
+        address: vehicle.customer_address,
+        city: vehicle.customer_city,
+        notes: vehicle.customer_notes,
+      });
+      selectVehicle(vehicle);
+    },
+  );
 
-  setupAutocomplete('form-phone', 'phone-suggestions', '/api/v1/autocomplete/customers?q=', (customer) => {
-    selectCustomer(customer);
-  });
+  setupAutocomplete(
+    'form-phone',
+    'phone-suggestions',
+    '/api/v1/autocomplete/customers?q=',
+    (customer) => {
+      selectCustomer(customer);
+    },
+  );
 
-  setupAutocomplete('form-customer-name', 'name-suggestions', '/api/v1/autocomplete/customers?q=', (customer) => {
-    selectCustomer(customer);
-  });
+  setupAutocomplete(
+    'form-customer-name',
+    'name-suggestions',
+    '/api/v1/autocomplete/customers?q=',
+    (customer) => {
+      selectCustomer(customer);
+    },
+  );
 
   // Registration Number blur/change lookup check
   const regInput = document.querySelector('#form-registration-number');
@@ -377,7 +390,9 @@ function setupListeners() {
       viewDetails(res.data.id);
     } catch (err) {
       if (err.details) {
-        const detailsStr = Object.entries(err.details).map(([k, v]) => `${k}: ${v}`).join(', ');
+        const detailsStr = Object.entries(err.details)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ');
         showMessage(`Creation failed: ${detailsStr}`, true);
       } else {
         showMessage(err.message, true);
@@ -395,7 +410,10 @@ function setupListeners() {
     const enteredQty = Number(document.querySelector('#part-quantity').value);
 
     if (enteredQty > availableQty) {
-      showMessage(`Cannot add part: stock cannot go negative. Remaining stock is ${availableQty}.`, true);
+      showMessage(
+        `Cannot add part: stock cannot go negative. Remaining stock is ${availableQty}.`,
+        true,
+      );
       return;
     }
 
@@ -428,7 +446,9 @@ function setupListeners() {
     e.preventDefault();
     const descInput = document.querySelector('#labour-description');
     const isOutside = document.querySelector('#labour-is-outside').checked;
-    const description = isOutside ? `[Outside Job] ${descInput.value.trim()}` : descInput.value.trim();
+    const description = isOutside
+      ? `[Outside Job] ${descInput.value.trim()}`
+      : descInput.value.trim();
 
     const payload = {
       description: description,
@@ -465,7 +485,9 @@ function setupListeners() {
     try {
       // Load batches and filter by item_id in client
       const res = await api(`/api/v1/batches?pageSize=1000`);
-      const batches = res.data.filter((b) => Number(b.item_id) === Number(itemId) && b.quantity > 0);
+      const batches = res.data.filter(
+        (b) => Number(b.item_id) === Number(itemId) && b.quantity > 0,
+      );
 
       if (batches.length === 0) {
         partBatchSelect.innerHTML = '<option value="">No stock batches available</option>';
@@ -552,7 +574,8 @@ async function loadJobCards() {
       summary.textContent = `Total Job Cards: ${res.pagination.unfilteredTotal}`;
     }
 
-    document.querySelector('#page-info').textContent = `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
+    document.querySelector('#page-info').textContent =
+      `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
 
     if (cards.length === 1 && searchQuery) {
       viewDetails(cards[0].id);
@@ -565,7 +588,8 @@ async function loadJobCards() {
 function renderJobCardsTable(rows) {
   const container = document.querySelector('#table-container');
   if (rows.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No Job Cards found.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No Job Cards found.</p>';
     return;
   }
 
@@ -654,15 +678,18 @@ async function loadJobCardDetails(id) {
     badge.textContent = jc.status;
     badge.className = `badge badge-${jc.status.toLowerCase()}`;
 
-    document.querySelector('#detail-customer-name').textContent = jc.customer_name || `ID ${jc.customer_id}`;
-    document.querySelector('#detail-vehicle-reg').textContent = jc.registration_number || `ID ${jc.vehicle_id}`;
+    document.querySelector('#detail-customer-name').textContent =
+      jc.customer_name || `ID ${jc.customer_id}`;
+    document.querySelector('#detail-vehicle-reg').textContent =
+      jc.registration_number || `ID ${jc.vehicle_id}`;
     document.querySelector('#detail-odometer').textContent = jc.odometer_reading;
-    document.querySelector('#detail-assigned-mechanic').textContent = jc.assigned_mechanic_name || 'Unassigned';
+    document.querySelector('#detail-assigned-mechanic').textContent =
+      jc.assigned_mechanic_name || 'Unassigned';
     document.querySelector('#detail-engine-number').textContent = jc.engine_number || '-';
     document.querySelector('#detail-chassis-number').textContent = jc.chassis_number || '-';
     document.querySelector('#detail-fuel-level').textContent = jc.fuel_level || '-';
-    document.querySelector('#detail-promised-delivery').textContent = jc.promised_delivery_at 
-      ? new Date(jc.promised_delivery_at).toLocaleString() 
+    document.querySelector('#detail-promised-delivery').textContent = jc.promised_delivery_at
+      ? new Date(jc.promised_delivery_at).toLocaleString()
       : '-';
     document.querySelector('#detail-battery-brand').textContent = jc.battery_brand || '-';
     document.querySelector('#detail-complaint').textContent = jc.complaint || 'No complaint notes.';
@@ -672,15 +699,18 @@ async function loadJobCardDetails(id) {
     if (jc.spare_wheel_present) checklistItems.push('Spare Wheel');
     if (jc.jack_present) checklistItems.push('Jack');
     if (jc.stereo_present) checklistItems.push('Stereo');
-    document.querySelector('#detail-checklist').textContent = checklistItems.length > 0 
-      ? checklistItems.join(', ') 
-      : 'None';
+    document.querySelector('#detail-checklist').textContent =
+      checklistItems.length > 0 ? checklistItems.join(', ') : 'None';
 
     // Populate Lists & Totals
     const partsConsumption = (jc.parts || []).filter((p) => p.item_type === 'PART');
     const lubricants = (jc.parts || []).filter((p) => p.item_type === 'LUBRICANT');
-    const standardLabour = (jc.labour || []).filter((l) => !String(l.description).startsWith('[Outside Job]'));
-    const outsideJobs = (jc.labour || []).filter((l) => String(l.description).startsWith('[Outside Job]'));
+    const standardLabour = (jc.labour || []).filter(
+      (l) => !String(l.description).startsWith('[Outside Job]'),
+    );
+    const outsideJobs = (jc.labour || []).filter((l) =>
+      String(l.description).startsWith('[Outside Job]'),
+    );
 
     renderPartsTable(partsConsumption, '#parts-list-container', 'No parts consumed yet.');
     renderPartsTable(lubricants, '#lubricants-list-container', 'No lubricants consumed yet.');
@@ -697,8 +727,11 @@ async function loadJobCardDetails(id) {
 
     if (jc.status === 'DRAFT' || jc.status === 'OPEN' || jc.status === 'IN_PROGRESS') {
       controls.style.display = 'block';
-      finalizeContainer.innerHTML = '<button id="finalize-job-btn" class="primary" style="font-size:16px; padding: 12px 18px;">Finalize Repair & Invoice</button>';
-      document.querySelector('#finalize-job-btn').addEventListener('click', () => finalizeJobCard(jc));
+      finalizeContainer.innerHTML =
+        '<button id="finalize-job-btn" class="primary" style="font-size:16px; padding: 12px 18px;">Finalize Repair & Invoice</button>';
+      document
+        .querySelector('#finalize-job-btn')
+        .addEventListener('click', () => finalizeJobCard(jc));
     } else {
       controls.style.display = 'none';
       if (jc.status === 'COMPLETED' && jc.invoice) {
@@ -821,8 +854,10 @@ function calculateTotals(parts, labour) {
   document.querySelector('#sum-parts-total').textContent = `Rs. ${partsTotal.toFixed(2)}`;
   document.querySelector('#sum-lubricants-total').textContent = `Rs. ${lubricantsTotal.toFixed(2)}`;
   document.querySelector('#sum-labour-total').textContent = `Rs. ${labourTotal.toFixed(2)}`;
-  document.querySelector('#sum-outside-job-total').textContent = `Rs. ${outsideJobTotal.toFixed(2)}`;
-  document.querySelector('#sum-grand-total').textContent = `Rs. ${(partsTotal + lubricantsTotal + labourTotal + outsideJobTotal).toFixed(2)}`;
+  document.querySelector('#sum-outside-job-total').textContent =
+    `Rs. ${outsideJobTotal.toFixed(2)}`;
+  document.querySelector('#sum-grand-total').textContent =
+    `Rs. ${(partsTotal + lubricantsTotal + labourTotal + outsideJobTotal).toFixed(2)}`;
 }
 
 // DROPDOWN LOADERS
@@ -878,7 +913,7 @@ async function finalizeJobCard(jc) {
   }
 
   try {
-    const res = await api(`/api/v1/job-cards/${jc.id}/finalize`, {
+    await api(`/api/v1/job-cards/${jc.id}/finalize`, {
       method: 'POST',
     });
     showMessage('Job Card finalized successfully. Invoice generated.');
@@ -902,7 +937,7 @@ function setupAutocomplete(inputId, dropdownId, apiEndpoint, onSelect) {
   input.addEventListener('input', () => {
     clearTimeout(timeout);
     const q = input.value.trim();
-    
+
     // Performance trigger rules: 3 digits phone, 3 chars reg, 2 chars name
     const minLength = inputId === 'form-customer-name' ? 2 : 3;
     if (q.length < minLength) {
@@ -932,7 +967,7 @@ function setupAutocomplete(inputId, dropdownId, apiEndpoint, onSelect) {
     currentSuggestions.forEach((item, index) => {
       const div = document.createElement('div');
       div.className = 'autocomplete-item';
-      
+
       if (inputId === 'form-registration-number') {
         div.innerHTML = `<span><strong>${item.registration_number}</strong> (${item.make} ${item.model})</span><span style="color: #64748b; font-size: 11px;">${item.customer_name}</span>`;
       } else if (inputId === 'form-phone') {
@@ -1010,32 +1045,36 @@ async function selectVehicle(vehicle) {
   lookupStatus.style.display = 'block';
 
   try {
-    const res = await api(`/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(vehicle.registration_number)}`);
+    const res = await api(
+      `/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(vehicle.registration_number)}`,
+    );
     if (res.data && res.data.vehicleStats) {
       const stats = res.data.vehicleStats;
       document.querySelector('#info-veh-total-job-cards').textContent = stats.totalJobCards;
-      document.querySelector('#info-veh-last-service').textContent = stats.lastServiceDate 
-        ? new Date(stats.lastServiceDate).toLocaleDateString() 
+      document.querySelector('#info-veh-last-service').textContent = stats.lastServiceDate
+        ? new Date(stats.lastServiceDate).toLocaleDateString()
         : 'Never';
       document.querySelector('#info-veh-last-odometer').textContent = stats.lastOdometer;
-      document.querySelector('#info-veh-outstanding').textContent = `Rs. ${Number(stats.outstandingBalance || 0).toFixed(2)}`;
-      document.querySelector('#info-veh-last-complaint').textContent = stats.lastComplaint || 'None';
+      document.querySelector('#info-veh-outstanding').textContent =
+        `Rs. ${Number(stats.outstandingBalance || 0).toFixed(2)}`;
+      document.querySelector('#info-veh-last-complaint').textContent =
+        stats.lastComplaint || 'None';
 
       // Service Due details
-      document.querySelector('#due-service-date').textContent = stats.nextServiceDate 
-        ? new Date(stats.nextServiceDate).toLocaleDateString() 
+      document.querySelector('#due-service-date').textContent = stats.nextServiceDate
+        ? new Date(stats.nextServiceDate).toLocaleDateString()
         : 'N/A';
-      document.querySelector('#due-service-odometer').textContent = stats.nextServiceOdometer 
-        ? `${stats.nextServiceOdometer} km` 
+      document.querySelector('#due-service-odometer').textContent = stats.nextServiceOdometer
+        ? `${stats.nextServiceOdometer} km`
         : 'N/A';
 
       // Due calculations (Days)
       const daysSpan = document.querySelector('#due-service-days');
       if (stats.nextServiceDate) {
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         const due = new Date(stats.nextServiceDate);
-        due.setHours(0,0,0,0);
+        due.setHours(0, 0, 0, 0);
         const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
         if (diffDays < 0) {
           daysSpan.textContent = `(Overdue by ${Math.abs(diffDays)} days)`;
@@ -1051,7 +1090,7 @@ async function selectVehicle(vehicle) {
       // Odometer Due Kilometers calculation
       const odoInput = document.querySelector('#form-odometer');
       const kmSpan = document.querySelector('#due-service-km');
-      
+
       const updateKmDue = () => {
         const enteredVal = Number(odoInput.value);
         if (!enteredVal) {
@@ -1089,20 +1128,20 @@ async function selectCustomer(customer) {
   try {
     const res = await api(`/api/v1/customers/${customer.id}/details`);
     const details = res.data;
-    
+
     document.querySelector('#info-cust-name').textContent = details.name;
     document.querySelector('#info-cust-phone').textContent = details.phone || 'No Phone';
     document.querySelector('#info-cust-total-vehicles').textContent = details.vehicle_count;
     document.querySelector('#info-cust-total-job-cards').textContent = details.job_card_count;
-    document.querySelector('#info-cust-last-visit').textContent = details.last_visit_at 
-      ? new Date(details.last_visit_at).toLocaleDateString() 
+    document.querySelector('#info-cust-last-visit').textContent = details.last_visit_at
+      ? new Date(details.last_visit_at).toLocaleDateString()
       : 'Never';
     document.querySelector('#info-cust-notes').textContent = details.notes || 'None';
 
     const vehiclesDiv = document.querySelector('#info-cust-linked-vehicles');
     vehiclesDiv.innerHTML = '';
     if (details.vehicles && details.vehicles.length > 0) {
-      details.vehicles.forEach(v => {
+      details.vehicles.forEach((v) => {
         const div = document.createElement('div');
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
@@ -1143,9 +1182,11 @@ async function handleRegistrationLookup() {
   if (!regValue || regValue.length < 3) return;
 
   try {
-    const res = await api(`/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(regValue)}`);
+    const res = await api(
+      `/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(regValue)}`,
+    );
     const lookupStatus = document.querySelector('#registration-lookup-status');
-    
+
     if (res.data) {
       // Vehicle exists! Prefill customer + vehicle history
       await selectCustomer({
@@ -1154,7 +1195,7 @@ async function handleRegistrationLookup() {
         phone: res.data.customer_phone,
         address: res.data.customer_address,
         city: res.data.customer_city,
-        notes: res.data.customer_notes
+        notes: res.data.customer_notes,
       });
       selectVehicle(res.data);
     } else {
@@ -1176,13 +1217,20 @@ async function handleRegistrationLookup() {
 // Toggle Quick Entry UI mode
 function triggerQuickEntryUI(isQuick) {
   const selectors = [
-    '#form-phone', '#form-model', '#form-fuel-type', 
-    '#form-chassis-number', '#form-engine-number', 
-    '#form-address', '#form-city', '#form-customer-notes',
-    '#form-battery-brand', '#form-fuel-level', '#form-promised-delivery'
+    '#form-phone',
+    '#form-model',
+    '#form-fuel-type',
+    '#form-chassis-number',
+    '#form-engine-number',
+    '#form-address',
+    '#form-city',
+    '#form-customer-notes',
+    '#form-battery-brand',
+    '#form-fuel-level',
+    '#form-promised-delivery',
   ];
 
-  selectors.forEach(sel => {
+  selectors.forEach((sel) => {
     const el = document.querySelector(sel);
     if (el) {
       const label = el.closest('label');
@@ -1213,7 +1261,8 @@ async function loadRecentVisits() {
     const res = await api('/api/v1/job-cards?pageSize=5');
     const cards = res.data || [];
     if (cards.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f8fafc; font-size:13px; text-align:center;">No recent workshop visits found.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f8fafc; font-size:13px; text-align:center;">No recent workshop visits found.</p>';
       return;
     }
 
@@ -1233,7 +1282,7 @@ async function loadRecentVisits() {
         <tbody>
     `;
 
-    cards.forEach(c => {
+    cards.forEach((c) => {
       html += `
         <tr>
           <td><strong>${c.customer_name || 'Walk-in'}</strong></td>
@@ -1252,11 +1301,13 @@ async function loadRecentVisits() {
     html += '</tbody></table>';
     container.innerHTML = html;
 
-    container.querySelectorAll('.use-recent-btn').forEach(btn => {
+    container.querySelectorAll('.use-recent-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const reg = btn.dataset.reg;
         try {
-          const res = await api(`/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(reg)}`);
+          const res = await api(
+            `/api/v1/vehicles/lookup?registration_number=${encodeURIComponent(reg)}`,
+          );
           if (res.data) {
             await selectCustomer({
               id: res.data.customer_id,
@@ -1264,7 +1315,7 @@ async function loadRecentVisits() {
               phone: res.data.customer_phone,
               address: res.data.customer_address,
               city: res.data.customer_city,
-              notes: res.data.customer_notes
+              notes: res.data.customer_notes,
             });
             selectVehicle(res.data);
           }
@@ -1273,9 +1324,9 @@ async function loadRecentVisits() {
         }
       });
     });
-
   } catch (err) {
     console.error('Failed to load recent visits:', err);
-    container.innerHTML = '<p style="padding:10px; color:#dc2626;">Failed to load recent workshop visits.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; color:#dc2626;">Failed to load recent workshop visits.</p>';
   }
 }

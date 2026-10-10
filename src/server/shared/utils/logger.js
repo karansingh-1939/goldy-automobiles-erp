@@ -8,7 +8,7 @@ export class Logger {
    */
   constructor({ logsDir, logLevel } = {}) {
     this.logsDir = logsDir || path.join(env.appDataPath, 'logs');
-    
+
     let resolvedLevel = (logLevel || env.logLevel || 'INFO').toUpperCase();
     const validLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
     if (!validLevels.includes(resolvedLevel)) {
@@ -20,7 +20,7 @@ export class Logger {
       DEBUG: 0,
       INFO: 1,
       WARN: 2,
-      ERROR: 3
+      ERROR: 3,
     };
 
     // Ensure logs directory exists automatically

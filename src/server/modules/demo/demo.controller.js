@@ -1,218 +1,305 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import Database from 'better-sqlite3';
+import bcrypt from 'bcryptjs';
 import { isDemoMode, toggleDemoMode, demoDbFile } from '../../database/connection.js';
-import { runMigrations } from '../../database/migrationRunner.js';
-import { runSeeds } from '../../database/seedRunner.js';
-import { seedDemoDatabase } from '../../database/demoSeeder.js';
-import { DbSafetyService } from '../../database/dbSafetyService.js';
+import { runMigrations, MigrationRunner } from '../../database/migration-runner.js';
+import { BackupService } from '../../database/backup-service.js';
+import { runSeeds } from '../../database/seed-runner.js';
+import { seedDemoDatabase } from '../../database/demo-seeder.js';
+import { DbSafetyService } from '../../database/db-safety-service.js';
+import { AppError } from '../../shared/errors/app-error.js';
+
+const businessTables = [
+  'customers',
+  'vehicles',
+  'suppliers',
+  'warehouses',
+  'inventory_categories',
+  'inventory_items',
+  'inventory_batches',
+  'inventory_transactions',
+  'stock_adjustments',
+  'stock_transfers',
+  'purchase_orders',
+  'purchase_receipts',
+  'purchase_items',
+  'purchase_returns',
+  'purchase_return_items',
+  'supplier_ledgers',
+  'technicians',
+  'job_cards',
+  'job_card_items',
+  'job_card_labour',
+  'job_card_assignments',
+  'invoices',
+  'invoice_items',
+  'expenses',
+  'gst_records',
+  'profit_records',
+  'fixed_assets',
+  'stock_verifications',
+  'companies',
+  'account_groups',
+  'ledgers',
+  'vouchers',
+  'journal_entries',
+  'ledger_balances',
+  'financial_years',
+  'locked_periods',
+  'direct_invoices',
+  'direct_invoice_items',
+  'customer_receipts',
+  'receipt_allocations',
+  'purchase_bills',
+  'purchase_bill_items',
+  'supplier_payments',
+  'supplier_allocations',
+  'gst_period_locks',
+  'inventory_reservations',
+  'quotations',
+  'quotation_items',
+  'sales_orders',
+  'sales_order_items',
+  'sales_shipments',
+  'sales_shipment_items',
+  'warranty_registrations',
+  'warranty_claims',
+  'customer_returns',
+  'customer_return_items',
+  'supplier_returns',
+  'supplier_return_items',
+  'loyalty_memberships',
+  'loyalty_ledger',
+  'customer_referrals',
+  'promotions',
+  'service_reminders',
+];
 
 export class DemoController {
   constructor(db) {
     this.db = db;
+    this.changingMode = false;
   }
 
-  getStatus = async (req, res, next) => {
-    try {
-      res.status(200).json({
-        status: 'success',
-        data: {
-          demoMode: isDemoMode()
-        }
-      });
-    } catch (err) {
-      next(err);
-    }
+  getStatus = (req, res) => {
+    res.status(200).json({ status: 'success', data: { demoMode: isDemoMode() } });
   };
+
+  assertMaintenanceAvailable() {
+    const activePath = this.db.name;
+    const directory = path.dirname(activePath);
+    if (
+      this.changingMode ||
+      fs.existsSync(path.join(directory, 'restore.lock')) ||
+      fs.existsSync(`${activePath}.backup.lock`)
+    ) {
+      throw new AppError(
+        'Database maintenance is already in progress.',
+        409,
+        'MAINTENANCE_IN_PROGRESS',
+      );
+    }
+  }
+
+  assertDemoDatabase() {
+    if (!isDemoMode() || path.resolve(this.db.name) !== path.resolve(demoDbFile)) {
+      throw new AppError(
+        'This operation is available only for the demo database.',
+        400,
+        'DEMO_MODE_REQUIRED',
+      );
+    }
+  }
 
   toggleMode = async (req, res, next) => {
     try {
-      const { enable } = req.body;
-      const willBeDemo = !!enable;
-      
-      if (willBeDemo) {
-        const demoDbExists = fs.existsSync(demoDbFile);
-        if (!demoDbExists) {
-          await this._initializeDemoDb();
-        }
-      }
-      
-      const activeState = toggleDemoMode(willBeDemo);
-      
-      res.status(200).json({
-        status: 'success',
-        data: {
-          demoMode: activeState
-        }
-      });
-    } catch (err) {
-      next(err);
+      if (typeof req.body.enable !== 'boolean')
+        throw new AppError('enable must be a boolean.', 400, 'VALIDATION_ERROR');
+      this.assertMaintenanceAvailable();
+      this.changingMode = true;
+      if (req.body.enable) await this.ensureDemoInitialized();
+      const demoMode = toggleDemoMode(req.body.enable);
+      res.status(200).json({ status: 'success', data: { demoMode } });
+    } catch (error) {
+      next(error);
+    } finally {
+      this.changingMode = false;
     }
   };
 
   loadData = async (req, res, next) => {
+    let demoDb;
     try {
-      if (!isDemoMode()) {
-        return res.status(400).json({
-          status: 'error',
-          error: { message: 'Demo mode is not active. Cannot load demo data in production.' }
-        });
-      }
-      
-      await seedDemoDatabase(this.db);
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Demo data loaded successfully.'
-      });
-    } catch (err) {
-      next(err);
+      this.assertMaintenanceAvailable();
+      this.assertDemoDatabase();
+      demoDb = new Database(demoDbFile, { fileMustExist: true });
+      demoDb.pragma('foreign_keys = ON');
+      await seedDemoDatabase(demoDb);
+      res.status(200).json({ status: 'success', message: 'Demo data loaded successfully.' });
+    } catch (error) {
+      next(error);
+    } finally {
+      demoDb?.close();
     }
   };
 
-  clearData = async (req, res, next) => {
-    try {
-      if (!isDemoMode()) {
-        return res.status(400).json({
-          status: 'error',
-          error: { message: 'Demo mode is not active. Cannot clear data in production.' }
-        });
-      }
-      
-      this.db.transaction(() => {
-        this.db.prepare("DELETE FROM profit_records").run();
-        this.db.prepare("DELETE FROM invoice_items").run();
-        this.db.prepare("DELETE FROM invoices").run();
-        this.db.prepare("DELETE FROM job_card_items").run();
-        this.db.prepare("DELETE FROM job_card_labour").run();
-        this.db.prepare("DELETE FROM job_cards").run();
-        this.db.prepare("DELETE FROM expenses").run();
-        this.db.prepare("DELETE FROM inventory_transactions").run();
-        this.db.prepare("DELETE FROM vehicles").run();
-        this.db.prepare("DELETE FROM customers").run();
-        
-        // Reset inventory quantities
-        this.db.prepare("UPDATE inventory_batches SET quantity = 0").run();
-        this.db.prepare("UPDATE inventory_items SET current_quantity = 0").run();
-      })();
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Demo transaction data cleared successfully.'
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
+  clearData = async (req, res, next) => this.rebuildDemo(res, next, false);
+  resetDb = async (req, res, next) => this.rebuildDemo(res, next, true);
 
-  resetDb = async (req, res, next) => {
+  async rebuildDemo(res, next, seedData) {
     try {
-      if (!isDemoMode()) {
-        return res.status(400).json({
-          status: 'error',
-          error: { message: 'Demo mode is not active. Cannot reset database in production.' }
-        });
-      }
-      
+      this.assertMaintenanceAvailable();
+      this.assertDemoDatabase();
+      this.changingMode = true;
       toggleDemoMode(false);
-      
-      if (fs.existsSync(demoDbFile)) {
-        try {
-          fs.unlinkSync(demoDbFile);
-          const wal = `${demoDbFile}-wal`;
-          const shm = `${demoDbFile}-shm`;
-          if (fs.existsSync(wal)) fs.unlinkSync(wal);
-          if (fs.existsSync(shm)) fs.unlinkSync(shm);
-        } catch (e) {
-          console.warn('Failed to delete demo sqlite file, trying to clean up tables instead:', e);
-        }
-      }
-      
-      await this._initializeDemoDb();
+      await this._initializeDemoDb({ seedData });
       toggleDemoMode(true);
-      
       res.status(200).json({
         status: 'success',
-        message: 'Demo database reset and seeded successfully.'
+        message: seedData
+          ? 'Demo database reset and seeded successfully.'
+          : 'Demo database cleared successfully.',
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
+    } finally {
+      this.changingMode = false;
     }
-  };
+  }
 
-  exportJsonData = async (req, res, next) => {
+  exportJsonData = (req, res, next) => {
     try {
-      const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'seed_history' AND name NOT LIKE 'migrations'").all().map(r => r.name);
-      
+      const existing = new Set(
+        this.db
+          .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .all()
+          .map((row) => row.name),
+      );
       const data = {};
-      for (const table of tables) {
-        data[table] = this.db.prepare(`SELECT * FROM "${table}"`).all();
-      }
-      
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename=goldy_business_data_${Date.now()}.json`);
-      res.status(200).send(JSON.stringify(data, null, 2));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  importJsonData = async (req, res, next) => {
-    try {
-      const data = req.body;
-      if (!data || typeof data !== 'object') {
-        return res.status(400).json({
-          status: 'error',
-          error: { message: 'Invalid JSON data payload.' }
-        });
-      }
-      
       this.db.transaction(() => {
-        this.db.pragma('foreign_keys = OFF');
-        
-        for (const [table, rows] of Object.entries(data)) {
-          const tableExists = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(table);
-          if (!tableExists) continue;
-          
-          this.db.prepare(`DELETE FROM "${table}"`).run();
-          
-          if (rows.length === 0) continue;
-          
-          const columns = Object.keys(rows[0]);
-          const placeholders = columns.map(() => '?').join(', ');
-          const sql = `INSERT INTO "${table}" (${columns.map(c => `"${c}"`).join(', ')}) VALUES (${placeholders})`;
-          const stmt = this.db.prepare(sql);
-          
-          for (const row of rows) {
-            const values = columns.map(col => row[col]);
-            stmt.run(...values);
-          }
+        for (const table of businessTables) {
+          if (existing.has(table)) data[table] = this.db.prepare(`SELECT * FROM "${table}"`).all();
         }
-        
-        this.db.pragma('foreign_keys = ON');
       })();
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Business data imported successfully.'
-      });
-    } catch (err) {
-      next(err);
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=goldy_business_data_${Date.now()}.json`,
+      );
+      res.status(200).send(JSON.stringify(data, null, 2));
+    } catch (error) {
+      next(error);
     }
   };
 
-  async _initializeDemoDb() {
-    const demoDb = new Database(demoDbFile);
+  importJsonData = (req, res, next) => {
+    next(
+      new AppError(
+        'JSON imports are disabled. Restore a verified ERP SQLite backup instead.',
+        400,
+        'JSON_IMPORT_DISABLED',
+      ),
+    );
+  };
+
+  async ensureDemoInitialized() {
+    if (!fs.existsSync(demoDbFile)) return this._initializeDemoDb();
+    const existing = new Database(demoDbFile, { fileMustExist: true });
+    let empty;
     try {
+      empty =
+        existing
+          .prepare(
+            "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+          )
+          .get().count === 0;
+      if (!empty) {
+        existing.pragma('foreign_keys = ON');
+        if (
+          existing
+            .prepare(
+              "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'system_settings'",
+            )
+            .get()
+        ) {
+          existing
+            .prepare(
+              "INSERT INTO system_settings (key, value) VALUES ('database.mode', 'demo') ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            )
+            .run();
+        }
+        new MigrationRunner(existing, new BackupService(existing)).run();
+        existing
+          .prepare(
+            "INSERT INTO system_settings (key, value) VALUES ('database.mode', 'demo') ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+          )
+          .run();
+      }
+    } finally {
+      existing.close();
+    }
+    if (empty) return this._initializeDemoDb();
+  }
+
+  async _initializeDemoDb({ seedData = true } = {}) {
+    fs.mkdirSync(path.dirname(demoDbFile), { recursive: true });
+    const temporary = `${demoDbFile}.${randomUUID()}.tmp`;
+    const previous = `${demoDbFile}.${randomUUID()}.previous`;
+    let demoDb;
+    try {
+      demoDb = new Database(temporary);
       demoDb.pragma('foreign_keys = ON');
       demoDb.pragma('journal_mode = WAL');
       demoDb.pragma('synchronous = NORMAL');
+      demoDb.pragma('busy_timeout = 10000');
       DbSafetyService.verifyConfiguration(demoDb);
-      
       runMigrations(demoDb);
       await runSeeds(demoDb);
-      await seedDemoDatabase(demoDb);
-    } finally {
+      demoDb
+        .prepare(
+          "INSERT INTO system_settings (key, value) VALUES ('database.mode', 'demo') ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        )
+        .run();
+      if (seedData) await seedDemoDatabase(demoDb);
+      else {
+        const role = demoDb.prepare("SELECT id FROM roles WHERE name = 'Admin'").get();
+        demoDb
+          .prepare('INSERT INTO users (name, username, password_hash, role_id) VALUES (?, ?, ?, ?)')
+          .run('Demo Administrator', 'admin', bcrypt.hashSync('Admin@12345', 12), role.id);
+      }
+      const foreignKeys = demoDb.pragma('foreign_key_check');
+      if (foreignKeys.length) throw new Error('Demo data failed foreign-key validation.');
       demoDb.close();
+      demoDb = null;
+      if (fs.existsSync(demoDbFile)) {
+        const existing = new Database(demoDbFile, { fileMustExist: true });
+        try {
+          const checkpoint = existing.pragma('wal_checkpoint(TRUNCATE)')[0];
+          if (checkpoint?.busy)
+            throw new AppError(
+              'Close other demo database readers before resetting.',
+              409,
+              'DEMO_DATABASE_BUSY',
+            );
+        } finally {
+          existing.close();
+        }
+      }
+      if (fs.existsSync(demoDbFile)) fs.renameSync(demoDbFile, previous);
+      try {
+        fs.renameSync(temporary, demoDbFile);
+      } catch (error) {
+        if (fs.existsSync(previous)) fs.renameSync(previous, demoDbFile);
+        throw error;
+      }
+      if (fs.existsSync(previous)) fs.unlinkSync(previous);
+    } finally {
+      demoDb?.close();
+      for (const file of [temporary, `${temporary}-wal`, `${temporary}-shm`]) {
+        if (fs.existsSync(file)) fs.unlinkSync(file);
+      }
     }
   }
 }

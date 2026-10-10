@@ -1,8 +1,9 @@
+import { localDate } from '../../../../public/local-date.js';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../shared/api/apiClient.js';
-import { useAppStore } from '../../shared/store/useAppStore.js';
-import { Search, Plus, BookOpen, FileText, CheckCircle, X, ChevronRight } from 'lucide-react';
+import { api } from '../../shared/api/api-client.js';
+import { useAppStore } from '../../shared/store/use-app-store.js';
+import { Plus, BookOpen, X } from 'lucide-react';
 
 export default function AccountingPortal() {
   const queryClient = useQueryClient();
@@ -13,62 +14,76 @@ export default function AccountingPortal() {
 
   // Form State (New Voucher)
   const [voucherType, setVoucherType] = useState('Journal');
-  const [voucherDate, setVoucherDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [voucherDate, setVoucherDate] = useState(() => localDate());
   const [narration, setNarration] = useState('');
-  
+
   // Voucher Entries
   const [entries, setEntries] = useState([
     { ledgerId: '', type: 'DEBIT', amount: '', narration: '' },
-    { ledgerId: '', type: 'CREDIT', amount: '', narration: '' }
+    { ledgerId: '', type: 'CREDIT', amount: '', narration: '' },
   ]);
 
   // Fetch ledgers for creation dropdowns
-  const { data: ledgersResponse } = useQuery({ queryKey: ['ledgers-list'], queryFn: () => api.get('/api/v1/accounting/ledgers') });
+  const { data: ledgersResponse } = useQuery({
+    queryKey: ['ledgers-list'],
+    queryFn: () => api.get('/api/v1/accounting/ledgers'),
+  });
   const ledgers = ledgersResponse?.data || [];
+
+  const reportEnd = localDate();
+  const reportStart = `${reportEnd.slice(0, 4)}-01-01`;
 
   // Fetch Trial Balance
   const { data: tbResponse, isLoading: loadingTB } = useQuery({
-    queryKey: ['trial-balance'],
-    queryFn: () => api.get('/api/v1/accounting/reports/trial-balance'),
-    enabled: activeTab === 'trial-balance'
+    queryKey: ['trial-balance', reportEnd],
+    queryFn: () => api.get(`/api/v1/accounting/reports/trial-balance?asOfDate=${reportEnd}`),
+    enabled: activeTab === 'trial-balance',
   });
 
   // Fetch Profit & Loss
   const { data: plResponse, isLoading: loadingPL } = useQuery({
-    queryKey: ['profit-loss'],
-    queryFn: () => api.get('/api/v1/accounting/reports/profit-loss'),
-    enabled: activeTab === 'profit-loss'
+    queryKey: ['profit-loss', reportStart, reportEnd],
+    queryFn: () =>
+      api.get(
+        `/api/v1/accounting/reports/profit-loss?startDate=${reportStart}&endDate=${reportEnd}`,
+      ),
+    enabled: activeTab === 'profit-loss',
   });
 
   // Fetch Day Book (Vouchers)
   const { data: dayBookResponse, isLoading: loadingVouchers } = useQuery({
     queryKey: ['daybook-vouchers'],
     queryFn: () => api.get('/api/v1/accounting/vouchers'),
-    enabled: activeTab === 'day-book'
+    enabled: activeTab === 'day-book',
   });
 
-  const trialBalance = tbResponse?.data || [];
-  const plData = plResponse?.data || { revenues: [], expenses: [], grossProfit: 0, netProfit: 0 };
+  const trialBalance = tbResponse?.data?.ledgers || [];
+  const plData = {
+    revenues: plResponse?.data?.revenue?.items || [],
+    expenses: plResponse?.data?.expenses?.items || [],
+    grossProfit: plResponse?.data?.grossProfit || 0,
+    netProfit: plResponse?.data?.netProfit || 0,
+  };
   const vouchers = dayBookResponse?.data || [];
 
   // Create Voucher Mutation
   const createVoucherMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/accounting/vouchers', payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['daybook-vouchers']);
-      queryClient.invalidateQueries(['trial-balance']);
-      queryClient.invalidateQueries(['profit-loss']);
+      queryClient.invalidateQueries({ queryKey: ['daybook-vouchers'] });
+      queryClient.invalidateQueries({ queryKey: ['trial-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['profit-loss'] });
       addNotification('Voucher posted successfully to General Ledger.', 'success');
       setShowAddVoucher(false);
       setNarration('');
       setEntries([
         { ledgerId: '', type: 'DEBIT', amount: '', narration: '' },
-        { ledgerId: '', type: 'CREDIT', amount: '', narration: '' }
+        { ledgerId: '', type: 'CREDIT', amount: '', narration: '' },
       ]);
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to post voucher.', 'error');
-    }
+    },
   });
 
   const handleAddEntryLine = () => {
@@ -87,20 +102,27 @@ export default function AccountingPortal() {
 
   const handleSubmitVoucher = (e) => {
     e.preventDefault();
-    
+
     // Validate entries
-    const formattedEntries = entries.map(e => ({
+    const formattedEntries = entries.map((e) => ({
       ledgerId: Number(e.ledgerId),
       type: e.type,
       amount: Number(e.amount),
-      narration: e.narration || undefined
+      narration: e.narration || undefined,
     }));
 
-    const debits = formattedEntries.filter(e => e.type === 'DEBIT').reduce((s, e) => s + e.amount, 0);
-    const credits = formattedEntries.filter(e => e.type === 'CREDIT').reduce((s, e) => s + e.amount, 0);
+    const debits = formattedEntries
+      .filter((e) => e.type === 'DEBIT')
+      .reduce((s, e) => s + e.amount, 0);
+    const credits = formattedEntries
+      .filter((e) => e.type === 'CREDIT')
+      .reduce((s, e) => s + e.amount, 0);
 
     if (Math.abs(debits - credits) > 0.001) {
-      addNotification(`Voucher out of balance by ₹${Math.abs(debits - credits).toFixed(2)}. Debits: ₹${debits}, Credits: ₹${credits}`, 'error');
+      addNotification(
+        `Voucher out of balance by ₹${Math.abs(debits - credits).toFixed(2)}. Debits: ₹${debits}, Credits: ₹${credits}`,
+        'error',
+      );
       return;
     }
 
@@ -108,7 +130,7 @@ export default function AccountingPortal() {
       voucherType,
       voucherDate,
       narration,
-      entries: formattedEntries
+      entries: formattedEntries,
     });
   };
 
@@ -116,8 +138,13 @@ export default function AccountingPortal() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">General Ledger & Vouchers</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">View real-time Trial Balance sheets, Profit & Loss summaries, and record Journal Entries.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            General Ledger & Vouchers
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            View real-time Trial Balance sheets, Profit & Loss summaries, and record Journal
+            Entries.
+          </p>
         </div>
         <button
           onClick={() => setShowAddVoucher(true)}
@@ -164,9 +191,11 @@ export default function AccountingPortal() {
 
       {/* Tab Panels */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
-        {activeTab === 'trial-balance' && (
-          loadingTB ? (
-            <div className="p-12 text-center text-sm text-gray-500">Generating Trial Balance...</div>
+        {activeTab === 'trial-balance' &&
+          (loadingTB ? (
+            <div className="p-12 text-center text-sm text-gray-500">
+              Generating Trial Balance...
+            </div>
           ) : trialBalance.length === 0 ? (
             <div className="p-12 text-center text-sm text-gray-500">No account balances found.</div>
           ) : (
@@ -182,30 +211,35 @@ export default function AccountingPortal() {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-mono text-xs">
                 {trialBalance.map((ledger) => (
                   <tr key={ledger.ledgerId} className="hover:bg-gray-50 dark:hover:bg-gray-850">
-                    <td className="px-6 py-3.5 font-sans text-sm font-semibold text-gray-900 dark:text-white">{ledger.ledgerName}</td>
-                    <td className="px-6 py-3.5 capitalize font-sans">{ledger.nature}</td>
+                    <td className="px-6 py-3.5 font-sans text-sm font-semibold text-gray-900 dark:text-white">
+                      {ledger.ledgerName}
+                    </td>
+                    <td className="px-6 py-3.5 capitalize font-sans">{ledger.balanceType}</td>
                     <td className="px-6 py-3.5 text-right text-gray-950 dark:text-white font-bold">
-                      {ledger.nature === 'Debit' ? `₹${ledger.amount.toFixed(2)}` : '-'}
+                      {ledger.balanceType === 'DEBIT' ? `₹${ledger.balance.toFixed(2)}` : '-'}
                     </td>
                     <td className="px-6 py-3.5 text-right text-gray-950 dark:text-white font-bold">
-                      {ledger.nature === 'Credit' ? `₹${ledger.amount.toFixed(2)}` : '-'}
+                      {ledger.balanceType === 'CREDIT' ? `₹${ledger.balance.toFixed(2)}` : '-'}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )
-        )}
+          ))}
 
-        {activeTab === 'profit-loss' && (
-          loadingPL ? (
-            <div className="p-12 text-center text-sm text-gray-500">Generating Profit & Loss statements...</div>
+        {activeTab === 'profit-loss' &&
+          (loadingPL ? (
+            <div className="p-12 text-center text-sm text-gray-500">
+              Generating Profit & Loss statements...
+            </div>
           ) : (
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 {/* Revenues */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-gray-950 dark:text-white uppercase tracking-wider">Revenues (Credit accounts)</h3>
+                  <h3 className="text-sm font-bold text-gray-950 dark:text-white uppercase tracking-wider">
+                    Revenues (Credit accounts)
+                  </h3>
                   <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 space-y-2">
                     {plData.revenues.map((r, i) => (
                       <div key={i} className="flex justify-between text-sm">
@@ -213,12 +247,16 @@ export default function AccountingPortal() {
                         <span className="font-bold">₹{r.amount.toFixed(2)}</span>
                       </div>
                     ))}
-                    {plData.revenues.length === 0 && <div className="text-xs text-gray-400">No revenue logs.</div>}
+                    {plData.revenues.length === 0 && (
+                      <div className="text-xs text-gray-400">No revenue logs.</div>
+                    )}
                   </div>
                 </div>
                 {/* Expenses */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-gray-950 dark:text-white uppercase tracking-wider">Expenses (Debit accounts)</h3>
+                  <h3 className="text-sm font-bold text-gray-950 dark:text-white uppercase tracking-wider">
+                    Expenses (Debit accounts)
+                  </h3>
                   <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 space-y-2">
                     {plData.expenses.map((e, i) => (
                       <div key={i} className="flex justify-between text-sm">
@@ -226,14 +264,18 @@ export default function AccountingPortal() {
                         <span className="font-bold">₹{e.amount.toFixed(2)}</span>
                       </div>
                     ))}
-                    {plData.expenses.length === 0 && <div className="text-xs text-gray-400">No expenses logged.</div>}
+                    {plData.expenses.length === 0 && (
+                      <div className="text-xs text-gray-400">No expenses logged.</div>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="flex justify-end gap-6 border-t border-gray-200 dark:border-gray-800 pt-4">
                 <div className="text-right">
                   <p className="text-xs text-gray-500 uppercase">Gross Profit</p>
-                  <p className="text-lg font-bold text-green-600">₹{plData.grossProfit.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-green-600">
+                    ₹{plData.grossProfit.toFixed(2)}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500 uppercase">Net Profit</p>
@@ -241,14 +283,17 @@ export default function AccountingPortal() {
                 </div>
               </div>
             </div>
-          )
-        )}
+          ))}
 
-        {activeTab === 'day-book' && (
-          loadingVouchers ? (
-            <div className="p-12 text-center text-sm text-gray-500">Loading Day Book Vouchers...</div>
+        {activeTab === 'day-book' &&
+          (loadingVouchers ? (
+            <div className="p-12 text-center text-sm text-gray-500">
+              Loading Day Book Vouchers...
+            </div>
           ) : vouchers.length === 0 ? (
-            <div className="p-12 text-center text-sm text-gray-500">No vouchers recorded for this period.</div>
+            <div className="p-12 text-center text-sm text-gray-500">
+              No vouchers recorded for this period.
+            </div>
           ) : (
             <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
               <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800">
@@ -263,15 +308,20 @@ export default function AccountingPortal() {
                 {vouchers.map((v) => (
                   <tr key={v.id} className="hover:bg-gray-50 dark:hover:bg-gray-850">
                     <td className="px-6 py-3.5 font-sans text-sm">{v.voucher_date}</td>
-                    <td className="px-6 py-3.5 font-bold text-gray-950 dark:text-white">{v.voucher_number}</td>
-                    <td className="px-6 py-3.5 capitalize font-sans font-semibold">{v.voucher_type}</td>
-                    <td className="px-6 py-3.5 font-sans truncate max-w-xs">{v.narration || '-'}</td>
+                    <td className="px-6 py-3.5 font-bold text-gray-950 dark:text-white">
+                      {v.voucher_number}
+                    </td>
+                    <td className="px-6 py-3.5 capitalize font-sans font-semibold">
+                      {v.voucher_type}
+                    </td>
+                    <td className="px-6 py-3.5 font-sans truncate max-w-xs">
+                      {v.narration || '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )
-        )}
+          ))}
       </div>
 
       {/* Add Voucher Modal */}
@@ -290,11 +340,19 @@ export default function AccountingPortal() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmitVoucher} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+
+            <form
+              onSubmit={handleSubmitVoucher}
+              className="p-6 space-y-4 max-h-[75vh] overflow-y-auto"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="modal-v-type" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Voucher Type *</label>
+                  <label
+                    htmlFor="modal-v-type"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Voucher Type *
+                  </label>
                   <select
                     id="modal-v-type"
                     value={voucherType}
@@ -308,7 +366,12 @@ export default function AccountingPortal() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="modal-v-date" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Voucher Date *</label>
+                  <label
+                    htmlFor="modal-v-date"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Voucher Date *
+                  </label>
                   <input
                     id="modal-v-date"
                     type="date"
@@ -319,7 +382,12 @@ export default function AccountingPortal() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label htmlFor="modal-v-narration" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Narration / Note</label>
+                  <label
+                    htmlFor="modal-v-narration"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Narration / Note
+                  </label>
                   <input
                     id="modal-v-narration"
                     type="text"
@@ -334,7 +402,9 @@ export default function AccountingPortal() {
               {/* Entries lines */}
               <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Journal Entries</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Journal Entries
+                  </h4>
                   <button
                     type="button"
                     onClick={handleAddEntryLine}
@@ -346,7 +416,10 @@ export default function AccountingPortal() {
 
                 <div className="space-y-2">
                   {entries.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-850 p-3 rounded-lg border border-gray-200 dark:border-gray-800/80 animate-fade-in">
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 bg-gray-50 dark:bg-gray-850 p-3 rounded-lg border border-gray-200 dark:border-gray-800/80 animate-fade-in"
+                    >
                       <select
                         required
                         value={entry.ledgerId}
@@ -355,10 +428,12 @@ export default function AccountingPortal() {
                       >
                         <option value="">Select Ledger Account...</option>
                         {ledgers.map((l) => (
-                          <option key={l.id} value={l.id}>{l.name}</option>
+                          <option key={l.id} value={l.id}>
+                            {l.name}
+                          </option>
                         ))}
                       </select>
-                      
+
                       <select
                         value={entry.type}
                         onChange={(e) => handleEntryChange(index, 'type', e.target.value)}
@@ -390,7 +465,7 @@ export default function AccountingPortal() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <button
                   type="button"

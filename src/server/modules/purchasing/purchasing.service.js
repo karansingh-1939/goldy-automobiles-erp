@@ -1,8 +1,9 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { AuditRepository } from '../audit/audit.repository.js';
 import { InventoryService } from '../inventory/inventory.service.js';
 import { PurchasingRepository } from './purchasing.repository.js';
-import { AccountingPostingEngine } from '../accounting/postingEngine.service.js';
+import { AccountingPostingEngine } from '../accounting/posting-engine.service.js';
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
@@ -25,7 +26,11 @@ function code(prefix) {
 
 function normalizeDatabaseError(error) {
   if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-    return new AppError('A record with the same unique value already exists.', 409, 'DUPLICATE_RECORD');
+    return new AppError(
+      'A record with the same unique value already exists.',
+      409,
+      'DUPLICATE_RECORD',
+    );
   }
 
   if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
@@ -112,7 +117,7 @@ export class PurchasingService {
         const orderId = this.repository.createPurchaseOrder({
           order_number: payload.order_number || code('PO'),
           supplier_id: supplier.id,
-          order_date: payload.order_date || new Date().toISOString().slice(0, 10),
+          order_date: payload.order_date || localDate(),
           expected_date: payload.expected_date || null,
           status: 'OPEN',
           notes: payload.notes || null,
@@ -180,7 +185,11 @@ export class PurchasingService {
     }
 
     if (purchaseOrder && Number(purchaseOrder.supplier_id) !== Number(supplier.id)) {
-      throw new AppError('Purchase order supplier does not match receipt supplier.', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        'Purchase order supplier does not match receipt supplier.',
+        400,
+        'VALIDATION_ERROR',
+      );
     }
 
     const items = this.validateItems(payload.items, { requireBatch: true });
@@ -191,7 +200,7 @@ export class PurchasingService {
           receipt_number: payload.receipt_number || code('GRN'),
           purchase_order_id: purchaseOrder?.id || null,
           supplier_id: supplier.id,
-          receipt_date: payload.receipt_date || new Date().toISOString().slice(0, 10),
+          receipt_date: payload.receipt_date || localDate(),
           status: 'POSTED',
           notes: payload.notes || null,
           created_by: userId,
@@ -208,41 +217,79 @@ export class PurchasingService {
 
         // Post Purchase Voucher automatically
         const supplierLedgerId = this.postingEngine.getOrCreateSupplierLedger(1, supplier.id);
-        const cgstAmount = money(totals.gst_total / 2);
-        const sgstAmount = money(totals.gst_total - cgstAmount);
+        const companyState =
+          this.db.prepare('SELECT state FROM companies WHERE id = 1').get()?.state || 'Haryana';
+        const interstate =
+          String(supplier.state || companyState)
+            .trim()
+            .toLowerCase() !== companyState.trim().toLowerCase();
+        const igstAmount = interstate ? totals.gst_total : 0;
+        const cgstAmount = interstate ? 0 : money(totals.gst_total / 2);
+        const sgstAmount = interstate ? 0 : money(totals.gst_total - cgstAmount);
 
         const accountingEntries = [];
-        accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'inventory_stock'), type: 'DEBIT', amount: totals.subtotal });
-        
+        accountingEntries.push({
+          ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'inventory_stock'),
+          type: 'DEBIT',
+          amount: totals.subtotal,
+        });
+
         if (cgstAmount > 0) {
-          accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'cgst_input'), type: 'DEBIT', amount: cgstAmount });
+          accountingEntries.push({
+            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'cgst_input'),
+            type: 'DEBIT',
+            amount: cgstAmount,
+          });
         }
         if (sgstAmount > 0) {
-          accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'sgst_input'), type: 'DEBIT', amount: sgstAmount });
+          accountingEntries.push({
+            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'sgst_input'),
+            type: 'DEBIT',
+            amount: sgstAmount,
+          });
         }
 
-        accountingEntries.push({ ledgerId: supplierLedgerId, type: 'CREDIT', amount: totals.grand_total });
+        accountingEntries.push({
+          ledgerId: supplierLedgerId,
+          type: 'CREDIT',
+          amount: totals.grand_total,
+        });
 
+        if (igstAmount > 0) {
+          accountingEntries.push({
+            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'igst_input'),
+            type: 'DEBIT',
+            amount: igstAmount,
+          });
+        }
         // Handle Round Off
-        const sumDebits = totals.subtotal + cgstAmount + sgstAmount;
+        const sumDebits = totals.subtotal + cgstAmount + sgstAmount + igstAmount;
         const roundoff = money(totals.grand_total - sumDebits);
         if (Math.abs(roundoff) >= 0.01) {
           if (roundoff > 0) {
-            accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'), type: 'DEBIT', amount: roundoff });
+            accountingEntries.push({
+              ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'),
+              type: 'DEBIT',
+              amount: roundoff,
+            });
           } else {
-            accountingEntries.push({ ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'), type: 'CREDIT', amount: Math.abs(roundoff) });
+            accountingEntries.push({
+              ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'round_off'),
+              type: 'CREDIT',
+              amount: Math.abs(roundoff),
+            });
           }
         }
 
         this.postingEngine.post({
           companyId: 1,
           voucherType: 'Purchase',
-          voucherDate: payload.receipt_date || new Date().toISOString().slice(0, 10),
+          voucherDate: payload.receipt_date || localDate(),
           referenceTable: 'purchase_receipts',
           referenceId: receiptId,
           narration: `Purchase receipt from supplier: ${supplier.name}. GRN: ${payload.receipt_number || receiptId}`,
           created_by: userId,
-          entries: accountingEntries
+          entries: accountingEntries,
         });
 
         if (purchaseOrder) {
@@ -251,7 +298,7 @@ export class PurchasingService {
 
         this.recordSupplierLedger({
           supplierId: supplier.id,
-          entryDate: payload.receipt_date || new Date().toISOString().slice(0, 10),
+          entryDate: payload.receipt_date || localDate(),
           entryType: 'Purchase',
           referenceType: 'purchase_receipts',
           referenceId: receiptId,
@@ -304,48 +351,104 @@ export class PurchasingService {
           return_number: payload.return_number || code('PR'),
           purchase_id: payload.purchase_id || null,
           supplier_id: supplier.id,
-          return_date: payload.return_date || new Date().toISOString().slice(0, 10),
+          return_date: payload.return_date || localDate(),
           notes: payload.notes || null,
           created_by: userId,
         });
 
-        const totals = items.reduce((sum, item) => {
-          const amounts = lineAmounts(item);
-          const stockOut = this.inventoryService.stockOut({
-            itemId: item.item_id,
-            warehouseId: item.warehouse_id,
-            batchId: item.batch_id,
-            quantity: item.quantity,
-            transactionType: 'Return',
-            referenceType: 'purchase_returns',
-            referenceId: returnId,
-            notes: payload.notes || null,
-            userId,
-          });
+        let inventoryValue = 0;
+        const totals = items.reduce(
+          (sum, item) => {
+            const amounts = lineAmounts(item);
+            const stockOut = this.inventoryService.stockOut({
+              itemId: item.item_id,
+              warehouseId: item.warehouse_id,
+              batchId: item.batch_id,
+              quantity: item.quantity,
+              transactionType: 'Return',
+              referenceType: 'purchase_returns',
+              referenceId: returnId,
+              notes: payload.notes || null,
+              userId,
+            });
+            inventoryValue = money(inventoryValue + stockOut.unitCost * amounts.quantity);
 
-          this.repository.createPurchaseReturnItem({
-            purchase_return_id: returnId,
-            item_id: item.item_id,
-            batch_id: item.batch_id,
-            warehouse_id: item.warehouse_id,
-            quantity: amounts.quantity,
-            unit_cost: amounts.purchaseCost || stockOut.unitCost,
-            gst_rate: amounts.gstRate,
-            gst_amount: amounts.gstAmount,
-            line_total: amounts.lineTotal,
-          });
+            this.repository.createPurchaseReturnItem({
+              purchase_return_id: returnId,
+              item_id: item.item_id,
+              batch_id: item.batch_id,
+              warehouse_id: item.warehouse_id,
+              quantity: amounts.quantity,
+              unit_cost: amounts.purchaseCost || stockOut.unitCost,
+              gst_rate: amounts.gstRate,
+              gst_amount: amounts.gstAmount,
+              line_total: amounts.lineTotal,
+            });
 
-          return {
-            subtotal: money(sum.subtotal + (amounts.quantity * amounts.purchaseCost)),
-            gst_total: money(sum.gst_total + amounts.gstAmount),
-            grand_total: money(sum.grand_total + amounts.lineTotal),
-          };
-        }, { subtotal: 0, gst_total: 0, grand_total: 0 });
+            return {
+              subtotal: money(sum.subtotal + amounts.quantity * amounts.purchaseCost),
+              gst_total: money(sum.gst_total + amounts.gstAmount),
+              grand_total: money(sum.grand_total + amounts.lineTotal),
+            };
+          },
+          { subtotal: 0, gst_total: 0, grand_total: 0 },
+        );
 
         this.repository.updatePurchaseReturnTotals(returnId, totals);
+        const entries = [
+          {
+            ledgerId: this.postingEngine.getOrCreateSupplierLedger(1, supplier.id),
+            type: 'DEBIT',
+            amount: totals.grand_total,
+          },
+          {
+            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'inventory_stock'),
+            type: 'CREDIT',
+            amount: inventoryValue,
+          },
+        ].filter((entry) => entry.amount > 0);
+        const company = this.db.prepare('SELECT state FROM companies WHERE id = 1').get();
+        const isInterstate =
+          supplier.state &&
+          company?.state &&
+          supplier.state.trim().toLowerCase() !== company.state.trim().toLowerCase();
+        const taxes = isInterstate
+          ? [['igst_input', totals.gst_total]]
+          : [
+              ['cgst_input', money(totals.gst_total / 2)],
+              ['sgst_input', money(totals.gst_total - money(totals.gst_total / 2))],
+            ];
+        for (const [key, amount] of taxes) {
+          if (amount > 0)
+            entries.push({
+              ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, key),
+              type: 'CREDIT',
+              amount,
+            });
+        }
+        const costDifference = money(inventoryValue - totals.subtotal);
+        if (costDifference !== 0) {
+          entries.push({
+            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(1, 'stock_adjustments'),
+            type: costDifference > 0 ? 'DEBIT' : 'CREDIT',
+            amount: Math.abs(costDifference),
+          });
+        }
+        if (entries.length > 0) {
+          this.postingEngine.post({
+            companyId: 1,
+            voucherType: 'Debit Note',
+            voucherDate: payload.return_date || localDate(),
+            referenceTable: 'purchase_returns',
+            referenceId: returnId,
+            narration: `Purchase return ${returnId} to ${supplier.name}`,
+            created_by: userId,
+            entries,
+          });
+        }
         this.recordSupplierLedger({
           supplierId: supplier.id,
-          entryDate: payload.return_date || new Date().toISOString().slice(0, 10),
+          entryDate: payload.return_date || localDate(),
           entryType: 'Return',
           referenceType: 'purchase_returns',
           referenceId: returnId,
@@ -399,7 +502,9 @@ export class PurchasingService {
         throw new AppError('Quantity must be greater than zero.', 400, 'VALIDATION_ERROR');
       }
 
-      const purchaseCost = money(item.purchase_cost ?? item.unit_cost ?? inventoryItem.purchase_cost);
+      const purchaseCost = money(
+        item.purchase_cost ?? item.unit_cost ?? inventoryItem.purchase_cost,
+      );
       if (purchaseCost < 0) {
         throw new AppError('Purchase cost cannot be negative.', 400, 'VALIDATION_ERROR');
       }
@@ -430,50 +535,54 @@ export class PurchasingService {
   }
 
   createPurchaseItems({ source, sourceId, supplierId = null, items, userId = null }) {
-    return items.reduce((sum, item) => {
-      const amounts = lineAmounts(item);
-      const stockIn = source === 'receipt'
-        ? this.inventoryService.stockIn({
-          itemId: item.item_id,
-          warehouseId: item.warehouse_id,
-          supplierId,
-          batchNumber: item.batch_number,
-          manufactureDate: item.manufacture_date,
-          expiryDate: item.expiry_date,
-          quantity: item.quantity,
-          unitCost: item.purchase_cost,
-          transactionType: 'Purchase',
-          referenceType: 'purchase_receipts',
-          referenceId: sourceId,
-          notes: 'Purchase receipt',
-          userId,
-        })
-        : null;
+    return items.reduce(
+      (sum, item) => {
+        const amounts = lineAmounts(item);
+        const stockIn =
+          source === 'receipt'
+            ? this.inventoryService.stockIn({
+                itemId: item.item_id,
+                warehouseId: item.warehouse_id,
+                supplierId,
+                batchNumber: item.batch_number,
+                manufactureDate: item.manufacture_date,
+                expiryDate: item.expiry_date,
+                quantity: item.quantity,
+                unitCost: item.purchase_cost,
+                transactionType: 'Purchase',
+                referenceType: 'purchase_receipts',
+                referenceId: sourceId,
+                notes: 'Purchase receipt',
+                userId,
+              })
+            : null;
 
-      this.repository.createPurchaseItem({
-        purchase_id: null,
-        purchase_order_id: source === 'order' ? sourceId : null,
-        purchase_receipt_id: source === 'receipt' ? sourceId : null,
-        item_id: item.item_id,
-        warehouse_id: item.warehouse_id,
-        batch_id: stockIn?.batch.id || item.batch_id,
-        batch_number: item.batch_number,
-        manufacture_date: item.manufacture_date,
-        expiry_date: item.expiry_date,
-        quantity: amounts.quantity,
-        purchase_cost: amounts.purchaseCost,
-        selling_price: item.selling_price,
-        gst_rate: amounts.gstRate,
-        gst_amount: amounts.gstAmount,
-        line_total: amounts.lineTotal,
-      });
+        this.repository.createPurchaseItem({
+          purchase_id: null,
+          purchase_order_id: source === 'order' ? sourceId : null,
+          purchase_receipt_id: source === 'receipt' ? sourceId : null,
+          item_id: item.item_id,
+          warehouse_id: item.warehouse_id,
+          batch_id: stockIn?.batch.id || item.batch_id,
+          batch_number: item.batch_number,
+          manufacture_date: item.manufacture_date,
+          expiry_date: item.expiry_date,
+          quantity: amounts.quantity,
+          purchase_cost: amounts.purchaseCost,
+          selling_price: item.selling_price,
+          gst_rate: amounts.gstRate,
+          gst_amount: amounts.gstAmount,
+          line_total: amounts.lineTotal,
+        });
 
-      return {
-        subtotal: money(sum.subtotal + (amounts.quantity * amounts.purchaseCost)),
-        gst_total: money(sum.gst_total + amounts.gstAmount),
-        grand_total: money(sum.grand_total + amounts.lineTotal),
-      };
-    }, { subtotal: 0, gst_total: 0, grand_total: 0 });
+        return {
+          subtotal: money(sum.subtotal + amounts.quantity * amounts.purchaseCost),
+          gst_total: money(sum.gst_total + amounts.gstAmount),
+          grand_total: money(sum.grand_total + amounts.lineTotal),
+        };
+      },
+      { subtotal: 0, gst_total: 0, grand_total: 0 },
+    );
   }
 
   recordSupplierLedger({
@@ -522,7 +631,7 @@ export class PurchasingService {
     const parsed = parseListQuery(query);
     const result = this.repository.listSupplierLedger(supplierId, {
       limit: parsed.pageSize,
-      offset: parsed.offset
+      offset: parsed.offset,
     });
 
     return this.withPagination(result, parsed);

@@ -1,4 +1,5 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { ProfitRepository } from './profit.repository.js';
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -8,7 +9,7 @@ function money(value) {
 }
 
 function todayString() {
-  return new Date().toISOString().slice(0, 10);
+  return localDate();
 }
 
 function firstDayOfMonth(dateText) {
@@ -24,7 +25,10 @@ function normalizePeriod(period) {
     return null;
   }
 
-  return String(period).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return String(period)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
 }
 
 function normalizeDate(value, label) {
@@ -201,17 +205,26 @@ export class ProfitService {
   tallyExport(query = {}) {
     const filters = parseFilters(query);
     const exportType = query.type || 'sales';
+    if (!['sales', 'all'].includes(exportType)) {
+      throw new AppError('Tally export type must be sales or all.', 400, 'VALIDATION_ERROR');
+    }
 
     const escapeXml = (unsafe) => {
       if (unsafe === undefined || unsafe === null) return '';
       return String(unsafe).replace(/[<>&'"]/g, (c) => {
         switch (c) {
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '&': return '&amp;';
-          case '\'': return '&apos;';
-          case '"': return '&quot;';
-          default: return c;
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case '&':
+            return '&amp;';
+          case "'":
+            return '&apos;';
+          case '"':
+            return '&quot;';
+          default:
+            return c;
         }
       });
     };
@@ -236,9 +249,9 @@ export class ProfitService {
       vouchers.forEach((v) => {
         const dateFormatted = v.voucher_date ? v.voucher_date.replace(/-/g, '') : '';
         const partyName = escapeXml(
-          v.entries.find(e => e.entry_type === 'DEBIT')?.ledger_name ||
-          v.entries[0]?.ledger_name ||
-          'Suspense Ledger'
+          v.entries.find((e) => e.entry_type === 'DEBIT')?.ledger_name ||
+            v.entries[0]?.ledger_name ||
+            'Suspense Ledger',
         );
 
         xml += `        <TALLYMESSAGE xmlns:UDF="TallyUDF">\n`;
@@ -253,9 +266,10 @@ export class ProfitService {
 
         v.entries.forEach((entry) => {
           const isDeemedPositive = entry.entry_type === 'DEBIT' ? 'Yes' : 'No';
-          const amount = entry.entry_type === 'DEBIT' 
-            ? `-${Number(entry.amount).toFixed(2)}` 
-            : `${Number(entry.amount).toFixed(2)}`;
+          const amount =
+            entry.entry_type === 'DEBIT'
+              ? `-${Number(entry.amount).toFixed(2)}`
+              : `${Number(entry.amount).toFixed(2)}`;
 
           xml += `            <ALLLEDGERENTRIES.LIST>\n`;
           xml += `              <LEDGERNAME>${escapeXml(entry.ledger_name)}</LEDGERNAME>\n`;
@@ -282,7 +296,7 @@ export class ProfitService {
         const partyName = escapeXml(inv.customer_name || 'Cash Customer');
 
         xml += `        <TALLYMESSAGE xmlns:UDF="TallyUDF">\n`;
-        xml += `          <VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="AccountingVoucherView">\n`;
+        xml += `          <VOUCHER VCHTYPE="${inv.document_type === 'CREDIT_NOTE' ? 'Credit Note' : 'Sales'}" ACTION="Create" OBJVIEW="AccountingVoucherView">\n`;
         xml += `            <DATE>${dateFormatted}</DATE>\n`;
         xml += `            <VOUCHERNUMBER>${escapeXml(inv.invoice_number)}</VOUCHERNUMBER>\n`;
         xml += `            <PARTYLEDGERNAME>${partyName}</PARTYLEDGERNAME>\n`;
@@ -291,44 +305,54 @@ export class ProfitService {
         // Ledger entry 1: Party (Debit)
         xml += `            <ALLLEDGERENTRIES.LIST>\n`;
         xml += `              <LEDGERNAME>${partyName}</LEDGERNAME>\n`;
-        xml += `              <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>\n`;
-        xml += `              <AMOUNT>-${grandTotal}</AMOUNT>\n`;
+        xml += `              <ISDEEMEDPOSITIVE>${Number(grandTotal) >= 0 ? 'Yes' : 'No'}</ISDEEMEDPOSITIVE>\n`;
+        xml += `              <AMOUNT>${(-Number(grandTotal)).toFixed(2)}</AMOUNT>\n`;
         xml += `            </ALLLEDGERENTRIES.LIST>\n`;
 
         // Ledger entry 2: Sales (Credit)
         xml += `            <ALLLEDGERENTRIES.LIST>\n`;
         xml += `              <LEDGERNAME>Sales Account</LEDGERNAME>\n`;
-        xml += `              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
+        xml += `              <ISDEEMEDPOSITIVE>${Number(taxableAmount) >= 0 ? 'No' : 'Yes'}</ISDEEMEDPOSITIVE>\n`;
         xml += `              <AMOUNT>${taxableAmount}</AMOUNT>\n`;
         xml += `            </ALLLEDGERENTRIES.LIST>\n`;
 
         // Ledger entry 3: CGST (Credit)
-        if (Number(cgstTotal) > 0) {
+        if (Number(cgstTotal) !== 0) {
           xml += `            <ALLLEDGERENTRIES.LIST>\n`;
           xml += `              <LEDGERNAME>CGST Ledger</LEDGERNAME>\n`;
-          xml += `              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
+          xml += `              <ISDEEMEDPOSITIVE>${Number(cgstTotal) >= 0 ? 'No' : 'Yes'}</ISDEEMEDPOSITIVE>\n`;
           xml += `              <AMOUNT>${cgstTotal}</AMOUNT>\n`;
           xml += `            </ALLLEDGERENTRIES.LIST>\n`;
         }
 
         // Ledger entry 4: SGST (Credit)
-        if (Number(sgstTotal) > 0) {
+        if (Number(sgstTotal) !== 0) {
           xml += `            <ALLLEDGERENTRIES.LIST>\n`;
           xml += `              <LEDGERNAME>SGST Ledger</LEDGERNAME>\n`;
-          xml += `              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
+          xml += `              <ISDEEMEDPOSITIVE>${Number(sgstTotal) >= 0 ? 'No' : 'Yes'}</ISDEEMEDPOSITIVE>\n`;
           xml += `              <AMOUNT>${sgstTotal}</AMOUNT>\n`;
           xml += `            </ALLLEDGERENTRIES.LIST>\n`;
         }
 
         // Ledger entry 5: IGST (Credit)
-        if (Number(igstTotal) > 0) {
+        if (Number(igstTotal) !== 0) {
           xml += `            <ALLLEDGERENTRIES.LIST>\n`;
           xml += `              <LEDGERNAME>IGST Ledger</LEDGERNAME>\n`;
-          xml += `              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
+          xml += `              <ISDEEMEDPOSITIVE>${Number(igstTotal) >= 0 ? 'No' : 'Yes'}</ISDEEMEDPOSITIVE>\n`;
           xml += `              <AMOUNT>${igstTotal}</AMOUNT>\n`;
           xml += `            </ALLLEDGERENTRIES.LIST>\n`;
         }
 
+        const roundOff = money(
+          Number(grandTotal) -
+            Number(taxableAmount) -
+            Number(cgstTotal) -
+            Number(sgstTotal) -
+            Number(igstTotal),
+        );
+        if (roundOff !== 0) {
+          xml += `            <ALLLEDGERENTRIES.LIST><LEDGERNAME>Round Off</LEDGERNAME><ISDEEMEDPOSITIVE>${roundOff > 0 ? 'No' : 'Yes'}</ISDEEMEDPOSITIVE><AMOUNT>${roundOff.toFixed(2)}</AMOUNT></ALLLEDGERENTRIES.LIST>\n`;
+        }
         xml += `          </VOUCHER>\n`;
         xml += `        </TALLYMESSAGE>\n`;
       });
@@ -346,4 +370,3 @@ export class ProfitService {
 export function createProfitService(db) {
   return new ProfitService(db);
 }
-

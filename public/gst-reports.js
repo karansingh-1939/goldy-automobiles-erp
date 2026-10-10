@@ -1,8 +1,15 @@
+import { localDate } from './local-date.js';
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 
 let activeTab = 'summary';
 let currentGstr1Data = [];
+
+function escapeHtml(value) {
+  const span = document.createElement('span');
+  span.textContent = String(value ?? '');
+  return span.innerHTML;
+}
 
 // Message display helper
 function showMessage(text, isError = false) {
@@ -59,7 +66,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -83,9 +90,12 @@ function setupTabs() {
 
 function switchTab(tab) {
   activeTab = tab;
-  document.querySelector('#gst-tabs').querySelectorAll('button').forEach((btn) => {
-    btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
-  });
+  document
+    .querySelector('#gst-tabs')
+    .querySelectorAll('button')
+    .forEach((btn) => {
+      btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
+    });
 
   document.querySelector('#tab-summary').style.display = tab === 'summary' ? 'block' : 'none';
   document.querySelector('#tab-gstr1').style.display = tab === 'gstr1' ? 'block' : 'none';
@@ -93,7 +103,8 @@ function switchTab(tab) {
   document.querySelector('#tab-hsn').style.display = tab === 'hsn' ? 'block' : 'none';
 
   // Show CSV export button only on GSTR-1 tab
-  document.querySelector('#export-csv-btn').style.display = tab === 'gstr1' ? 'inline-block' : 'none';
+  document.querySelector('#export-csv-btn').style.display =
+    tab === 'gstr1' ? 'inline-block' : 'none';
 
   generateReport();
 }
@@ -103,9 +114,12 @@ function setupFilterListeners() {
   const periodSelect = document.querySelector('#filter-period');
   periodSelect.addEventListener('change', () => {
     const period = periodSelect.value;
-    document.querySelector('#month-selector-container').style.display = period === 'month' ? 'block' : 'none';
-    document.querySelector('#fy-selector-container').style.display = period === 'fy' ? 'block' : 'none';
-    document.querySelector('#custom-date-container').style.display = period === 'custom' ? 'flex' : 'none';
+    document.querySelector('#month-selector-container').style.display =
+      period === 'month' ? 'block' : 'none';
+    document.querySelector('#fy-selector-container').style.display =
+      period === 'fy' ? 'block' : 'none';
+    document.querySelector('#custom-date-container').style.display =
+      period === 'custom' ? 'flex' : 'none';
   });
 
   document.querySelector('#generate-btn').addEventListener('click', () => {
@@ -120,7 +134,7 @@ function setupFilterListeners() {
 // CONVERT PERIOD SELECTOR TO DATE RANGE
 function getPeriodDates() {
   const period = document.querySelector('#filter-period').value;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
 
   if (period === 'this_month') {
     return {
@@ -200,7 +214,7 @@ async function loadInputTaxCredit(dateFrom, dateTo) {
 
     const taxableValue = postedReceipts.reduce((sum, r) => sum + Number(r.subtotal || 0), 0);
     const totalITC = postedReceipts.reduce((sum, r) => sum + Number(r.gst_total || 0), 0);
-    
+
     // Split 50/50 for CGST and SGST (IGST is 0 for local operations)
     const cgstITC = Math.round((totalITC / 2) * 100) / 100;
     const sgstITC = Math.round((totalITC - cgstITC) * 100) / 100;
@@ -291,7 +305,8 @@ async function renderGstr1Tab(queryParams) {
   currentGstr1Data = res.data;
 
   if (currentGstr1Data.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No sales records found for this period.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No sales records found for this period.</p>';
     return;
   }
 
@@ -300,6 +315,8 @@ async function renderGstr1Tab(queryParams) {
       <thead>
         <tr>
           <th>Invoice No</th>
+          <th>Document Type</th>
+          <th>Original Invoice</th>
           <th>Invoice Date</th>
           <th>Customer Name</th>
           <th>Customer GSTIN</th>
@@ -319,12 +336,14 @@ async function renderGstr1Tab(queryParams) {
   currentGstr1Data.forEach((row) => {
     html += `
       <tr>
-        <td><strong>${row.invoiceNumber}</strong></td>
-        <td>${row.invoiceDate}</td>
-        <td>${row.customerName}</td>
-        <td>${row.customerGstin || '-'}</td>
-        <td>${row.placeOfSupply || '-'}</td>
-        <td><span style="font-family:monospace; font-weight:700;">${row.hsnSac || 'UNSPECIFIED'}</span></td>
+        <td><strong>${escapeHtml(row.invoiceNumber)}</strong></td>
+        <td>${row.documentType === 'CREDIT_NOTE' ? 'Credit note' : 'Invoice'}</td>
+        <td>${escapeHtml(row.originalInvoiceNumber || '-')}</td>
+        <td>${escapeHtml(row.invoiceDate)}</td>
+        <td>${escapeHtml(row.customerName)}</td>
+        <td>${escapeHtml(row.customerGstin || '-')}</td>
+        <td>${escapeHtml(row.placeOfSupply || '-')}</td>
+        <td><span style="font-family:monospace; font-weight:700;">${escapeHtml(row.hsnSac || 'UNSPECIFIED')}</span></td>
         <td>Rs. ${row.taxableValue.toFixed(2)}</td>
         <td>Rs. ${row.cgstAmount.toFixed(2)}</td>
         <td>Rs. ${row.sgstAmount.toFixed(2)}</td>
@@ -349,8 +368,10 @@ async function renderGstr3bTab(queryParams, filters) {
 
   // Update Outward supplies
   document.querySelector('#gstr3b-sales-count').textContent = sales.invoiceCount;
-  document.querySelector('#gstr3b-sales-taxable').textContent = `Rs. ${sales.taxableValue.toFixed(2)}`;
-  document.querySelector('#gstr3b-sales-igst').textContent = `Rs. ${sales.integratedTax.toFixed(2)}`;
+  document.querySelector('#gstr3b-sales-taxable').textContent =
+    `Rs. ${sales.taxableValue.toFixed(2)}`;
+  document.querySelector('#gstr3b-sales-igst').textContent =
+    `Rs. ${sales.integratedTax.toFixed(2)}`;
   document.querySelector('#gstr3b-sales-cgst').textContent = `Rs. ${sales.centralTax.toFixed(2)}`;
   document.querySelector('#gstr3b-sales-sgst').textContent = `Rs. ${sales.stateUtTax.toFixed(2)}`;
   document.querySelector('#gstr3b-sales-total').textContent = `Rs. ${sales.totalTax.toFixed(2)}`;
@@ -365,7 +386,8 @@ async function renderGstr3bTab(queryParams, filters) {
   // Render Rate Breakdown Table
   const rateContainer = document.querySelector('#gstr3b-rate-container');
   if (rateBreakdown.length === 0) {
-    rateContainer.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No rate breakdown available.</p>';
+    rateContainer.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No rate breakdown available.</p>';
     return;
   }
 
@@ -408,7 +430,8 @@ async function renderHsnTab(queryParams) {
   const data = res.data;
 
   if (data.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No HSN summary data found for this period.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No HSN summary data found for this period.</p>';
     return;
   }
 
@@ -431,7 +454,7 @@ async function renderHsnTab(queryParams) {
   data.forEach((row) => {
     html += `
       <tr>
-        <td><span style="font-family:monospace; font-weight:700;">${row.hsnSac}</span></td>
+        <td><span style="font-family:monospace; font-weight:700;">${escapeHtml(row.hsnSac)}</span></td>
         <td>${row.quantity}</td>
         <td>Rs. ${row.taxableValue.toFixed(2)}</td>
         <td>Rs. ${row.cgstAmount.toFixed(2)}</td>
@@ -454,6 +477,8 @@ function exportGstr1ToCsv() {
   }
 
   const headers = [
+    'Document Type',
+    'Original Invoice Number',
     'Invoice Number',
     'Invoice Date',
     'Customer Name',
@@ -470,21 +495,23 @@ function exportGstr1ToCsv() {
     'SGST Amount',
     'IGST Amount',
     'Total Tax',
-    'Line Total'
+    'Line Total',
   ];
 
   const csvRows = [headers.join(',')];
 
   currentGstr1Data.forEach((row) => {
     const csvRow = [
+      row.documentType || 'INVOICE',
+      row.originalInvoiceNumber || '',
       row.invoiceNumber,
       row.invoiceDate,
-      `"${row.customerName.replace(/"/g, '""')}"`,
+      row.customerName,
       row.customerGstin || '',
       row.placeOfSupply || '',
       row.itemType,
       row.hsnSac || 'UNSPECIFIED',
-      `"${(row.description || '').replace(/"/g, '""')}"`,
+      row.description || '',
       row.quantity,
       row.unitPrice,
       row.taxableValue,
@@ -493,16 +520,24 @@ function exportGstr1ToCsv() {
       row.sgstAmount,
       row.igstAmount,
       row.totalTax,
-      row.lineTotal
+      row.lineTotal,
     ];
-    csvRows.push(csvRow.join(','));
+    csvRows.push(
+      csvRow
+        .map((value) => {
+          const text = String(value ?? '');
+          const safe = typeof value === 'string' && /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+          return `"${safe.replace(/"/g, '""')}"`;
+        })
+        .join(','),
+    );
   });
 
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  
-  const dateStr = new Date().toISOString().slice(0, 10);
+
+  const dateStr = localDate();
   link.setAttribute('download', `GSTR1_Export_${dateStr}.csv`);
   document.body.appendChild(link);
   link.click();

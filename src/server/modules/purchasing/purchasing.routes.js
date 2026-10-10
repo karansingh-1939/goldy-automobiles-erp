@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createAuthService } from '../auth/auth.routes.js';
-import { authenticate, requirePermission } from '../../shared/middleware/authMiddleware.js';
+import { authenticate, requirePermission } from '../../shared/middleware/auth-middleware.js';
 import { PurchasingController } from './purchasing.controller.js';
 import { createPurchasingService } from './purchasing.service.js';
 
@@ -23,7 +23,11 @@ export function createPurchasingRouter(db) {
   router.get('/returns/:id', requirePermission('purchases.read'), controller.getReturn);
   router.post('/returns', requirePermission('purchases.write'), controller.createReturn);
 
-  router.get('/suppliers/:supplierId/ledger', requirePermission('purchases.read'), controller.getSupplierLedger);
+  router.get(
+    '/suppliers/:supplierId/ledger',
+    requirePermission('purchases.read'),
+    controller.getSupplierLedger,
+  );
 
   return router;
 }

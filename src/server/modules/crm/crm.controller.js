@@ -29,7 +29,7 @@ export class CrmController {
         Number(points),
         transactionType || 'MANUAL_ADJUSTMENT',
         notes,
-        req.user?.id
+        req.user?.id,
       );
       res.status(200).json({ status: 'success', data: result });
     } catch (error) {

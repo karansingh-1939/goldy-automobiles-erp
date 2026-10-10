@@ -61,7 +61,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -118,7 +118,6 @@ async function loadSuppliers() {
       opt.textContent = s.name;
       supplierSelect.appendChild(opt);
     });
-
   } catch (err) {
     showMessage('Failed to load suppliers list: ' + err.message, true);
   }
@@ -137,16 +136,19 @@ async function loadLedgerData() {
     document.querySelector('#supplier-phone').textContent = sup.phone || '-';
     document.querySelector('#supplier-email').textContent = sup.email || '-';
     document.querySelector('#supplier-gstin').textContent = sup.gstin || 'UNREGISTERED';
-    document.querySelector('#supplier-city-state').textContent = `${sup.city || ''}, ${sup.state || ''}`.trim().replace(/^,\s*/, '') || '-';
+    document.querySelector('#supplier-city-state').textContent =
+      `${sup.city || ''}, ${sup.state || ''}`.trim().replace(/^,\s*/, '') || '-';
     document.querySelector('#supplier-address').textContent = sup.address || '-';
 
     // 2. Fetch Supplier Ledger entries
     const params = new URLSearchParams({
       page: String(page),
-      pageSize: '10'
+      pageSize: '10',
     });
-    const ledgerRes = await api(`/api/v1/purchases/suppliers/${selectedSupplierId}/ledger?${params}`);
-    
+    const ledgerRes = await api(
+      `/api/v1/purchases/suppliers/${selectedSupplierId}/ledger?${params}`,
+    );
+
     // The outstanding balance is held in the latest ledger entry (index 0 on page 1)
     let currentBalance = 0;
     if (ledgerRes.data && ledgerRes.data.length > 0) {
@@ -155,7 +157,9 @@ async function loadLedgerData() {
         currentBalance = ledgerRes.data[0].balance_after;
       } else {
         // Fallback: fetch page 1 to extract the actual current balance
-        const latestRes = await api(`/api/v1/purchases/suppliers/${selectedSupplierId}/ledger?page=1&pageSize=1`);
+        const latestRes = await api(
+          `/api/v1/purchases/suppliers/${selectedSupplierId}/ledger?page=1&pageSize=1`,
+        );
         if (latestRes.data && latestRes.data.length > 0) {
           currentBalance = latestRes.data[0].balance_after;
         }
@@ -173,12 +177,12 @@ async function loadLedgerData() {
     }
 
     renderLedgerTable(ledgerRes.data);
-    
-    document.querySelector('#page-info').textContent = `Page ${page} of ${ledgerRes.pagination.totalPages || 1} (Total transactions: ${ledgerRes.pagination.total})`;
+
+    document.querySelector('#page-info').textContent =
+      `Page ${page} of ${ledgerRes.pagination.totalPages || 1} (Total transactions: ${ledgerRes.pagination.total})`;
 
     noSelectionView.style.display = 'none';
     ledgerView.style.display = 'block';
-
   } catch (err) {
     showMessage('Failed to load ledger: ' + err.message, true);
   }
@@ -187,7 +191,8 @@ async function loadLedgerData() {
 function renderLedgerTable(rows) {
   const container = document.querySelector('#table-container');
   if (!rows || rows.length === 0) {
-    container.innerHTML = '<p style="padding:20px; background:#f8fafc; text-align:center; color:#64748b;">No transaction ledger entries recorded for this supplier.</p>';
+    container.innerHTML =
+      '<p style="padding:20px; background:#f8fafc; text-align:center; color:#64748b;">No transaction ledger entries recorded for this supplier.</p>';
     return;
   }
 

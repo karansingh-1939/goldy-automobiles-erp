@@ -1,4 +1,4 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,7 +24,9 @@ export function parseAuditListQuery(query = {}) {
   const pageSize = Math.min(Math.max(Number.parseInt(query.pageSize || '20', 10) || 20, 1), 100);
   const entityType = hasValue(query.entityType) ? String(query.entityType).trim() : undefined;
   const action = hasValue(query.action) ? String(query.action).trim() : undefined;
-  const userId = hasValue(query.userId) ? Number.parseInt(query.userId, 10) || undefined : undefined;
+  const userId = hasValue(query.userId)
+    ? Number.parseInt(query.userId, 10) || undefined
+    : undefined;
   const dateFrom = normalizeDate(query.dateFrom ?? query.from);
   const dateTo = normalizeDate(query.dateTo ?? query.to);
   const search = hasValue(query.search) ? String(query.search).trim() : undefined;

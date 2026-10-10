@@ -1,24 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useAppStore } from '../store/useAppStore.js';
-import { 
-  LayoutDashboard, Wrench, Package, ShoppingCart, BookOpen, 
-  FileSpreadsheet, Settings, LogOut, Sun, Moon, Search, X, CheckCircle, AlertTriangle, Info,
-  Users, Car, Truck, ShoppingBag, Award, Undo2
+import { api } from '../api/api-client.js';
+import { queryClient } from '../api/query-client.js';
+import { useAppStore } from '../store/use-app-store.js';
+import {
+  LayoutDashboard,
+  Wrench,
+  Package,
+  ShoppingCart,
+  BookOpen,
+  FileSpreadsheet,
+  Settings,
+  LogOut,
+  Sun,
+  Moon,
+  Search,
+  X,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  Users,
+  Car,
+  Truck,
+  ShoppingBag,
+  Award,
+  Undo2,
 } from 'lucide-react';
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const user = useAppStore((state) => state.user);
   const logout = useAppStore((state) => state.logout);
   const theme = useAppStore((state) => state.theme);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
-  
+
   const notifications = useAppStore((state) => state.notifications);
   const removeNotification = useAppStore((state) => state.removeNotification);
-  
+
   const dialog = useAppStore((state) => state.dialog);
   const closeDialog = useAppStore((state) => state.closeDialog);
 
@@ -51,7 +71,7 @@ export default function Layout() {
         e.preventDefault();
         setShowSearch((prev) => !prev);
       }
-      
+
       // Close Command Palette / Dialog: Escape
       if (e.key === 'Escape') {
         if (showSearch) setShowSearch(false);
@@ -59,18 +79,54 @@ export default function Layout() {
       }
 
       // F-Keys Navigation
-      if (e.key === 'F1') { e.preventDefault(); navigate('/'); }
-      if (e.key === 'F2') { e.preventDefault(); navigate('/job-cards'); }
-      if (e.key === 'F3') { e.preventDefault(); navigate('/sales-orders'); }
-      if (e.key === 'F4') { e.preventDefault(); navigate('/inventory'); }
-      if (e.key === 'F5') { e.preventDefault(); navigate('/purchasing'); }
-      if (e.key === 'F6') { e.preventDefault(); navigate('/accounting'); }
-      if (e.key === 'F7') { e.preventDefault(); navigate('/reports'); }
-      if (e.key === 'F8') { e.preventDefault(); navigate('/customers'); }
-      if (e.key === 'F9') { e.preventDefault(); navigate('/settings'); }
-      if (e.key === 'F10') { e.preventDefault(); navigate('/vehicles'); }
-      if (e.key === 'F11') { e.preventDefault(); navigate('/suppliers'); }
-      if (e.key === 'F12') { e.preventDefault(); navigate('/warranties'); }
+      if (e.key === 'F1') {
+        e.preventDefault();
+        navigate('/');
+      }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        navigate('/job-cards');
+      }
+      if (e.key === 'F3') {
+        e.preventDefault();
+        navigate('/sales-orders');
+      }
+      if (e.key === 'F4') {
+        e.preventDefault();
+        navigate('/inventory');
+      }
+      if (e.key === 'F5') {
+        e.preventDefault();
+        navigate('/purchasing');
+      }
+      if (e.key === 'F6') {
+        e.preventDefault();
+        navigate('/accounting');
+      }
+      if (e.key === 'F7') {
+        e.preventDefault();
+        navigate('/reports');
+      }
+      if (e.key === 'F8') {
+        e.preventDefault();
+        navigate('/customers');
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        navigate('/settings');
+      }
+      if (e.key === 'F10') {
+        e.preventDefault();
+        navigate('/vehicles');
+      }
+      if (e.key === 'F11') {
+        e.preventDefault();
+        navigate('/suppliers');
+      }
+      if (e.key === 'F12') {
+        e.preventDefault();
+        navigate('/warranties');
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -85,14 +141,13 @@ export default function Layout() {
   }, [showSearch]);
 
   const filteredNavItems = navItems.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">
-      
       {/* 1. SIDEBAR */}
-      <aside className="w-64 bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-800 flex flex-col justify-between shrink-0">
+      <aside className="w-64 overflow-y-auto bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-800 flex flex-col justify-between shrink-0">
         <div>
           <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
             <span className="text-lg font-bold tracking-wider text-brand-600 dark:text-brand-400">
@@ -108,8 +163,8 @@ export default function Layout() {
                   key={item.name}
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    isActive 
-                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' 
+                    isActive
+                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
                   }`}
                 >
@@ -123,17 +178,52 @@ export default function Layout() {
                 </button>
               );
             })}
+            <div className="border-t border-gray-200 pt-3 mt-3 dark:border-gray-800">
+              <p className="px-4 text-xs font-semibold text-gray-500 mb-2">Workshop tools</p>
+              {[
+                ['Invoices & Billing', '/invoices.html'],
+                ['Expenses', '/expenses.html'],
+                ['Warehouses & Masters', '/masters.html'],
+                ['Purchasing Entry', '/purchasing.html'],
+                ['Stock Verification', '/stock-verification.html'],
+                ['Technicians', '/technicians.html'],
+                ['Service History', '/service-history.html'],
+                ['Backup Schedule', '/settings.html'],
+                ['Audit Logs', '/audit-logs.html'],
+              ].map(([name, href]) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="block px-4 py-2 text-sm text-gray-600 hover:text-brand-600 dark:text-gray-400"
+                >
+                  {name}
+                </a>
+              ))}
+            </div>
           </nav>
         </div>
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
             <div>
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{user?.username}</p>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 capitalize">{user?.role?.name || 'Administrator'}</p>
+              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                {user?.username}
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 capitalize">
+                {user?.role?.name || 'Administrator'}
+              </p>
             </div>
             <button
-              onClick={logout}
+              onClick={async () => {
+                try {
+                  await api.post('/api/v1/auth/logout');
+                } catch (error) {
+                  useAppStore.getState().addNotification(error.message, 'error');
+                } finally {
+                  queryClient.clear();
+                  logout();
+                }
+              }}
               className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors"
               title="Sign Out"
             >
@@ -145,7 +235,6 @@ export default function Layout() {
 
       {/* 2. MAIN COCKPIT VIEW */}
       <div className="flex flex-col flex-1 min-w-0">
-        
         {/* TOP HEADER */}
         <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
@@ -184,13 +273,16 @@ export default function Layout() {
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none">
         {notifications.map((n) => {
           let Icon = Info;
-          let color = 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-900 dark:text-blue-400';
+          let color =
+            'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-900 dark:text-blue-400';
           if (n.type === 'success') {
             Icon = CheckCircle;
-            color = 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/80 dark:border-green-900 dark:text-green-400';
+            color =
+              'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/80 dark:border-green-900 dark:text-green-400';
           } else if (n.type === 'error') {
             Icon = AlertTriangle;
-            color = 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/80 dark:border-red-900 dark:text-red-400';
+            color =
+              'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/80 dark:border-red-900 dark:text-red-400';
           }
           return (
             <div
@@ -257,7 +349,7 @@ export default function Layout() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <div className="max-h-[300px] overflow-y-auto p-2">
               {filteredNavItems.length > 0 ? (
                 filteredNavItems.map((item) => {
@@ -291,7 +383,6 @@ export default function Layout() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

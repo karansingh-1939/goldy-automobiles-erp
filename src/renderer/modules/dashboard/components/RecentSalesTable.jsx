@@ -3,20 +3,20 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  flexRender
+  flexRender,
 } from '@tanstack/react-table';
 
 const inrFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2
+  maximumFractionDigits: 2,
 });
 
 /**
  * Recent Sales Table Component.
  * Employs TanStack Table v8 for client-side sorting and column management.
- * 
+ *
  * @param {object} props
  * @param {Array} props.sales - List of recent finalized sales invoices from the API
  * @param {boolean} props.isLoading - Whether the component is in a loading state
@@ -24,47 +24,54 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
 export function RecentSalesTable({ sales, isLoading }) {
   const [sorting, setSorting] = useState([{ id: 'invoiceDate', desc: true }]);
 
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'invoiceNumber',
-      header: 'Invoice Number',
-      enableSorting: false, // Sorting not required for alphanumeric invoice IDs
-      cell: (info) => (
-        <span className="font-mono font-semibold text-gray-900">
-          {info.getValue()}
-        </span>
-      )
-    },
-    {
-      accessorKey: 'invoiceDate',
-      header: 'Invoice Date',
-      cell: (info) => {
-        const dateVal = info.getValue();
-        if (!dateVal) return '-';
-        try {
-          const d = new Date(dateVal);
-          return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-        } catch {
-          return dateVal;
-        }
-      }
-    },
-    {
-      accessorKey: 'customerName',
-      header: 'Customer',
-      enableSorting: false,
-      cell: (info) => <span className="text-gray-700">{info.getValue() || 'Walk-in Customer'}</span>
-    },
-    {
-      accessorKey: 'grandTotal',
-      header: 'Grand Total',
-      cell: (info) => (
-        <span className="font-bold text-gray-900">
-          {inrFormatter.format(info.getValue() || 0)}
-        </span>
-      )
-    }
-  ], []);
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'invoiceNumber',
+        header: 'Invoice Number',
+        enableSorting: false, // Sorting not required for alphanumeric invoice IDs
+        cell: (info) => (
+          <span className="font-mono font-semibold text-gray-900">{info.getValue()}</span>
+        ),
+      },
+      {
+        accessorKey: 'invoiceDate',
+        header: 'Invoice Date',
+        cell: (info) => {
+          const dateVal = info.getValue();
+          if (!dateVal) return '-';
+          try {
+            const d = new Date(dateVal);
+            return d.toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            });
+          } catch {
+            return dateVal;
+          }
+        },
+      },
+      {
+        accessorKey: 'customerName',
+        header: 'Customer',
+        enableSorting: false,
+        cell: (info) => (
+          <span className="text-gray-700">{info.getValue() || 'Walk-in Customer'}</span>
+        ),
+      },
+      {
+        accessorKey: 'grandTotal',
+        header: 'Grand Total',
+        cell: (info) => (
+          <span className="font-bold text-gray-900">
+            {inrFormatter.format(info.getValue() || 0)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
 
   const tableData = useMemo(() => sales || [], [sales]);
 
@@ -80,9 +87,7 @@ export function RecentSalesTable({ sales, isLoading }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col min-h-[380px]">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-          Recent Sales Activity
-        </h2>
+        <h2 className="text-lg font-bold text-gray-900 tracking-tight">Recent Sales Activity</h2>
         <p className="text-xs text-gray-500 mt-0.5">
           Latest finalized sales invoices sorted by date. Click headers to sort.
         </p>
@@ -96,7 +101,7 @@ export function RecentSalesTable({ sales, isLoading }) {
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   const sortDir = header.column.getIsSorted();
-                  
+
                   return (
                     <th
                       key={header.id}
@@ -129,10 +134,18 @@ export function RecentSalesTable({ sales, isLoading }) {
               // Loading Skeleton State
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="animate-pulse" aria-hidden="true">
-                  <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-2/3" /></td>
-                  <td className="px-4 py-4"><div className="h-4 bg-gray-150 rounded w-3/4" /></td>
-                  <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-1/2" /></td>
-                  <td className="px-4 py-4"><div className="h-4 bg-gray-150 rounded w-1/3" /></td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 bg-gray-150 rounded w-3/4" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 bg-gray-150 rounded w-1/3" />
+                  </td>
                 </tr>
               ))
             ) : tableData.length === 0 ? (

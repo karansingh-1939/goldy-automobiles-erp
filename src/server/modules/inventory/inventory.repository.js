@@ -8,7 +8,9 @@ export class InventoryRepository {
   }
 
   createItem(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO inventory_items (
         sku,
         barcode,
@@ -49,10 +51,12 @@ export class InventoryRepository {
         @is_active,
         @warranty_period_months
       )
-    `).run({
-      ...data,
-      warranty_period_months: data.warranty_period_months || 0
-    });
+    `,
+      )
+      .run({
+        ...data,
+        warranty_period_months: data.warranty_period_months || 0,
+      });
 
     return this.findItemById(result.lastInsertRowid);
   }
@@ -60,12 +64,16 @@ export class InventoryRepository {
   updateItem(id, data) {
     const columns = Object.keys(data);
     const setClause = columns.map((column) => `${column} = @${column}`).join(', ');
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE inventory_items
       SET ${setClause},
           updated_at = CURRENT_TIMESTAMP
       WHERE id = @id
-    `).run({ ...data, id });
+    `,
+      )
+      .run({ ...data, id });
 
     return this.findItemById(id);
   }
@@ -82,7 +90,9 @@ export class InventoryRepository {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT
         inventory_items.*,
         suppliers.name AS supplier_name,
@@ -93,19 +103,27 @@ export class InventoryRepository {
       ${where}
       ORDER BY inventory_items.id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, offset);
+    `,
+      )
+      .all(...params, pageSize, offset);
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM inventory_items
       ${where}
-    `).get(...params).count;
+    `,
+      )
+      .get(...params).count;
 
     return { data, total };
   }
 
   findItemById(id) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         inventory_items.*,
         suppliers.name AS supplier_name,
@@ -114,7 +132,9 @@ export class InventoryRepository {
       LEFT JOIN suppliers ON suppliers.id = inventory_items.supplier_id
       LEFT JOIN inventory_categories ON inventory_categories.id = inventory_items.category_id
       WHERE inventory_items.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
   }
 
   findSupplierById(id) {
@@ -134,17 +154,23 @@ export class InventoryRepository {
   }
 
   findBatchByNumber({ itemId, warehouseId, batchNumber }) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT *
       FROM inventory_batches
       WHERE item_id = ?
         AND warehouse_id = ?
         AND batch_number = ?
-    `).get(itemId, warehouseId, batchNumber);
+    `,
+      )
+      .get(itemId, warehouseId, batchNumber);
   }
 
   createBatch(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO inventory_batches (
         item_id,
         warehouse_id,
@@ -169,37 +195,49 @@ export class InventoryRepository {
         @expiry_date,
         @expiry_date
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return this.findBatchById(result.lastInsertRowid);
   }
 
   updateBatchQuantity(batchId, quantity) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE inventory_batches
       SET quantity = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(quantity, batchId);
+    `,
+      )
+      .run(quantity, batchId);
 
     return this.findBatchById(batchId);
   }
 
   updateItemStock({ itemId, quantity, averageCost }) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE inventory_items
       SET current_quantity = ?,
           average_cost = ?,
           purchase_cost = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(quantity, averageCost, averageCost, itemId);
+    `,
+      )
+      .run(quantity, averageCost, averageCost, itemId);
 
     return this.findItemById(itemId);
   }
 
   createInventoryTransaction(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO inventory_transactions (
         item_id,
         batch_id,
@@ -230,13 +268,17 @@ export class InventoryRepository {
         @notes,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return result.lastInsertRowid;
   }
 
   createStockAdjustment(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO stock_adjustments (
         adjustment_number,
         item_id,
@@ -259,13 +301,17 @@ export class InventoryRepository {
         @reason,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return result.lastInsertRowid;
   }
 
   createStockTransfer(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO stock_transfers (
         transfer_number,
         item_id,
@@ -288,13 +334,17 @@ export class InventoryRepository {
         @notes,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return result.lastInsertRowid;
   }
 
   stockSummary() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         inventory_items.id,
         inventory_items.sku,
@@ -309,11 +359,15 @@ export class InventoryRepository {
       LEFT JOIN inventory_batches ON inventory_batches.item_id = inventory_items.id
       GROUP BY inventory_items.id
       ORDER BY inventory_items.item_name
-    `).all();
+    `,
+      )
+      .all();
   }
 
   stockValuation() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         id,
         sku,
@@ -324,14 +378,18 @@ export class InventoryRepository {
       FROM inventory_items
       WHERE is_active = 1
       ORDER BY item_name
-    `).all();
+    `,
+      )
+      .all();
   }
 
   inventoryMovements({ itemId } = {}) {
     const where = itemId ? 'WHERE inventory_transactions.item_id = ?' : '';
     const params = itemId ? [itemId] : [];
 
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         inventory_transactions.*,
         inventory_items.sku,
@@ -344,21 +402,29 @@ export class InventoryRepository {
       LEFT JOIN users ON users.id = inventory_transactions.created_by
       ${where}
       ORDER BY inventory_transactions.id DESC
-    `).all(...params);
+    `,
+      )
+      .all(...params);
   }
 
   lowStock() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT id, sku, item_name, current_quantity, reorder_level, unit_of_measure
       FROM inventory_items
       WHERE is_active = 1
         AND current_quantity <= reorder_level
       ORDER BY item_name
-    `).all();
+    `,
+      )
+      .all();
   }
 
   expiringStock({ asOf, days }) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         inventory_batches.*,
         inventory_items.sku,
@@ -371,11 +437,15 @@ export class InventoryRepository {
         AND inventory_batches.expiry_date IS NOT NULL
         AND DATE(inventory_batches.expiry_date) <= DATE(?, '+' || ? || ' days')
       ORDER BY inventory_batches.expiry_date
-    `).all(asOf, days);
+    `,
+      )
+      .all(asOf, days);
   }
 
   createFixedAsset(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO fixed_assets (
         asset_name,
         sku,
@@ -404,17 +474,23 @@ export class InventoryRepository {
         @notes,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
     return this.findFixedAssetById(result.lastInsertRowid);
   }
 
   findFixedAssetById(id) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT fixed_assets.*, suppliers.name AS supplier_name
       FROM fixed_assets
       JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
       WHERE fixed_assets.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
   }
 
   listFixedAssets({ search, pageSize, offset }) {
@@ -429,27 +505,37 @@ export class InventoryRepository {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT fixed_assets.*, suppliers.name AS supplier_name
       FROM fixed_assets
       JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
       ${where}
       ORDER BY fixed_assets.id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, offset);
+    `,
+      )
+      .all(...params, pageSize, offset);
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM fixed_assets
       JOIN suppliers ON suppliers.id = fixed_assets.supplier_id
       ${where}
-    `).get(...params).count;
+    `,
+      )
+      .get(...params).count;
 
     return { data, total };
   }
 
   createStockVerification(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO stock_verifications (
         verification_number,
         verification_type,
@@ -478,7 +564,9 @@ export class InventoryRepository {
         @verified_by,
         @notes
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
     return result.lastInsertRowid;
   }
 
@@ -501,7 +589,9 @@ export class InventoryRepository {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT
         stock_verifications.*,
         inventory_items.item_name,
@@ -517,13 +607,19 @@ export class InventoryRepository {
       ${where}
       ORDER BY stock_verifications.id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, limit, offset);
+    `,
+      )
+      .all(...params, limit, offset);
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM stock_verifications
       ${where}
-    `).get(...params).count;
+    `,
+      )
+      .get(...params).count;
 
     return { data, total };
   }

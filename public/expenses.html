@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Expense Management</title>
     <style>
       :root {
@@ -70,7 +70,7 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .summary-card h3 {
@@ -111,13 +111,16 @@
         align-items: center;
       }
 
-      .toolbar input, .toolbar select {
+      .toolbar input,
+      .toolbar select {
         width: auto;
         flex: 1;
         min-width: 150px;
       }
 
-      input, textarea, select {
+      input,
+      textarea,
+      select {
         border: 1px solid #b8c1ce;
         border-radius: 6px;
         box-sizing: border-box;
@@ -172,7 +175,8 @@
         margin-top: 10px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 10px;
         text-align: left;
@@ -234,8 +238,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -254,7 +258,9 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
@@ -278,8 +284,15 @@
 
       <!-- Main Expense List Panel -->
       <section>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <h2 style="margin: 0; color:#0f766e; font-size: 20px;">Expense Ledger</h2>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+          "
+        >
+          <h2 style="margin: 0; color: #0f766e; font-size: 20px">Expense Ledger</h2>
           <button id="add-expense-btn" class="primary">Add Expense</button>
         </div>
 
@@ -287,7 +300,7 @@
 
         <!-- Filters Toolbar -->
         <div class="toolbar">
-          <input id="search-query" placeholder="Search description or notes...">
+          <input id="search-query" placeholder="Search description or notes..." />
           <select id="filter-category">
             <option value="">All Categories</option>
             <option value="Rent">Rent</option>
@@ -298,11 +311,11 @@
             <option value="Maintenance">Maintenance</option>
             <option value="Miscellaneous">Miscellaneous</option>
           </select>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 14px; color:#475569;">From:</span>
-            <input id="filter-date-from" type="date" style="padding: 7px 10px;">
-            <span style="font-size: 14px; color:#475569;">To:</span>
-            <input id="filter-date-to" type="date" style="padding: 7px 10px;">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <span style="font-size: 14px; color: #475569">From:</span>
+            <input id="filter-date-from" type="date" style="padding: 7px 10px" />
+            <span style="font-size: 14px; color: #475569">To:</span>
+            <input id="filter-date-to" type="date" style="padding: 7px 10px" />
           </div>
           <button id="search-btn" class="primary">Apply Filters</button>
           <button id="reset-filters-btn">Clear</button>
@@ -313,30 +326,30 @@
         </div>
 
         <!-- Pagination -->
-        <div class="form-actions" style="margin-top: 14px; justify-content: space-between;">
+        <div class="form-actions" style="margin-top: 14px; justify-content: space-between">
           <div>
             <button id="prev-btn">Previous</button>
             <button id="next-btn">Next</button>
           </div>
-          <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+          <span id="page-info" style="align-self: center; font-size: 14px"></span>
         </div>
       </section>
     </main>
 
     <!-- Modal for Adding / Editing Expenses -->
-    <div id="expense-modal" class="modal" style="display: none;">
+    <div id="expense-modal" class="modal" style="display: none">
       <div class="modal-content">
         <h2 id="modal-title">Add New Expense</h2>
-        <form id="expense-form" style="display: flex; flex-direction: column; gap: 12px;">
-          <input type="hidden" id="modal-expense-id">
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <label style="display: flex; flex-direction: column; gap: 4px;">
+        <form id="expense-form" style="display: flex; flex-direction: column; gap: 12px">
+          <input type="hidden" id="modal-expense-id" />
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <label style="display: flex; flex-direction: column; gap: 4px">
               Expense Date *
-              <input id="modal-date" type="date" name="date" required>
+              <input id="modal-date" type="date" name="date" required />
             </label>
 
-            <label style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="display: flex; flex-direction: column; gap: 4px">
               Category *
               <select id="modal-category" name="category" required>
                 <option value="">-- Select Category --</option>
@@ -351,13 +364,21 @@
             </label>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <label style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <label style="display: flex; flex-direction: column; gap: 4px">
               Amount (Rs.) *
-              <input id="modal-amount" type="number" name="amount" min="0.01" step="0.01" required placeholder="e.g. 1500">
+              <input
+                id="modal-amount"
+                type="number"
+                name="amount"
+                min="0.01"
+                step="0.01"
+                required
+                placeholder="e.g. 1500"
+              />
             </label>
 
-            <label style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="display: flex; flex-direction: column; gap: 4px">
               Payment Method *
               <select id="modal-payment" name="payment_method" required>
                 <option value="Cash">Cash</option>
@@ -368,17 +389,30 @@
             </label>
           </div>
 
-          <label style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="display: flex; flex-direction: column; gap: 4px">
             Description / Description Details *
-            <input id="modal-description" type="text" name="description" required placeholder="e.g. May electricity bill" maxlength="500">
+            <input
+              id="modal-description"
+              type="text"
+              name="description"
+              required
+              placeholder="e.g. May electricity bill"
+              maxlength="500"
+            />
           </label>
 
-          <label style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="display: flex; flex-direction: column; gap: 4px">
             Notes / Vendor Details
-            <textarea id="modal-notes" name="notes" placeholder="e.g. Paid to clerk, Transaction receipt attached" rows="3" maxlength="300"></textarea>
+            <textarea
+              id="modal-notes"
+              name="notes"
+              placeholder="e.g. Paid to clerk, Transaction receipt attached"
+              rows="3"
+              maxlength="300"
+            ></textarea>
           </label>
 
-          <div class="form-actions" style="justify-content: flex-end; margin-top: 10px;">
+          <div class="form-actions" style="justify-content: flex-end; margin-top: 10px">
             <button id="modal-cancel-btn" type="button">Cancel</button>
             <button id="modal-submit-btn" type="submit" class="primary">Save Expense</button>
           </div>
@@ -387,17 +421,20 @@
     </div>
 
     <!-- Modal for Deleting Expenses (Confirmation) -->
-    <div id="delete-modal" class="modal" style="display: none;">
-      <div class="modal-content" style="width: min(400px, calc(100vw - 32px));">
-        <h2 style="color: #dc2626; border-bottom-color: #fee2e2;">Confirm Delete</h2>
-        <p style="font-size: 14px; margin: 14px 0;">Are you sure you want to permanently delete this expense record? This action cannot be undone.</p>
-        <div class="form-actions" style="justify-content: flex-end;">
+    <div id="delete-modal" class="modal" style="display: none">
+      <div class="modal-content" style="width: min(400px, calc(100vw - 32px))">
+        <h2 style="color: #dc2626; border-bottom-color: #fee2e2">Confirm Delete</h2>
+        <p style="font-size: 14px; margin: 14px 0">
+          Are you sure you want to permanently delete this expense record? This action cannot be
+          undone.
+        </p>
+        <div class="form-actions" style="justify-content: flex-end">
           <button id="delete-cancel-btn" type="button">Cancel</button>
           <button id="delete-confirm-btn" class="danger">Delete</button>
         </div>
       </div>
     </div>
 
-    <script src="/expenses.js"></script>
+    <script type="module" src="/expenses.js"></script>
   </body>
 </html>

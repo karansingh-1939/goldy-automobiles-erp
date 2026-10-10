@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { env } from '../../config/env.js';
+import { randomUUID } from 'node:crypto';
+import { getBackupDirectory, isManagedBackup } from '../../database/backup-service.js';
 import { BackupRepository } from './backup.repository.js';
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 
 export class BackupService {
   constructor(db) {
@@ -10,7 +11,7 @@ export class BackupService {
     this.repository = new BackupRepository(db);
   }
 
-  async backupDatabase({ type, customPath, userId } = {}) {
+  async backupDatabase({ type, customPath, userId, allowDuringRestore = false } = {}) {
     if (!type) {
       throw new AppError('Backup type is required', 400, 'BACKUP_TYPE_REQUIRED');
     }
@@ -21,10 +22,11 @@ export class BackupService {
     }
 
     const dbPath = this.db.name;
-    const dbBase = (dbPath && dbPath !== ':memory:') ? path.basename(dbPath, path.extname(dbPath)) : 'goldy_erp';
-    const dbExt = (dbPath && dbPath !== ':memory:') ? path.extname(dbPath) : '.db';
+    const dbBase =
+      dbPath && dbPath !== ':memory:' ? path.basename(dbPath, path.extname(dbPath)) : 'goldy_erp';
+    const dbExt = dbPath && dbPath !== ':memory:' ? path.extname(dbPath) : '.db';
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${dbBase}_backup_${type}_${timestamp}${dbExt}`;
+    const filename = `${dbBase}_backup_${type}_${timestamp}_${randomUUID()}${dbExt}`;
 
     let targetPath;
     if (customPath) {
@@ -34,17 +36,39 @@ export class BackupService {
         if (fs.existsSync(resolvedCustom)) {
           isDir = fs.statSync(resolvedCustom).isDirectory();
         } else {
-          isDir = !path.extname(resolvedCustom) || customPath.endsWith('/') || customPath.endsWith('\\');
+          isDir =
+            !path.extname(resolvedCustom) || customPath.endsWith('/') || customPath.endsWith('\\');
         }
       } catch (err) {
         isDir = false;
       }
       targetPath = isDir ? path.join(resolvedCustom, filename) : resolvedCustom;
     } else {
-      targetPath = path.join(env.appDataPath, 'backups', filename);
+      targetPath = path.join(getBackupDirectory(dbPath), filename);
     }
 
     const targetDir = path.dirname(targetPath);
+
+    if (path.resolve(targetPath) === path.resolve(dbPath)) {
+      throw new AppError(
+        'A backup cannot overwrite the active database.',
+        400,
+        'BACKUP_PATH_INVALID',
+      );
+    }
+    const lockPath = `${dbPath}.backup.lock`;
+    if (!allowDuringRestore && fs.existsSync(path.join(path.dirname(dbPath), 'restore.lock'))) {
+      throw new AppError('A restore is already in progress.', 409, 'RESTORE_IN_PROGRESS');
+    }
+    try {
+      fs.writeFileSync(lockPath, String(process.pid), { flag: 'wx' });
+    } catch (error) {
+      throw new AppError(
+        'A backup is already in progress or its lock cannot be acquired.',
+        409,
+        'BACKUP_IN_PROGRESS',
+      );
+    }
 
     let logRecord;
     try {
@@ -53,10 +77,15 @@ export class BackupService {
         filepath: targetPath,
         type,
         status: 'PENDING',
-        created_by: userId || null
+        created_by: userId || null,
       });
     } catch (dbErr) {
-      throw new AppError(`Failed to initialize backup log: ${dbErr.message}`, 500, 'BACKUP_LOG_INIT_FAILED');
+      fs.unlinkSync(lockPath);
+      throw new AppError(
+        `Failed to initialize backup log: ${dbErr.message}`,
+        500,
+        'BACKUP_LOG_INIT_FAILED',
+      );
     }
 
     try {
@@ -70,9 +99,6 @@ export class BackupService {
       } else {
         // 2. Fallback: VACUUM INTO 'filepath'
         const escapedPath = targetPath.replace(/'/g, "''");
-        if (fs.existsSync(targetPath)) {
-          fs.unlinkSync(targetPath);
-        }
         this.db.prepare(`VACUUM INTO '${escapedPath}'`).run();
       }
 
@@ -82,8 +108,10 @@ export class BackupService {
 
       const fileSize = fs.statSync(targetPath).size;
 
+      if (this.db.name !== dbPath) throw new Error('Active database changed during backup.');
+
       logRecord = this.repository.updateBackupLogStatus(logRecord.id, 'SUCCESS', {
-        file_size: fileSize
+        file_size: fileSize,
       });
 
       // Run retention policy asynchronously or inline for AUTO backups
@@ -98,14 +126,17 @@ export class BackupService {
       return logRecord;
     } catch (err) {
       try {
+        if (this.db.name !== dbPath) throw new Error('Active database changed during backup.');
         logRecord = this.repository.updateBackupLogStatus(logRecord.id, 'FAILED', {
-          error_message: err.message
+          error_message: err.message,
         });
       } catch (logErr) {
         console.error('Failed to update backup log status to FAILED:', logErr);
       }
 
       throw new AppError(`Database backup failed: ${err.message}`, 500, 'BACKUP_FAILED');
+    } finally {
+      if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath);
     }
   }
 
@@ -128,17 +159,33 @@ export class BackupService {
     const cleanSettings = {};
 
     if (settings['backup.auto_enabled'] !== undefined) {
-      cleanSettings['backup.auto_enabled'] = settings['backup.auto_enabled'] === true || settings['backup.auto_enabled'] === 'true' || settings['backup.auto_enabled'] === 1 || settings['backup.auto_enabled'] === '1' ? 'true' : 'false';
+      cleanSettings['backup.auto_enabled'] =
+        settings['backup.auto_enabled'] === true ||
+        settings['backup.auto_enabled'] === 'true' ||
+        settings['backup.auto_enabled'] === 1 ||
+        settings['backup.auto_enabled'] === '1'
+          ? 'true'
+          : 'false';
     }
 
     if (settings['backup.missed_recovery'] !== undefined) {
-      cleanSettings['backup.missed_recovery'] = settings['backup.missed_recovery'] === true || settings['backup.missed_recovery'] === 'true' || settings['backup.missed_recovery'] === 1 || settings['backup.missed_recovery'] === '1' ? 'true' : 'false';
+      cleanSettings['backup.missed_recovery'] =
+        settings['backup.missed_recovery'] === true ||
+        settings['backup.missed_recovery'] === 'true' ||
+        settings['backup.missed_recovery'] === 1 ||
+        settings['backup.missed_recovery'] === '1'
+          ? 'true'
+          : 'false';
     }
 
     if (settings['backup.retention_count'] !== undefined) {
       const count = Number(settings['backup.retention_count']);
       if (!Number.isInteger(count) || count < 1) {
-        throw new AppError('Retention count must be an integer greater than or equal to 1.', 400, 'VALIDATION_ERROR');
+        throw new AppError(
+          'Retention count must be an integer greater than or equal to 1.',
+          400,
+          'VALIDATION_ERROR',
+        );
       }
       cleanSettings['backup.retention_count'] = count;
     }
@@ -146,7 +193,11 @@ export class BackupService {
     if (settings['backup.interval_hours'] !== undefined) {
       const hours = Number(settings['backup.interval_hours']);
       if (!Number.isInteger(hours) || hours < 1) {
-        throw new AppError('Interval hours must be an integer greater than or equal to 1.', 400, 'VALIDATION_ERROR');
+        throw new AppError(
+          'Interval hours must be an integer greater than or equal to 1.',
+          400,
+          'VALIDATION_ERROR',
+        );
       }
       cleanSettings['backup.interval_hours'] = hours;
     }
@@ -162,7 +213,11 @@ export class BackupService {
     if (settings['backup.schedule_type'] !== undefined) {
       const st = String(settings['backup.schedule_type']).toUpperCase();
       if (!['DAILY', 'WEEKLY', 'INTERVAL'].includes(st)) {
-        throw new AppError('Schedule type must be DAILY, WEEKLY, or INTERVAL.', 400, 'VALIDATION_ERROR');
+        throw new AppError(
+          'Schedule type must be DAILY, WEEKLY, or INTERVAL.',
+          400,
+          'VALIDATION_ERROR',
+        );
       }
       cleanSettings['backup.schedule_type'] = st;
     }
@@ -177,7 +232,9 @@ export class BackupService {
     }
 
     if (settings['backup.last_run_at'] !== undefined) {
-      cleanSettings['backup.last_run_at'] = settings['backup.last_run_at'] ? String(settings['backup.last_run_at']).trim() : null;
+      cleanSettings['backup.last_run_at'] = settings['backup.last_run_at']
+        ? String(settings['backup.last_run_at']).trim()
+        : null;
     }
 
     return this.repository.updateSchedulerSettings(cleanSettings);
@@ -190,7 +247,7 @@ export class BackupService {
   enforceRetentionPolicy() {
     const settings = this.repository.getSchedulerSettings();
     let retentionCount = settings['backup.retention_count'];
-    
+
     // Boundary conditions / safety guards
     if (typeof retentionCount !== 'number' || isNaN(retentionCount)) {
       retentionCount = 7;
@@ -199,7 +256,10 @@ export class BackupService {
       retentionCount = 1;
     }
 
-    const activeBackups = this.repository.getUnpurgedSuccessfulAutoBackups();
+    const directory = getBackupDirectory(this.db.name);
+    const activeBackups = this.repository
+      .getUnpurgedSuccessfulAutoBackups()
+      .filter((log) => log.filepath && isManagedBackup(log.filepath, directory));
     if (activeBackups.length <= retentionCount) {
       return { success: true, purgedCount: 0 };
     }
@@ -215,13 +275,15 @@ export class BackupService {
             fs.unlinkSync(log.filepath);
           }
         } catch (err) {
-          console.warn(`Failed to physically delete backup file at ${log.filepath}: ${err.message}`);
+          console.warn(
+            `Failed to physically delete backup file at ${log.filepath}: ${err.message}`,
+          );
           if (fs.existsSync(log.filepath)) {
             continue; // Skip marking as purged since the file is still present on disk
           }
         }
       }
-      
+
       this.repository.markBackupAsPurged(log.id);
       purgedCount++;
     }

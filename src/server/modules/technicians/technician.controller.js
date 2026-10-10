@@ -29,7 +29,9 @@ export class TechnicianController {
 
   update = (req, res, next) => {
     try {
-      res.status(200).json({ data: this.technicianService.update(Number(req.params.id), req.body || {}, req.user?.id) });
+      res.status(200).json({
+        data: this.technicianService.update(Number(req.params.id), req.body || {}, req.user?.id),
+      });
     } catch (error) {
       next(error);
     }
@@ -37,7 +39,9 @@ export class TechnicianController {
 
   deactivate = (req, res, next) => {
     try {
-      res.status(200).json({ data: this.technicianService.deactivate(Number(req.params.id), req.user?.id) });
+      res
+        .status(200)
+        .json({ data: this.technicianService.deactivate(Number(req.params.id), req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -46,7 +50,14 @@ export class TechnicianController {
   assignToJobCard = (req, res, next) => {
     try {
       const { jobCardId, notes } = req.body || {};
-      res.status(200).json({ data: this.technicianService.assignToJobCard(Number(jobCardId), Number(req.params.id), req.user?.id, notes) });
+      res.status(200).json({
+        data: this.technicianService.assignToJobCard(
+          Number(jobCardId),
+          Number(req.params.id),
+          req.user?.id,
+          notes,
+        ),
+      });
     } catch (error) {
       next(error);
     }
@@ -54,7 +65,9 @@ export class TechnicianController {
 
   getHistory = (req, res, next) => {
     try {
-      res.status(200).json(this.technicianService.getHistoryAndMetrics(Number(req.params.id), req.query));
+      res
+        .status(200)
+        .json(this.technicianService.getHistoryAndMetrics(Number(req.params.id), req.query));
     } catch (error) {
       next(error);
     }

@@ -1,3 +1,4 @@
+import { localDate } from './local-date.js';
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 
@@ -16,9 +17,9 @@ if (!token) {
 
 function init() {
   // Set default dates (first day of current month to today)
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDate();
   const startOfMonthStr = `${todayStr.slice(0, 7)}-01`;
-  
+
   document.querySelector('#date-from').value = startOfMonthStr;
   document.querySelector('#date-to').value = todayStr;
 
@@ -34,7 +35,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -101,7 +102,7 @@ async function exportTallyXml() {
     // Create a Blob and download it
     const blob = new Blob([xmlText], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = `tally_export_${dateFrom}_to_${dateTo}.xml`;

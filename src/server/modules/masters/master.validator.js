@@ -1,4 +1,4 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -100,8 +100,7 @@ function validateValue(field, value, rule, errors) {
 export function validatePayload(config, payload, { partial = false } = {}) {
   const clean = {};
   const errors = {};
-  const unknownFields = Object.keys(payload || {})
-    .filter((field) => !config.fields[field]);
+  const unknownFields = Object.keys(payload || {}).filter((field) => !config.fields[field]);
 
   if (unknownFields.length) {
     throw new AppError(`Unknown fields: ${unknownFields.join(', ')}`, 400, 'VALIDATION_ERROR');

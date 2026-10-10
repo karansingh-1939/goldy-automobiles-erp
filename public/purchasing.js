@@ -1,14 +1,13 @@
+import { localDate } from './local-date.js';
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 const tabsContainer = document.querySelector('#purchasing-tabs');
 const detailsTabBtn = document.querySelector('#details-tab-btn');
 
-let activeTab = 'list';
 let page = 1;
 let suppliers = [];
 let warehouses = [];
 let inventoryItems = [];
-let currentViewingReceiptId = null;
 
 // Notification Alert helper
 function showMessage(text, isError = false) {
@@ -17,7 +16,7 @@ function showMessage(text, isError = false) {
   message.style.background = isError ? '#fef2f2' : '#f0fdf4';
   message.style.border = isError ? '1px solid #fee2e2' : '1px solid #bbf7d0';
   message.style.color = isError ? '#991b1b' : '#166534';
-  
+
   // Auto-hide after 5 seconds
   setTimeout(() => {
     message.style.display = 'none';
@@ -40,7 +39,7 @@ async function api(endpoint, options = {}) {
     window.location.replace('/index.html');
     return;
   }
-  
+
   const body = await response.json();
 
   if (!response.ok) {
@@ -65,17 +64,13 @@ async function init() {
   setupTabs();
   setupListeners();
   setupLogout();
-  
+
   // Set default invoice date to today
-  document.querySelector('#form-invoice-date').value = new Date().toISOString().slice(0, 10);
+  document.querySelector('#form-invoice-date').value = localDate();
 
   // Fetch initial master lists
   try {
-    await Promise.all([
-      loadSuppliers(),
-      loadWarehouses(),
-      loadInventoryItems()
-    ]);
+    await Promise.all([loadSuppliers(), loadWarehouses(), loadInventoryItems()]);
     loadReceipts();
   } catch (err) {
     showMessage('Failed to initialize metadata: ' + err.message, true);
@@ -90,7 +85,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -111,7 +106,6 @@ function setupTabs() {
 }
 
 function switchTab(tab) {
-  activeTab = tab;
   tabsContainer.querySelectorAll('button').forEach((btn) => {
     btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
   });
@@ -160,14 +154,14 @@ function setupListeners() {
   document.querySelector('#form-supplier-id').addEventListener('change', (e) => {
     const supplierId = Number(e.target.value);
     const supplierGstInput = document.querySelector('#form-supplier-gstin');
-    
+
     if (!supplierId) {
       supplierGstInput.value = '';
       return;
     }
 
-    const supplier = suppliers.find(s => s.id === supplierId);
-    supplierGstInput.value = supplier ? (supplier.gstin || 'No GSTIN registered') : '';
+    const supplier = suppliers.find((s) => s.id === supplierId);
+    supplierGstInput.value = supplier ? supplier.gstin || 'No GSTIN registered' : '';
   });
 
   // Add line item row button
@@ -195,8 +189,8 @@ function setupListeners() {
 async function loadSuppliers() {
   const select = document.querySelector('#form-supplier-id');
   const res = await api('/api/v1/suppliers?pageSize=500');
-  suppliers = res.data.filter(s => s.is_active);
-  
+  suppliers = res.data.filter((s) => s.is_active);
+
   suppliers.forEach((s) => {
     const opt = document.createElement('option');
     opt.value = s.id;
@@ -208,8 +202,8 @@ async function loadSuppliers() {
 async function loadWarehouses() {
   const select = document.querySelector('#form-warehouse-id');
   const res = await api('/api/v1/warehouses?pageSize=100');
-  warehouses = res.data.filter(w => w.is_active);
-  
+  warehouses = res.data.filter((w) => w.is_active);
+
   warehouses.forEach((w) => {
     const opt = document.createElement('option');
     opt.value = w.id;
@@ -225,7 +219,7 @@ async function loadWarehouses() {
 
 async function loadInventoryItems() {
   const res = await api('/api/v1/inventory/items?pageSize=1000');
-  inventoryItems = res.data.filter(i => i.is_active);
+  inventoryItems = res.data.filter((i) => i.is_active);
 }
 
 // Load purchase receipts list
@@ -234,16 +228,16 @@ async function loadReceipts() {
   const params = new URLSearchParams({
     page: String(page),
     pageSize: '10',
-    search: search
+    search: search,
   });
 
   try {
     const res = await api(`/api/v1/purchases/receipts?${params}`);
     renderReceiptsTable(res.data);
-    
+
     const pageInfo = document.querySelector('#page-info');
     pageInfo.textContent = `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
-    
+
     document.querySelector('#prev-btn').disabled = page <= 1;
     document.querySelector('#next-btn').disabled = page >= res.pagination.totalPages;
   } catch (err) {
@@ -254,7 +248,8 @@ async function loadReceipts() {
 function renderReceiptsTable(rows) {
   const container = document.querySelector('#table-container');
   if (rows.length === 0) {
-    container.innerHTML = '<p style="padding:15px; background:#f8fafc; border: 1px solid #cbd5e1; border-radius:6px; text-align:center; color:#64748b;">No recorded invoices or receipts found.</p>';
+    container.innerHTML =
+      '<p style="padding:15px; background:#f8fafc; border: 1px solid #cbd5e1; border-radius:6px; text-align:center; color:#64748b;">No recorded invoices or receipts found.</p>';
     return;
   }
 
@@ -303,7 +298,6 @@ function renderReceiptsTable(rows) {
 
 // View individual receipt details
 async function viewReceiptDetails(id) {
-  currentViewingReceiptId = id;
   detailsTabBtn.style.display = 'block';
   switchTab('details');
 
@@ -314,7 +308,7 @@ async function viewReceiptDetails(id) {
     // Fill details header
     document.querySelector('#detail-receipt-no').textContent = receipt.receipt_number;
     document.querySelector('#detail-receipt-date').textContent = receipt.receipt_date;
-    
+
     // Find supplier details
     let supName = `Supplier ID ${receipt.supplier_id}`;
     let supGst = 'N/A';
@@ -330,7 +324,8 @@ async function viewReceiptDetails(id) {
     document.querySelector('#detail-supplier-gstin').textContent = supGst;
     document.querySelector('#detail-notes').textContent = receipt.notes || 'None';
     document.querySelector('#detail-status').textContent = receipt.status;
-    document.querySelector('#detail-status').className = `badge ${receipt.status === 'POSTED' ? 'badge-completed' : 'badge-draft'}`;
+    document.querySelector('#detail-status').className =
+      `badge ${receipt.status === 'POSTED' ? 'badge-completed' : 'badge-draft'}`;
 
     // Load warehouse name
     let whName = `Warehouse ID ${receipt.items[0]?.warehouse_id || ''}`;
@@ -376,9 +371,12 @@ async function viewReceiptDetails(id) {
     });
 
     // Totals
-    document.querySelector('#detail-subtotal').textContent = `Rs. ${Number(receipt.subtotal).toFixed(2)}`;
-    document.querySelector('#detail-gst').textContent = `Rs. ${Number(receipt.gst_total).toFixed(2)}`;
-    document.querySelector('#detail-grand-total').textContent = `Rs. ${Number(receipt.grand_total).toFixed(2)}`;
+    document.querySelector('#detail-subtotal').textContent =
+      `Rs. ${Number(receipt.subtotal).toFixed(2)}`;
+    document.querySelector('#detail-gst').textContent =
+      `Rs. ${Number(receipt.gst_total).toFixed(2)}`;
+    document.querySelector('#detail-grand-total').textContent =
+      `Rs. ${Number(receipt.grand_total).toFixed(2)}`;
   } catch (err) {
     showMessage('Failed to load receipt details: ' + err.message, true);
   }
@@ -448,7 +446,7 @@ function addGridRow() {
       return;
     }
 
-    const item = inventoryItems.find(i => i.id === itemId);
+    const item = inventoryItems.find((i) => i.id === itemId);
     if (item) {
       skuInput.value = item.sku;
       rateInput.value = item.purchase_cost || '';
@@ -476,13 +474,13 @@ function recalculateRowTotal(row) {
   const qty = Number(row.querySelector('.row-qty').value) || 0;
   const rate = Number(row.querySelector('.row-rate').value) || 0;
   const gstRate = Number(row.querySelector('.row-gst-rate').value) || 0;
-  
+
   const taxable = qty * rate;
   const tax = (taxable * gstRate) / 100;
   const total = taxable + tax;
 
   row.querySelector('.row-total').value = `Rs. ${total.toFixed(2)}`;
-  
+
   recalculateAllTotals();
 }
 
@@ -513,9 +511,9 @@ function recalculateAllTotals() {
 function resetCreateForm() {
   document.querySelector('#invoice-import-form').reset();
   document.querySelector('#items-grid-body').innerHTML = '';
-  document.querySelector('#form-invoice-date').value = new Date().toISOString().slice(0, 10);
+  document.querySelector('#form-invoice-date').value = localDate();
   document.querySelector('#form-supplier-gstin').value = '';
-  
+
   // Prepopulate with one empty row for user ease
   addGridRow();
   recalculateAllTotals();
@@ -569,7 +567,7 @@ async function saveInvoiceImport() {
       quantity: qty,
       purchase_cost: rate,
       selling_price: sellingPrice,
-      gst_rate: gstRate
+      gst_rate: gstRate,
     });
   });
 
@@ -584,7 +582,7 @@ async function saveInvoiceImport() {
     receipt_number: invoiceNo,
     receipt_date: invoiceDate,
     notes: notes,
-    items: items
+    items: items,
   };
 
   const saveBtn = document.querySelector('#save-invoice-btn');
@@ -592,13 +590,13 @@ async function saveInvoiceImport() {
   saveBtn.textContent = 'Saving & Seeding Batches...';
 
   try {
-    const res = await api('/api/v1/purchases/receipts', {
+    await api('/api/v1/purchases/receipts', {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     showMessage(`Invoice ${invoiceNo} recorded successfully! Stock levels increased.`);
-    
+
     // Refresh inventory items metadata list in background so job cards/dropdown reflect new stocks
     loadInventoryItems().catch(console.error);
 

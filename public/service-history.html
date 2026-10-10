@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Service History</title>
     <style>
       :root {
@@ -231,7 +231,8 @@
         margin-top: 8px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #cbd5e1;
         padding: 6px;
         text-align: left;
@@ -257,17 +258,29 @@
         font-weight: bold;
         text-transform: uppercase;
       }
-      .badge-completed { background: #dcfce7; color: #15803d; }
-      .badge-cancelled { background: #fee2e2; color: #b91c1c; }
-      .badge-draft { background: #f1f5f9; color: #475569; }
-      .badge-in_progress { background: #fef3c7; color: #d97706; }
+      .badge-completed {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .badge-cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .badge-draft {
+        background: #f1f5f9;
+        color: #475569;
+      }
+      .badge-in_progress {
+        background: #fef3c7;
+        color: #d97706;
+      }
     </style>
     <script src="/navigation.js" defer></script>
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -286,20 +299,24 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
       <!-- Left sidebar: Vehicle search -->
       <nav class="sidebar" aria-label="Vehicle search panel">
-        <h3 style="margin-top:0; color:#0f766e; font-size:16px;">Search Vehicles</h3>
+        <h3 style="margin-top: 0; color: #0f766e; font-size: 16px">Search Vehicles</h3>
         <form id="search-form" class="toolbar">
-          <input id="search-query" placeholder="Reg No, Chassis, Engine...">
+          <input id="search-query" placeholder="Reg No, Chassis, Engine..." />
           <button type="submit" class="primary">Search Vehicles</button>
         </form>
         <ul class="search-results-list" id="search-results">
           <!-- Dynamically populated vehicles -->
-          <li style="text-align:center; color:#64748b; cursor:default; background:none;">Enter query to search...</li>
+          <li style="text-align: center; color: #64748b; cursor: default; background: none">
+            Enter query to search...
+          </li>
         </ul>
       </nav>
 
@@ -307,18 +324,43 @@
       <section>
         <p id="message" role="status"></p>
 
-        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b;">
+        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b">
           <h3>Select a vehicle from the search panel to view complete service history.</h3>
         </div>
 
-        <div id="history-view" style="display: none;">
+        <div id="history-view" style="display: none">
           <!-- Vehicle Header & Info -->
           <div class="card">
-            <h3 style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+            <h3
+              style="
+                margin-bottom: 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
               <span>Vehicle Details</span>
-              <span id="detail-reg" style="font-size: 18px; font-weight: bold; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px;"></span>
+              <span
+                id="detail-reg"
+                style="
+                  font-size: 18px;
+                  font-weight: bold;
+                  background: #e0f2fe;
+                  color: #0369a1;
+                  padding: 4px 10px;
+                  border-radius: 6px;
+                "
+              ></span>
             </h3>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 14px; margin-bottom: 16px;">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                font-size: 14px;
+                margin-bottom: 16px;
+              "
+            >
               <div><strong>Owner Name:</strong> <span id="detail-owner-name">-</span></div>
               <div><strong>Owner Phone:</strong> <span id="detail-owner-phone">-</span></div>
               <div><strong>Make / Model:</strong> <span id="detail-model">-</span></div>
@@ -345,7 +387,16 @@
           </div>
 
           <!-- Chronological Maintenance Timeline -->
-          <h3 style="color: #0f766e; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; margin-top: 24px;"> chronological Service Timeline</h3>
+          <h3
+            style="
+              color: #0f766e;
+              border-bottom: 2px solid #cbd5e1;
+              padding-bottom: 6px;
+              margin-top: 24px;
+            "
+          >
+            chronological Service Timeline
+          </h3>
           <div id="timeline-container">
             <!-- Timeline items rendered dynamically -->
           </div>

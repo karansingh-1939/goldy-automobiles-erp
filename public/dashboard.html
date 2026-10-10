@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Dashboard</title>
     <style>
       :root {
@@ -71,7 +71,7 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -128,7 +128,7 @@
         border: 1px solid #d8dee8;
         border-radius: 8px;
         padding: 18px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .panel-card h3 {
@@ -146,7 +146,8 @@
         width: 100%;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 8px;
         text-align: left;
@@ -181,7 +182,7 @@
         font-size: 13px;
       }
 
-      .tabs button[aria-selected="true"] {
+      .tabs button[aria-selected='true'] {
         background: #0f766e;
         border-color: #0f766e;
         color: #ffffff;
@@ -191,8 +192,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -211,16 +212,35 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; color:#0f766e; font-size: 20px;">Workshop Dashboard & Analytics</h2>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 13px; font-weight: bold; color: #475569;">Target Date:</span>
-          <input type="date" id="dashboard-date" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit;">
-          <button id="refresh-btn" style="background:#0f766e; color:white; border:0; padding:7px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">Refresh</button>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; color: #0f766e; font-size: 20px">Workshop Dashboard & Analytics</h2>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 13px; font-weight: bold; color: #475569">Target Date:</span>
+          <input
+            type="date"
+            id="dashboard-date"
+            style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit"
+          />
+          <button
+            id="refresh-btn"
+            style="
+              background: #0f766e;
+              color: white;
+              border: 0;
+              padding: 7px 12px;
+              border-radius: 6px;
+              font-weight: bold;
+              cursor: pointer;
+            "
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -229,7 +249,10 @@
       <!-- Section 1: Workshop KPIs -->
       <div>
         <div class="section-title">Workshop KPIs</div>
-        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div
+          class="metrics-grid"
+          style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"
+        >
           <div class="metric-card">
             <h3>Today's Job Cards</h3>
             <div class="value" id="op-today-jc">0</div>
@@ -252,7 +275,7 @@
           </div>
           <div class="metric-card alert">
             <h3>Outstanding Amount</h3>
-            <div class="value" id="fin-outstanding" style="color: #b91c1c;">Rs. 0.00</div>
+            <div class="value" id="fin-outstanding" style="color: #b91c1c">Rs. 0.00</div>
             <div class="subtext">Unpaid finalized balance</div>
           </div>
         </div>
@@ -271,7 +294,7 @@
             <div class="value" id="fin-revenue">Rs. 0.00</div>
             <div class="subtext" id="fin-revenue-lbl">Selected Day Revenue</div>
           </div>
-          <div class="metric-card alert" id="fin-expenses-card" style="display: none;">
+          <div class="metric-card alert" id="fin-expenses-card" style="display: none">
             <h3>Expenses</h3>
             <div class="value" id="fin-expenses">Rs. 0.00</div>
             <div class="subtext">Total cash expenses in selected month</div>
@@ -281,9 +304,9 @@
             <div class="value" id="fin-gross-profit">Rs. 0.00</div>
             <div class="subtext">Selling cost - Purchase cost</div>
           </div>
-          <div class="metric-card success" style="background:#f0fdfa; border-color:#86efac;">
+          <div class="metric-card success" style="background: #f0fdfa; border-color: #86efac">
             <h3>Net Profit</h3>
-            <div class="value" id="fin-net-profit" style="color:#16a34a;">Rs. 0.00</div>
+            <div class="value" id="fin-net-profit" style="color: #16a34a">Rs. 0.00</div>
             <div class="subtext">Gross Profit - Month Expenses</div>
           </div>
         </div>
@@ -294,14 +317,14 @@
         <!-- Recent Sales -->
         <div class="panel-card">
           <h3>Recent Invoices</h3>
-          <div id="recent-sales-container" style="overflow-x: auto;">
+          <div id="recent-sales-container" style="overflow-x: auto">
             <!-- Render recent invoices table -->
           </div>
         </div>
         <!-- Top Services -->
         <div class="panel-card">
           <h3>Top Services & Labour Operations</h3>
-          <div id="top-services-container" style="overflow-x: auto;">
+          <div id="top-services-container" style="overflow-x: auto">
             <!-- Render top services table -->
           </div>
         </div>
@@ -310,7 +333,7 @@
       <!-- Section 4: Inventory & Warehouse Metrics -->
       <div>
         <div class="section-title">Inventory & Warehousing</div>
-        <div class="metrics-grid" style="margin-bottom: 20px;">
+        <div class="metrics-grid" style="margin-bottom: 20px">
           <div class="metric-card">
             <h3>Total Catalog Items</h3>
             <div class="value" id="inv-total-items">0</div>
@@ -337,14 +360,14 @@
           <!-- Warehouse stock aggregates -->
           <div class="panel-card">
             <h3>Warehouse Godowns Valuation</h3>
-            <div id="warehouse-container" style="overflow-x: auto;">
+            <div id="warehouse-container" style="overflow-x: auto">
               <!-- Render warehouse totals -->
             </div>
           </div>
           <!-- Low Stock details -->
           <div class="panel-card">
             <h3>Critical Low Stock Items</h3>
-            <div id="low-stock-container" style="overflow-x: auto;">
+            <div id="low-stock-container" style="overflow-x: auto">
               <!-- Render critical low stock items -->
             </div>
           </div>
@@ -352,6 +375,6 @@
       </div>
     </main>
 
-    <script src="/dashboard.js"></script>
+    <script type="module" src="/dashboard.js"></script>
   </body>
 </html>

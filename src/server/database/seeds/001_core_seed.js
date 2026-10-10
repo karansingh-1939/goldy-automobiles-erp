@@ -1,5 +1,3 @@
-import bcrypt from 'bcryptjs';
-
 const roles = [
   ['Admin', 'Full system access.'],
   ['Manager', 'Workshop operations and reporting access.'],
@@ -41,15 +39,23 @@ const permissions = [
   ['audit.read', 'View audit logs.'],
   ['backups.read', 'View database backups and logs.'],
   ['backups.write', 'Create manual database backups.'],
-  ['accounting.read', 'View general ledgers, voucher entries, trial balance, P&L, and balance sheets.'],
-  ['accounting.write', 'Post manual vouchers (Contra, Journal, Payments, Receipts) and adjust/cancel accounting logs.'],
+  [
+    'accounting.read',
+    'View general ledgers, voucher entries, trial balance, P&L, and balance sheets.',
+  ],
+  [
+    'accounting.write',
+    'Post manual vouchers (Contra, Journal, Payments, Receipts) and adjust/cancel accounting logs.',
+  ],
 ];
 
 const rolePermissionKeys = {
   Admin: permissions.map(([key]) => key),
   Manager: permissions
     .map(([key]) => key)
-    .filter((key) => !['users.manage', 'roles.manage', 'backups.read', 'backups.write'].includes(key)),
+    .filter(
+      (key) => !['users.manage', 'roles.manage', 'backups.read', 'backups.write'].includes(key),
+    ),
   Mechanic: [
     'customers.read',
     'vehicles.read',
@@ -105,19 +111,23 @@ export async function run(db) {
       const role = db.prepare('SELECT id FROM roles WHERE name = ?').get(roleName);
 
       for (const permissionKey of permissionKeys) {
-        const permission = db.prepare('SELECT id FROM permissions WHERE key = ?').get(permissionKey);
+        const permission = db
+          .prepare('SELECT id FROM permissions WHERE key = ?')
+          .get(permissionKey);
         linkPermission.run(role.id, permission.id);
       }
     }
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO warehouses (name, code, address)
       VALUES ('Main Store', 'MAIN', 'Primary workshop store')
       ON CONFLICT(code) DO UPDATE SET
         name = excluded.name,
         address = excluded.address,
         updated_at = CURRENT_TIMESTAMP
-    `).run();
+    `,
+    ).run();
   });
 
   seedTransaction();

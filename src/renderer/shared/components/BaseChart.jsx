@@ -5,7 +5,7 @@ import Chart from 'chart.js/auto';
  * Reusable Base Chart component using HTML5 Canvas and Chart.js.
  * Wraps imperatively initialized Chart.js instances inside a React lifecycle
  * and automatically manages instance teardown to prevent canvas memory leaks.
- * 
+ *
  * @param {object} props
  * @param {string} props.type - Chart.js chart type (e.g. 'bar', 'doughnut')
  * @param {object} props.data - Chart.js data configuration object

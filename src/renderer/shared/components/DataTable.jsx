@@ -7,7 +7,7 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, ArrowUpDown, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, AlertCircle } from 'lucide-react';
 
 export default function DataTable({
   columns,
@@ -37,11 +37,6 @@ export default function DataTable({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-    onPaginationChange: (updater) => {
-      // Handle page size and index updates via react-table state internally
-      const nextState = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
-      table.setPagination(nextState);
-    },
     initialState: {
       pagination: {
         pageSize: currentPageSize,
@@ -56,7 +51,12 @@ export default function DataTable({
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-4" role="grid" aria-colcount={columns.length} aria-rowcount={data.length}>
+    <div
+      className="flex flex-col h-full w-full space-y-4"
+      role="grid"
+      aria-colcount={columns.length}
+      aria-rowcount={data.length}
+    >
       {/* Search and Bulk Actions header */}
       {(bulkActions || table.getColumnCanGlobalFilter) && (
         <div className="flex items-center justify-between gap-4">
@@ -65,7 +65,10 @@ export default function DataTable({
       )}
 
       {/* Table Container */}
-      <div className="flex-1 overflow-auto border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm relative min-h-[250px] focus:outline-none focus:ring-1 focus:ring-brand-500/20" tabIndex={0}>
+      <div
+        className="flex-1 overflow-auto border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm relative min-h-[250px] focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+        tabIndex={0}
+      >
         <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
           <thead className="bg-gray-50 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -80,7 +83,9 @@ export default function DataTable({
                       <div
                         onClick={header.column.getToggleSortingHandler()}
                         className={`flex items-center gap-1.5 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-900 dark:hover:text-white' : ''
+                          header.column.getCanSort()
+                            ? 'cursor-pointer select-none hover:text-gray-900 dark:hover:text-white'
+                            : ''
                         }`}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -94,7 +99,7 @@ export default function DataTable({
               </tr>
             ))}
           </thead>
-          
+
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
             {isLoading ? (
               // Premium skeleton rows with animation
@@ -140,7 +145,10 @@ export default function DataTable({
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4 border-r border-gray-100 dark:border-gray-800/40 last:border-r-0">
+                    <td
+                      key={cell.id}
+                      className="px-6 py-4 border-r border-gray-100 dark:border-gray-800/40 last:border-r-0"
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -158,7 +166,7 @@ export default function DataTable({
             <span className="text-xs text-gray-500">
               Showing {table.getRowModel().rows.length} of {data.length} records
             </span>
-            
+
             <div className="flex items-center gap-1.5 text-xs text-gray-500">
               <span>Rows per page:</span>
               <select
@@ -173,7 +181,7 @@ export default function DataTable({
               </select>
             </div>
           </div>
-          
+
           {table.getPageCount() > 1 && (
             <div className="flex items-center gap-2">
               <button
@@ -184,7 +192,7 @@ export default function DataTable({
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              
+
               <span className="text-xs text-gray-500">
                 Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
               </span>

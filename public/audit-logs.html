@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Audit Logs</title>
     <style>
       :root {
@@ -66,13 +66,16 @@
         align-items: center;
       }
 
-      .toolbar input, .toolbar select {
+      .toolbar input,
+      .toolbar select {
         width: auto;
         flex: 1;
         min-width: 150px;
       }
 
-      input, textarea, select {
+      input,
+      textarea,
+      select {
         border: 1px solid #b8c1ce;
         border-radius: 6px;
         box-sizing: border-box;
@@ -108,7 +111,8 @@
         margin-top: 10px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 10px;
         text-align: left;
@@ -199,10 +203,22 @@
         text-transform: uppercase;
       }
 
-      .badge-create { background-color: #dcfce7; color: #15803d; }
-      .badge-update { background-color: #fef9c3; color: #a16207; }
-      .badge-delete { background-color: #fee2e2; color: #b91c1c; }
-      .badge-other { background-color: #f1f5f9; color: #475569; }
+      .badge-create {
+        background-color: #dcfce7;
+        color: #15803d;
+      }
+      .badge-update {
+        background-color: #fef9c3;
+        color: #a16207;
+      }
+      .badge-delete {
+        background-color: #fee2e2;
+        color: #b91c1c;
+      }
+      .badge-other {
+        background-color: #f1f5f9;
+        color: #475569;
+      }
 
       @media (max-width: 768px) {
         .json-diff-container {
@@ -214,8 +230,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -234,21 +250,30 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
       <section>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <h2 style="margin: 0; color:#0f766e; font-size: 20px;">System Audit Logs</h2>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+          "
+        >
+          <h2 style="margin: 0; color: #0f766e; font-size: 20px">System Audit Logs</h2>
         </div>
 
         <p id="message" role="status"></p>
 
         <!-- Filters Toolbar -->
         <div class="toolbar">
-          <input type="text" id="filter-search" placeholder="Search user or entity...">
-          
+          <input type="text" id="filter-search" placeholder="Search user or entity..." />
+
           <select id="filter-action">
             <option value="">-- All Actions --</option>
             <option value="CREATE">CREATE</option>
@@ -256,17 +281,17 @@
             <option value="DELETE">DELETE</option>
           </select>
 
-          <input type="text" id="filter-entity-type" placeholder="Entity Type (e.g. customers)">
-          
-          <input type="date" id="filter-date-from" placeholder="Date From">
-          <input type="date" id="filter-date-to" placeholder="Date To">
+          <input type="text" id="filter-entity-type" placeholder="Entity Type (e.g. customers)" />
+
+          <input type="date" id="filter-date-from" placeholder="Date From" />
+          <input type="date" id="filter-date-to" placeholder="Date To" />
 
           <button id="apply-filters-btn" class="primary">Apply</button>
           <button id="clear-filters-btn">Clear</button>
         </div>
 
         <!-- Audit Table -->
-        <div style="overflow-x: auto;">
+        <div style="overflow-x: auto">
           <table>
             <thead>
               <tr>
@@ -281,7 +306,9 @@
             </thead>
             <tbody id="audit-logs-tbody">
               <tr>
-                <td colspan="7" style="text-align: center; color: #64748b;">Loading audit logs...</td>
+                <td colspan="7" style="text-align: center; color: #64748b">
+                  Loading audit logs...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -289,10 +316,10 @@
 
         <!-- Pagination -->
         <div class="pagination-container">
-          <div style="color: #64748b; font-size: 14px;" id="pagination-info">
+          <div style="color: #64748b; font-size: 14px" id="pagination-info">
             Showing 0 to 0 of 0 logs
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px">
             <button id="prev-page-btn" disabled>&lt; Previous</button>
             <button id="next-page-btn" disabled>Next &gt;</button>
           </div>
@@ -301,10 +328,18 @@
     </main>
 
     <!-- Details Modal -->
-    <div id="details-modal" class="modal" style="display: none;">
+    <div id="details-modal" class="modal" style="display: none">
       <div class="modal-content">
         <h2>Audit Log Detail</h2>
-        <div style="margin-bottom: 12px; font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div
+          style="
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          "
+        >
           <div><strong>Timestamp:</strong> <span id="modal-timestamp"></span></div>
           <div><strong>User:</strong> <span id="modal-user"></span></div>
           <div><strong>Action:</strong> <span id="modal-action"></span></div>
@@ -322,7 +357,7 @@
           </div>
         </div>
 
-        <div class="form-actions" style="justify-content: flex-end; margin-top: 18px;">
+        <div class="form-actions" style="justify-content: flex-end; margin-top: 18px">
           <button id="close-modal-btn">Close</button>
         </div>
       </div>

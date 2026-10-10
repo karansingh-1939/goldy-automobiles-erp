@@ -1,14 +1,22 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { validatePayload } from './master.validator.js';
 
 function normalizeDatabaseError(error, action = null) {
   if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-    return new AppError('A record with the same unique value already exists.', 409, 'DUPLICATE_RECORD');
+    return new AppError(
+      'A record with the same unique value already exists.',
+      409,
+      'DUPLICATE_RECORD',
+    );
   }
 
   if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
     if (action === 'delete') {
-      return new AppError('Cannot delete record because it is referenced by other records.', 400, 'RELATED_RECORD_EXISTS');
+      return new AppError(
+        'Cannot delete record because it is referenced by other records.',
+        400,
+        'RELATED_RECORD_EXISTS',
+      );
     }
     return new AppError('Related record was not found.', 400, 'RELATED_RECORD_NOT_FOUND');
   }
@@ -52,16 +60,31 @@ export class MasterService {
   }
 
   create(payload, userId) {
+    if (this.config.entityType === 'vehicles') {
+      delete payload.registration_number_normalized;
+    }
     if (this.config.entityType === 'vehicles' && !payload.customer_id) {
-      let defaultCustomer = this.repository.db.prepare("SELECT * FROM customers WHERE phone = '9999999999'").get();
+      let defaultCustomer = this.repository.db
+        .prepare("SELECT * FROM customers WHERE phone = '9999999999'")
+        .get();
       if (!defaultCustomer) {
-        const result = this.repository.db.prepare(`
+        const result = this.repository.db
+          .prepare(
+            `
           INSERT INTO customers (name, phone, address, city, state)
           VALUES ('General Customer', '9999999999', 'Workshop', 'Karnal', 'Haryana')
-        `).run();
+        `,
+          )
+          .run();
         defaultCustomer = { id: result.lastInsertRowid };
       }
       payload.customer_id = defaultCustomer.id;
+    }
+
+    if (this.config.entityType === 'vehicles' && payload.registration_number) {
+      payload.registration_number_normalized = String(payload.registration_number)
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase();
     }
 
     const data = validatePayload(this.config, payload);
@@ -85,6 +108,14 @@ export class MasterService {
 
   update(id, payload, userId) {
     const existing = this.get(id);
+    if (this.config.entityType === 'vehicles') {
+      delete payload.registration_number_normalized;
+    }
+    if (this.config.entityType === 'vehicles' && payload.registration_number) {
+      payload.registration_number_normalized = String(payload.registration_number)
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase();
+    }
     const data = validatePayload(this.config, payload, { partial: true });
     this.validateRelations(data);
 

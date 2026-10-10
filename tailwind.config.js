@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./src/renderer/index.html",
-    "./src/renderer/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./src/renderer/index.html', './src/renderer/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -19,9 +16,9 @@ export default {
           700: 'hsl(var(--brand-700) / <alpha-value>)',
           800: 'hsl(var(--brand-800) / <alpha-value>)',
           900: 'hsl(var(--brand-900) / <alpha-value>)',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],
-}
+};

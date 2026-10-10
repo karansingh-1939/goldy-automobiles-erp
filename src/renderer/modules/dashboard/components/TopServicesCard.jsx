@@ -5,7 +5,7 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2
+  maximumFractionDigits: 2,
 });
 
 const PALETTE = [
@@ -19,7 +19,7 @@ const PALETTE = [
 /**
  * Top Services Card Component.
  * Visualizes the breakdown of top services performed by count and revenue.
- * 
+ *
  * @param {object} props
  * @param {Array} props.services - List of service metrics from the API
  * @param {boolean} props.isLoading - Whether the component is in a loading state
@@ -38,9 +38,9 @@ export function TopServicesCard({ services, isLoading }) {
           backgroundColor: PALETTE.slice(0, services.length),
           borderWidth: 2,
           borderColor: '#ffffff',
-          hoverOffset: 4
-        }
-      ]
+          hoverOffset: 4,
+        },
+      ],
     };
   }, [services, hasData]);
 
@@ -49,7 +49,7 @@ export function TopServicesCard({ services, isLoading }) {
       cutout: '65%', // Thin donut shape
       plugins: {
         legend: {
-          display: false // We use our own custom list layout for better space efficiency
+          display: false, // We use our own custom list layout for better space efficiency
         },
         tooltip: {
           callbacks: {
@@ -65,12 +65,12 @@ export function TopServicesCard({ services, isLoading }) {
               return [
                 `Count: ${s.count}`,
                 `Total Quantity: ${s.totalQuantity}`,
-                `Total Revenue: ${inrFormatter.format(s.totalRevenue)}`
+                `Total Revenue: ${inrFormatter.format(s.totalRevenue)}`,
               ];
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     };
   }, [services]);
 
@@ -83,7 +83,10 @@ export function TopServicesCard({ services, isLoading }) {
       <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-6">
         {isLoading ? (
           // Skeleton UI with no layout shifts
-          <div className="w-full h-full flex flex-col md:flex-row items-center gap-6 animate-pulse" aria-hidden="true">
+          <div
+            className="w-full h-full flex flex-col md:flex-row items-center gap-6 animate-pulse"
+            aria-hidden="true"
+          >
             <div className="w-[180px] h-[180px] rounded-full border-[18px] border-gray-200 flex items-center justify-center" />
             <div className="flex-1 flex flex-col gap-4 w-full">
               {[1, 2, 3].map((i) => (
@@ -110,7 +113,10 @@ export function TopServicesCard({ services, isLoading }) {
             <div className="flex-grow w-full max-h-[220px] overflow-y-auto">
               <ul className="divide-y divide-gray-100">
                 {services.map((service, index) => (
-                  <li key={service.description} className="py-2.5 flex items-center justify-between gap-4">
+                  <li
+                    key={service.description}
+                    className="py-2.5 flex items-center justify-between gap-4"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
                         className="w-3 h-3 rounded-full shrink-0"

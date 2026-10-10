@@ -17,4 +17,3 @@ export class AuditService {
 export function createAuditService(db) {
   return new AuditService(new AuditRepository(db));
 }
-

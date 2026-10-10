@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { createAuthService } from '../auth/auth.routes.js';
-import { authenticate } from '../../shared/middleware/authMiddleware.js';
+import { authenticate } from '../../shared/middleware/auth-middleware.js';
 import { DemoController } from './demo.controller.js';
+import { requireAdministrator } from '../backup/maintenance-middleware.js';
 
 export function createDemoRouter(db) {
   const router = Router();
@@ -12,6 +13,7 @@ export function createDemoRouter(db) {
   router.use(requireAuth);
 
   router.get('/status', controller.getStatus);
+  router.use(requireAdministrator);
   router.post('/toggle', controller.toggleMode);
   router.post('/load', controller.loadData);
   router.post('/clear', controller.clearData);

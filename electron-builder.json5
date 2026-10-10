@@ -1,37 +1,39 @@
 {
   // Core Application Metadata
-  appId: "com.goldyautomobiles.erp",
-  productName: "GOLDY AUTOMOBILE ERP",
-  copyright: "Copyright © 2026 GOLDY AUTOMOBILE",
+  appId: 'com.goldyautomobiles.erp',
+  productName: 'GOLDY AUTOMOBILE ERP',
+  copyright: 'Copyright © 2026 GOLDY AUTOMOBILE',
 
   // Packaging Rules
   files: [
-    "src/**/*",
-    "public/**/*",
-    "package.json",
+    'src/desktop/**/*',
+    'src/server/**/*',
+    'dist/renderer/**/*',
+    'package.json',
     // Exclude developer configuration, backups, local database copies, and tests
-    "!src/server/tests/**/*",
-    "!data/**/*",
-    "!.git/**/*",
-    "!.env*",
-    "!**/*.log"
+    '!tests/**/*',
+    '!data/**/*',
+    '!.git/**/*',
+    '!.env*',
+    '!**/*.log',
   ],
+  directories: { output: 'release' },
 
   // Security and Module Support
   asar: true, // Package application code into ASAR archive
-  npmRebuild: true, // Rebuild native dependencies (better-sqlite3) automatically for Electron ABI
-  asarUnpack: [
-    "**/node_modules/better-sqlite3/**/*"
-  ],
+  // better-sqlite3 13 ships Node-API binaries, verified by postinstall in Electron.
+  npmRebuild: false,
+  electronDist: 'node_modules/electron/dist',
+  asarUnpack: ['**/node_modules/better-sqlite3/**/*'],
 
   // Windows Specific Configuration
   win: {
     target: [
       {
-        target: "nsis",
-        arch: ["x64"]
-      }
-    ]
+        target: 'nsis',
+        arch: ['x64'],
+      },
+    ],
   },
 
   // NSIS Installer Configuration
@@ -39,11 +41,11 @@
     oneClick: false, // Wizard-based custom installation steps
     allowToChangeInstallationDirectory: true, // User can customize installation target directory
     perMachine: true, // Install to Program Files (requires UAC admin privileges)
-    createDesktopShortcut: "always", // Create Desktop shortcut
+    createDesktopShortcut: 'always', // Create Desktop shortcut
     createStartMenuShortcut: true, // Create Start Menu shortcut
-    shortcutName: "GOLDY AUTOMOBILE ERP",
-    uninstallDisplayName: "GOLDY AUTOMOBILE ERP",
+    shortcutName: 'GOLDY AUTOMOBILE ERP',
+    uninstallDisplayName: 'GOLDY AUTOMOBILE ERP',
     deleteAppDataOnUninstall: false, // Ensure database, logs, and backups are NOT removed during uninstalls
-    runAfterFinish: true // Offer running the app immediately after installation finishes
-  }
+    runAfterFinish: true, // Offer running the app immediately after installation finishes
+  },
 }

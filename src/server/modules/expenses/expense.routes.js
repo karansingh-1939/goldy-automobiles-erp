@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createAuthService } from '../auth/auth.routes.js';
-import { authenticate, requirePermission } from '../../shared/middleware/authMiddleware.js';
+import { authenticate, requirePermission } from '../../shared/middleware/auth-middleware.js';
 import { ExpenseController } from './expense.controller.js';
 import { createExpenseService } from './expense.service.js';
 

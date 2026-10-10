@@ -39,7 +39,11 @@ export class InventoryController {
 
   updateItem = (req, res, next) => {
     try {
-      const item = this.inventoryService.updateItem(Number(req.params.id), req.body || {}, req.user?.id);
+      const item = this.inventoryService.updateItem(
+        Number(req.params.id),
+        req.body || {},
+        req.user?.id,
+      );
       res.status(200).json({ data: item });
     } catch (error) {
       next(error);
@@ -48,7 +52,9 @@ export class InventoryController {
 
   createOpeningStock = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.inventoryService.createOpeningStock(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.inventoryService.createOpeningStock(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -56,7 +62,9 @@ export class InventoryController {
 
   createAdjustment = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.inventoryService.createAdjustment(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.inventoryService.createAdjustment(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -64,7 +72,9 @@ export class InventoryController {
 
   transferStock = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.inventoryService.transferStock(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.inventoryService.transferStock(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -181,7 +191,11 @@ export class InventoryController {
 
   receiveTransfer = (req, res, next) => {
     try {
-      const result = this.inventoryService.receiveTransfer(Number(req.params.id), req.body || {}, req.user?.id);
+      const result = this.inventoryService.receiveTransfer(
+        Number(req.params.id),
+        req.body || {},
+        req.user?.id,
+      );
       res.status(200).json({ data: result });
     } catch (error) {
       next(error);
@@ -208,7 +222,10 @@ export class InventoryController {
 
   saveWarehousePermissions = (req, res, next) => {
     try {
-      const result = this.inventoryService.saveWarehousePermissions(Number(req.params.id), req.body || {});
+      const result = this.inventoryService.saveWarehousePermissions(
+        Number(req.params.id),
+        req.body || {},
+      );
       res.status(200).json({ data: result });
     } catch (error) {
       next(error);

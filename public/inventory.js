@@ -1,7 +1,6 @@
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 
-let activeTab = 'catalog';
 let activeSubreport = 'movements';
 
 let editingItemId = null;
@@ -65,7 +64,7 @@ async function init() {
     document.getElementById('quick-selected-sku').textContent = item.sku;
     document.getElementById('quick-selected-stock').textContent = item.current_quantity;
     document.getElementById('quick-selected-unit').textContent = item.unit_of_measure || 'pcs';
-    
+
     // Default actual count input to current quantity
     document.getElementById('quick-qty').value = item.current_quantity;
     updateVariance();
@@ -83,7 +82,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -126,10 +125,12 @@ function setupTabs() {
 }
 
 function switchTab(tab) {
-  activeTab = tab;
-  document.querySelector('#inventory-tabs').querySelectorAll('button').forEach((btn) => {
-    btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
-  });
+  document
+    .querySelector('#inventory-tabs')
+    .querySelectorAll('button')
+    .forEach((btn) => {
+      btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
+    });
 
   const allTabs = ['dashboard', 'catalog', 'initial-count', 'quick-update', 'low-stock', 'reports'];
   allTabs.forEach((t) => {
@@ -154,9 +155,12 @@ function switchTab(tab) {
 
 function switchSubreport(subreport) {
   activeSubreport = subreport;
-  document.querySelector('#reports-inner-tabs').querySelectorAll('button').forEach((btn) => {
-    btn.setAttribute('aria-selected', btn.dataset.subreport === subreport ? 'true' : 'false');
-  });
+  document
+    .querySelector('#reports-inner-tabs')
+    .querySelectorAll('button')
+    .forEach((btn) => {
+      btn.setAttribute('aria-selected', btn.dataset.subreport === subreport ? 'true' : 'false');
+    });
 
   const allSubreports = ['summary', 'valuation', 'movements'];
   allSubreports.forEach((sr) => {
@@ -254,7 +258,9 @@ function setupListeners() {
   });
 
   document.getElementById('initial-save-all-btn').addEventListener('click', saveAllInitialCounts);
-  document.getElementById('initial-save-all-bottom-btn').addEventListener('click', saveAllInitialCounts);
+  document
+    .getElementById('initial-save-all-bottom-btn')
+    .addEventListener('click', saveAllInitialCounts);
 
   // Update stock form event listeners
   document.getElementById('quick-qty').addEventListener('input', updateVariance);
@@ -288,7 +294,7 @@ function setupListeners() {
 
     const newQty = Number(document.getElementById('quick-qty').value);
     const currentQty = Number(document.getElementById('quick-selected-stock').textContent || 0);
-    
+
     if (newQty === currentQty) {
       showMessage('No stock change detected.', true);
       return;
@@ -306,21 +312,21 @@ function setupListeners() {
           item_id: Number(itemId),
           warehouse_id: 1,
           counted_quantity: newQty,
-          notes: reason
-        })
+          notes: reason,
+        }),
       });
       showMessage('Stock updated successfully!');
-      
+
       document.getElementById('quick-update-form').reset();
       document.getElementById('quick-item-details').style.display = 'none';
       document.getElementById('quick-item-id').value = '';
-      
+
       const varianceVal = document.getElementById('quick-variance-val');
       if (varianceVal) {
         varianceVal.textContent = '0';
         varianceVal.style.color = '#64748b';
       }
-      
+
       const customWrapper = document.getElementById('quick-reason-custom-wrapper');
       if (customWrapper) customWrapper.style.display = 'none';
 
@@ -349,11 +355,11 @@ async function loadMetadataDropdowns() {
     const categoriesRes = await api('/api/v1/inventory-categories?pageSize=500');
     const catSelects = [
       document.querySelector('#filter-category'),
-      document.querySelector('#modal-category-id')
+      document.querySelector('#modal-category-id'),
     ];
     catSelects.forEach((select) => {
       if (!select) return;
-      select.innerHTML = select.id.includes('filter') 
+      select.innerHTML = select.id.includes('filter')
         ? '<option value="">All Categories</option>'
         : '<option value="">-- Select Category --</option>';
       categoriesRes.data.forEach((c) => {
@@ -366,18 +372,18 @@ async function loadMetadataDropdowns() {
 
     // 2. Fetch suppliers
     const suppliersRes = await api('/api/v1/suppliers?pageSize=500');
-    const supSelects = [
-      document.querySelector('#modal-supplier-id')
-    ];
+    const supSelects = [document.querySelector('#modal-supplier-id')];
     supSelects.forEach((select) => {
       if (!select) return;
       select.innerHTML = '<option value="">-- Select Supplier --</option>';
-      suppliersRes.data.filter(s => s.is_active).forEach((s) => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = s.name;
-        select.appendChild(opt);
-      });
+      suppliersRes.data
+        .filter((s) => s.is_active)
+        .forEach((s) => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name;
+          select.appendChild(opt);
+        });
     });
   } catch (err) {
     showMessage(err.message, true);
@@ -388,7 +394,7 @@ async function loadMetadataDropdowns() {
 async function cacheActiveItems() {
   try {
     const res = await api('/api/v1/inventory/items?pageSize=1000');
-    activeItemsList = res.data.filter(i => i.is_active);
+    activeItemsList = res.data.filter((i) => i.is_active);
   } catch (err) {
     console.error('Failed to cache active items:', err);
   }
@@ -408,15 +414,18 @@ function setupAutocomplete(inputId, resultsId, hiddenId, onSelectCallback) {
       return;
     }
 
-    const matches = activeItemsList.filter(item => 
-      item.sku.toLowerCase().includes(val) || 
-      item.item_name.toLowerCase().includes(val)
-    ).slice(0, 10);
+    const matches = activeItemsList
+      .filter(
+        (item) =>
+          item.sku.toLowerCase().includes(val) || item.item_name.toLowerCase().includes(val),
+      )
+      .slice(0, 10);
 
     if (matches.length === 0) {
-      resultsDiv.innerHTML = '<div style="padding: 8px; color: #64748b; font-size: 14px;">No matching items found</div>';
+      resultsDiv.innerHTML =
+        '<div style="padding: 8px; color: #64748b; font-size: 14px;">No matching items found</div>';
     } else {
-      matches.forEach(item => {
+      matches.forEach((item) => {
         const div = document.createElement('div');
         div.style.padding = '8px 12px';
         div.style.cursor = 'pointer';
@@ -465,7 +474,7 @@ async function loadInventoryCatalog() {
   const params = new URLSearchParams({
     page: isFiltered ? '1' : String(page),
     pageSize: isFiltered ? '1000' : '10',
-    search: search
+    search: search,
   });
 
   try {
@@ -481,14 +490,16 @@ async function loadInventoryCatalog() {
     if (isFiltered) {
       document.querySelector('#prev-btn').style.display = 'none';
       document.querySelector('#next-btn').style.display = 'none';
-      document.querySelector('#page-info').textContent = `Showing ${data.length} filtered items (Total: ${res.pagination.total})`;
+      document.querySelector('#page-info').textContent =
+        `Showing ${data.length} filtered items (Total: ${res.pagination.total})`;
     } else {
       document.querySelector('#prev-btn').style.display = 'inline-block';
       document.querySelector('#next-btn').style.display = 'inline-block';
-      document.querySelector('#page-info').textContent = `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
-      
-      document.querySelector('#prev-btn').disabled = (page <= 1);
-      document.querySelector('#next-btn').disabled = (page >= (res.pagination.totalPages || 1));
+      document.querySelector('#page-info').textContent =
+        `Page ${page} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
+
+      document.querySelector('#prev-btn').disabled = page <= 1;
+      document.querySelector('#next-btn').disabled = page >= (res.pagination.totalPages || 1);
     }
   } catch (err) {
     showMessage(err.message, true);
@@ -498,7 +509,8 @@ async function loadInventoryCatalog() {
 function renderCatalogTable(rows) {
   const container = document.querySelector('#table-container');
   if (rows.length === 0) {
-    container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No inventory items found.</p>';
+    container.innerHTML =
+      '<p style="padding:10px; background:#f3f4f6; text-align:center;">No inventory items found.</p>';
     return;
   }
 
@@ -529,7 +541,9 @@ function renderCatalogTable(rows) {
     const status = row.is_active ? 'Active' : 'Inactive';
     const cost = Number(row.average_cost || row.purchase_cost || 0).toFixed(2);
     const price = Number(row.selling_price || 0).toFixed(2);
-    const stockValue = (Number(row.current_quantity) * Number(row.average_cost || row.purchase_cost || 0)).toFixed(2);
+    const stockValue = (
+      Number(row.current_quantity) * Number(row.average_cost || row.purchase_cost || 0)
+    ).toFixed(2);
 
     html += `
       <tr>
@@ -569,7 +583,7 @@ async function openItemModal(id = null) {
   const title = document.querySelector('#modal-title');
   const skuInput = document.querySelector('#modal-sku');
   const openingStockSec = document.getElementById('modal-opening-stock-section');
-  
+
   form.reset();
   editingItemId = id;
 
@@ -580,7 +594,7 @@ async function openItemModal(id = null) {
     try {
       const res = await api(`/api/v1/inventory/items/${id}`);
       const item = res.data;
-      
+
       document.querySelector('#modal-item-id').value = item.id;
       document.querySelector('#modal-sku').value = item.sku;
       document.querySelector('#modal-barcode').value = item.barcode || '';
@@ -618,15 +632,19 @@ async function saveInventoryItem() {
   const payload = {
     barcode: document.querySelector('#modal-barcode').value || null,
     item_name: document.querySelector('#modal-name').value,
-    category_id: document.querySelector('#modal-category-id').value ? Number(document.querySelector('#modal-category-id').value) : null,
-    supplier_id: document.querySelector('#modal-supplier-id').value ? Number(document.querySelector('#modal-supplier-id').value) : null,
+    category_id: document.querySelector('#modal-category-id').value
+      ? Number(document.querySelector('#modal-category-id').value)
+      : null,
+    supplier_id: document.querySelector('#modal-supplier-id').value
+      ? Number(document.querySelector('#modal-supplier-id').value)
+      : null,
     hsn_code: document.querySelector('#modal-hsn').value || null,
     gst_rate: Number(document.querySelector('#modal-gst').value),
     unit_of_measure: document.querySelector('#modal-unit').value,
     purchase_cost: Number(document.querySelector('#modal-cost').value),
     selling_price: Number(document.querySelector('#modal-price').value),
     reorder_level: Number(document.querySelector('#modal-reorder').value),
-    is_active: document.querySelector('#modal-active').checked ? 1 : 0
+    is_active: document.querySelector('#modal-active').checked ? 1 : 0,
   };
 
   if (!editingItemId) {
@@ -634,14 +652,16 @@ async function saveInventoryItem() {
   }
 
   const method = editingItemId ? 'PATCH' : 'POST';
-  const url = editingItemId ? `/api/v1/inventory/items/${editingItemId}` : '/api/v1/inventory/items';
+  const url = editingItemId
+    ? `/api/v1/inventory/items/${editingItemId}`
+    : '/api/v1/inventory/items';
 
   try {
     const res = await api(url, {
       method,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
-    
+
     // If opening stock quantity is entered, submit it
     if (!editingItemId) {
       const opQty = Number(document.querySelector('#modal-opening-qty').value || 0);
@@ -657,8 +677,8 @@ async function saveInventoryItem() {
             quantity: opQty,
             unit_cost: opCost || payload.purchase_cost,
             batch_number: `BAT-${createdItem.sku}-OPEN`,
-            notes: 'Initial opening stock count entered'
-          })
+            notes: 'Initial opening stock count entered',
+          }),
         });
       }
     }
@@ -669,7 +689,9 @@ async function saveInventoryItem() {
     await cacheActiveItems();
   } catch (err) {
     if (err.details) {
-      const details = Object.entries(err.details).map(([k, v]) => `${k}: ${v}`).join(', ');
+      const details = Object.entries(err.details)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
       showMessage(`Validation error: ${details}`, true);
     } else {
       showMessage(err.message, true);
@@ -686,7 +708,7 @@ async function loadInitialCountPage() {
   const params = new URLSearchParams({
     page: String(initialCountPage),
     pageSize: '15',
-    search: initialCountSearch
+    search: initialCountSearch,
   });
 
   try {
@@ -694,7 +716,8 @@ async function loadInitialCountPage() {
     const container = document.getElementById('initial-table-container');
 
     if (res.data.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No items found.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f3f4f6; text-align:center;">No items found.</p>';
       return;
     }
 
@@ -712,9 +735,9 @@ async function loadInitialCountPage() {
         <tbody>
     `;
 
-    res.data.forEach(item => {
-      const currentVal = initialCountsMap.has(item.id) 
-        ? initialCountsMap.get(item.id) 
+    res.data.forEach((item) => {
+      const currentVal = initialCountsMap.has(item.id)
+        ? initialCountsMap.get(item.id)
         : item.current_quantity;
 
       html += `
@@ -734,7 +757,7 @@ async function loadInitialCountPage() {
     container.innerHTML = html;
 
     // Listen to value edits
-    container.querySelectorAll('.initial-count-input').forEach(input => {
+    container.querySelectorAll('.initial-count-input').forEach((input) => {
       input.addEventListener('input', () => {
         const id = Number(input.dataset.id);
         const val = input.value === '' ? '' : Number(input.value);
@@ -747,10 +770,11 @@ async function loadInitialCountPage() {
     });
 
     // Pagination bounds
-    document.getElementById('initial-prev-btn').disabled = (initialCountPage <= 1);
-    document.getElementById('initial-next-btn').disabled = (initialCountPage >= (res.pagination.totalPages || 1));
-    document.getElementById('initial-page-info').textContent = `Page ${initialCountPage} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
-
+    document.getElementById('initial-prev-btn').disabled = initialCountPage <= 1;
+    document.getElementById('initial-next-btn').disabled =
+      initialCountPage >= (res.pagination.totalPages || 1);
+    document.getElementById('initial-page-info').textContent =
+      `Page ${initialCountPage} of ${res.pagination.totalPages || 1} (Total: ${res.pagination.total})`;
   } catch (err) {
     showMessage('Failed to load initial count grid: ' + err.message, true);
   }
@@ -771,7 +795,7 @@ async function saveAllInitialCounts() {
     showMessage('Saving counts...');
     await api('/api/v1/inventory/bulk-save', {
       method: 'POST',
-      body: JSON.stringify({ items })
+      body: JSON.stringify({ items }),
     });
     showMessage('Initial stock counts saved successfully!');
     initialCountsMap.clear();
@@ -801,7 +825,8 @@ async function loadLowStockReport() {
     const data = res.data;
 
     if (data.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:6px; font-weight:bold;">All stock levels are optimal. No items are below minimum thresholds.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:6px; font-weight:bold;">All stock levels are optimal. No items are below minimum thresholds.</p>';
       return;
     }
 
@@ -844,7 +869,8 @@ async function loadSummaryReport() {
     const data = res.data;
 
     if (data.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No inventory summary data available.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f3f4f6; text-align:center;">No inventory summary data available.</p>';
       return;
     }
 
@@ -888,7 +914,8 @@ async function loadValuationReport() {
     const totals = res.totals;
 
     if (data.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No valuation data available.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f3f4f6; text-align:center;">No valuation data available.</p>';
       return;
     }
 
@@ -958,14 +985,17 @@ async function loadMovementsMetadata() {
 async function loadMovementsReport() {
   const container = document.querySelector('#movements-container');
   const itemId = document.querySelector('#movement-item-filter').value;
-  const url = itemId ? `/api/v1/inventory/reports/movements?itemId=${itemId}` : '/api/v1/inventory/reports/movements';
+  const url = itemId
+    ? `/api/v1/inventory/reports/movements?itemId=${itemId}`
+    : '/api/v1/inventory/reports/movements';
 
   try {
     const res = await api(url);
     const data = res.data;
 
     if (data.length === 0) {
-      container.innerHTML = '<p style="padding:10px; background:#f3f4f6; text-align:center;">No stock transaction movements logged.</p>';
+      container.innerHTML =
+        '<p style="padding:10px; background:#f3f4f6; text-align:center;">No stock transaction movements logged.</p>';
       return;
     }
 
@@ -985,16 +1015,17 @@ async function loadMovementsReport() {
         <tbody>
     `;
     data.forEach((row) => {
-      const prevQty = row.direction === 'IN' 
-        ? Number(row.quantity_after) - Number(row.quantity) 
-        : Number(row.quantity_after) + Number(row.quantity);
-      
+      const prevQty =
+        row.direction === 'IN'
+          ? Number(row.quantity_after) - Number(row.quantity)
+          : Number(row.quantity_after) + Number(row.quantity);
+
       const adjSign = row.direction === 'IN' ? '+' : '-';
       const adjColor = row.direction === 'IN' ? '#16a34a' : '#dc2626';
       const adjText = `${adjSign}${row.quantity}`;
-      
+
       const userText = row.user_name || 'System';
-      
+
       html += `
         <tr>
           <td>${new Date(row.created_at).toLocaleString()}</td>
@@ -1041,13 +1072,13 @@ async function saveQuickInventoryItem() {
     selling_price: Number(document.querySelector('#quick-add-price').value),
     reorder_level: 5,
     is_active: 1,
-    sku: '' // Triggers backend auto-generation
+    sku: '', // Triggers backend auto-generation
   };
 
   try {
     const res = await api('/api/v1/inventory/items', {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const opQty = Number(document.querySelector('#quick-add-opening-qty').value || 0);
@@ -1062,8 +1093,8 @@ async function saveQuickInventoryItem() {
           quantity: opQty,
           unit_cost: payload.purchase_cost,
           batch_number: `BAT-${createdItem.sku}-OPEN`,
-          notes: 'Initial opening stock count entered via Quick Add'
-        })
+          notes: 'Initial opening stock count entered via Quick Add',
+        }),
       });
     }
 
@@ -1073,7 +1104,9 @@ async function saveQuickInventoryItem() {
     await cacheActiveItems();
   } catch (err) {
     if (err.details) {
-      const details = Object.entries(err.details).map(([k, v]) => `${k}: ${v}`).join(', ');
+      const details = Object.entries(err.details)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
       showMessage(`Validation error: ${details}`, true);
     } else {
       showMessage(err.message, true);
@@ -1085,7 +1118,7 @@ function updateVariance() {
   const newQtyInput = document.getElementById('quick-qty').value;
   const currentQty = Number(document.getElementById('quick-selected-stock').textContent || 0);
   const varianceVal = document.getElementById('quick-variance-val');
-  
+
   if (!varianceVal) return;
 
   if (newQtyInput !== '' && document.getElementById('quick-item-id').value) {

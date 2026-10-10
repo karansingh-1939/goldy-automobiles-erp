@@ -34,7 +34,9 @@ export class ExpenseRepository {
 
   list(filters) {
     const { clause, params } = whereClause(filters);
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT
         expenses.*,
         users.name AS created_by_name
@@ -43,30 +45,42 @@ export class ExpenseRepository {
       ${clause}
       ORDER BY expenses.expense_date DESC, expenses.id DESC
       LIMIT @pageSize OFFSET @offset
-    `).all({ ...params, pageSize: filters.pageSize, offset: filters.offset });
+    `,
+      )
+      .all({ ...params, pageSize: filters.pageSize, offset: filters.offset });
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM expenses
       ${clause}
-    `).get(params).count;
+    `,
+      )
+      .get(params).count;
 
     return { data, total };
   }
 
   findById(id) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         expenses.*,
         users.name AS created_by_name
       FROM expenses
       LEFT JOIN users ON users.id = expenses.created_by
       WHERE expenses.id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
   }
 
   create(data) {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO expenses (
         expense_date,
         category,
@@ -81,7 +95,9 @@ export class ExpenseRepository {
         @description,
         @created_by
       )
-    `).run(data);
+    `,
+      )
+      .run(data);
 
     return this.findById(result.lastInsertRowid);
   }
@@ -90,20 +106,30 @@ export class ExpenseRepository {
     const columns = Object.keys(data);
     const setClause = columns.map((column) => `${column} = @${column}`).join(', ');
 
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE expenses
       SET ${setClause},
           updated_at = CURRENT_TIMESTAMP
       WHERE id = @id
-    `).run({ ...data, id });
+    `,
+      )
+      .run({ ...data, id });
 
     return this.findById(id);
   }
 
   delete(id) {
-    return this.db.prepare(`
+    return (
+      this.db
+        .prepare(
+          `
       DELETE FROM expenses
       WHERE id = ?
-    `).run(id).changes > 0;
+    `,
+        )
+        .run(id).changes > 0
+    );
   }
 }

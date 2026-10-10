@@ -21,7 +21,9 @@ export class PurchasingController {
 
   createOrder = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.purchasingService.createOrder(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.purchasingService.createOrder(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -45,7 +47,9 @@ export class PurchasingController {
 
   createReceipt = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.purchasingService.createReceipt(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.purchasingService.createReceipt(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -61,7 +65,9 @@ export class PurchasingController {
 
   createReturn = (req, res, next) => {
     try {
-      res.status(201).json({ data: this.purchasingService.createReturn(req.body || {}, req.user?.id) });
+      res
+        .status(201)
+        .json({ data: this.purchasingService.createReturn(req.body || {}, req.user?.id) });
     } catch (error) {
       next(error);
     }
@@ -69,7 +75,9 @@ export class PurchasingController {
 
   getSupplierLedger = (req, res, next) => {
     try {
-      res.status(200).json(this.purchasingService.getSupplierLedger(Number(req.params.supplierId), req.query));
+      res
+        .status(200)
+        .json(this.purchasingService.getSupplierLedger(Number(req.params.supplierId), req.query));
     } catch (error) {
       next(error);
     }

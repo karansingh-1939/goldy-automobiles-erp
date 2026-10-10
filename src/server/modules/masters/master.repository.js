@@ -26,9 +26,11 @@ export class MasterRepository {
   list({ search, pageSize, offset }) {
     if (this.config.table === 'invoices' && search) {
       const querySearch = `%${search}%`;
-      const selectCols = this.config.listColumns.map(col => `invoices.${col}`).join(', ');
-      
-      const rows = this.db.prepare(`
+      const selectCols = this.config.listColumns.map((col) => `invoices.${col}`).join(', ');
+
+      const rows = this.db
+        .prepare(
+          `
         SELECT ${selectCols}
         FROM invoices
         LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
@@ -40,9 +42,13 @@ export class MasterRepository {
            OR customers.name LIKE ? COLLATE NOCASE
         ORDER BY invoices.id DESC
         LIMIT ? OFFSET ?
-      `).all(querySearch, querySearch, querySearch, querySearch, querySearch, pageSize, offset);
+      `,
+        )
+        .all(querySearch, querySearch, querySearch, querySearch, querySearch, pageSize, offset);
 
-      const total = this.db.prepare(`
+      const total = this.db
+        .prepare(
+          `
         SELECT COUNT(*) AS count
         FROM invoices
         LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
@@ -52,53 +58,79 @@ export class MasterRepository {
            OR vehicles.chassis_number LIKE ? COLLATE NOCASE
            OR vehicles.registration_number LIKE ? COLLATE NOCASE
            OR customers.name LIKE ? COLLATE NOCASE
-      `).get(querySearch, querySearch, querySearch, querySearch, querySearch).count;
+      `,
+        )
+        .get(querySearch, querySearch, querySearch, querySearch, querySearch).count;
 
       return { rows, total };
     }
 
     const { clause, params } = searchWhere(this.config, search);
-    const selectCols = this.config.listColumns.map(col => `${this.config.table}.${col}`).join(', ');
-    const rows = this.db.prepare(`
+    const selectCols = this.config.listColumns
+      .map((col) => `${this.config.table}.${col}`)
+      .join(', ');
+    const rows = this.db
+      .prepare(
+        `
       SELECT ${selectCols}
       FROM ${this.config.table}
       ${clause}
       ORDER BY ${this.config.table}.id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, offset);
+    `,
+      )
+      .all(...params, pageSize, offset);
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM ${this.config.table}
       ${clause}
-    `).get(...params).count;
+    `,
+      )
+      .get(...params).count;
 
     return { rows, total };
   }
 
   findById(id) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT ${columnsSql(this.config.listColumns)}
       FROM ${this.config.table}
       WHERE id = ?
-    `).get(id);
+    `,
+      )
+      .get(id);
   }
 
   exists(table, id) {
-    return Boolean(this.db.prepare(`
+    return Boolean(
+      this.db
+        .prepare(
+          `
       SELECT id
       FROM ${table}
       WHERE id = ?
-    `).get(id));
+    `,
+        )
+        .get(id),
+    );
   }
 
   create(data) {
     const columns = Object.keys(data);
     const placeholders = columns.map(() => '?').join(', ');
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       INSERT INTO ${this.config.table} (${columns.join(', ')})
       VALUES (${placeholders})
-    `).run(...columns.map((column) => data[column]));
+    `,
+      )
+      .run(...columns.map((column) => data[column]));
 
     return this.findById(result.lastInsertRowid);
   }
@@ -107,20 +139,30 @@ export class MasterRepository {
     const columns = Object.keys(data);
     const setClause = columns.map((column) => `${column} = ?`).join(', ');
 
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE ${this.config.table}
       SET ${setClause},
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(...columns.map((column) => data[column]), id);
+    `,
+      )
+      .run(...columns.map((column) => data[column]), id);
 
     return this.findById(id);
   }
 
   delete(id) {
-    return this.db.prepare(`
+    return (
+      this.db
+        .prepare(
+          `
       DELETE FROM ${this.config.table}
       WHERE id = ?
-    `).run(id).changes > 0;
+    `,
+        )
+        .run(id).changes > 0
+    );
   }
 }

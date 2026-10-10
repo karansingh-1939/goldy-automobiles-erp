@@ -30,7 +30,11 @@ export class ExpenseController {
 
   update = (req, res, next) => {
     try {
-      const expense = this.expenseService.update(Number(req.params.id), req.body || {}, req.user?.id);
+      const expense = this.expenseService.update(
+        Number(req.params.id),
+        req.body || {},
+        req.user?.id,
+      );
       res.status(200).json({ data: expense });
     } catch (error) {
       next(error);

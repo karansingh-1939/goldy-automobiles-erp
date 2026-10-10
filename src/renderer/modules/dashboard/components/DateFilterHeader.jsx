@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Controlled DateFilterHeader Component.
  * Contains page title, native date picker, and manual refresh button.
- * 
+ *
  * @param {object} props
  * @param {string} props.date - The selected date string (YYYY-MM-DD)
  * @param {function} props.onDateChange - Callback fired on date input change
@@ -14,9 +14,7 @@ export function DateFilterHeader({ date, onDateChange, onRefresh, isLoading }) {
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-gray-200">
       <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-          Sales Dashboard
-        </h1>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Sales Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
           Real-time summary of sales, top performance metrics, and recent work invoices.
         </p>

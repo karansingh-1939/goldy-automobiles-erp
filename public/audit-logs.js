@@ -66,7 +66,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -161,12 +161,12 @@ async function loadAuditLogs() {
     const start = (page - 1) * 20 + 1;
     const end = Math.min(page * 20, res.pagination.total);
     const total = res.pagination.total;
-    
-    document.querySelector('#pagination-info').textContent = 
+
+    document.querySelector('#pagination-info').textContent =
       total > 0 ? `Showing ${start} to ${end} of ${total} logs` : 'Showing 0 to 0 of 0 logs';
 
-    document.querySelector('#prev-page-btn').disabled = (page <= 1);
-    document.querySelector('#next-page-btn').disabled = (page >= totalPages);
+    document.querySelector('#prev-page-btn').disabled = page <= 1;
+    document.querySelector('#next-page-btn').disabled = page >= totalPages;
   } catch (err) {
     showMessage(err.message, true);
     document.querySelector('#audit-logs-tbody').innerHTML = `
@@ -182,7 +182,7 @@ async function loadAuditLogs() {
 // RENDER TABLE
 function renderTable(logs) {
   const tbody = document.querySelector('#audit-logs-tbody');
-  
+
   if (logs.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -194,43 +194,53 @@ function renderTable(logs) {
     return;
   }
 
-  tbody.innerHTML = logs.map((log) => {
-    const dateFormatted = new Date(log.createdAt).toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+  tbody.innerHTML = logs
+    .map((log) => {
+      const dateFormatted = new Date(log.createdAt).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
 
-    let actionBadgeClass = 'badge-other';
-    if (log.action === 'CREATE') actionBadgeClass = 'badge-create';
-    else if (log.action === 'UPDATE') actionBadgeClass = 'badge-update';
-    else if (log.action === 'DELETE') actionBadgeClass = 'badge-delete';
+      let actionBadgeClass = 'badge-other';
+      if (log.action === 'CREATE') actionBadgeClass = 'badge-create';
+      else if (log.action === 'UPDATE') actionBadgeClass = 'badge-update';
+      else if (log.action === 'DELETE') actionBadgeClass = 'badge-delete';
 
-    // Build a nice description/summary of what happened
-    let summary = '';
-    if (log.action === 'CREATE') {
-      summary = `Created new ${log.entityType}`;
-      if (log.newValue && (log.newValue.name || log.newValue.sku || log.newValue.registration_number)) {
-        summary += `: "${log.newValue.name || log.newValue.sku || log.newValue.registration_number}"`;
+      // Build a nice description/summary of what happened
+      let summary = '';
+      if (log.action === 'CREATE') {
+        summary = `Created new ${log.entityType}`;
+        if (
+          log.newValue &&
+          (log.newValue.name || log.newValue.sku || log.newValue.registration_number)
+        ) {
+          summary += `: "${log.newValue.name || log.newValue.sku || log.newValue.registration_number}"`;
+        }
+      } else if (log.action === 'UPDATE') {
+        summary = `Updated ${log.entityType}`;
+        if (
+          log.oldValue &&
+          (log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number)
+        ) {
+          summary += `: "${log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number}"`;
+        }
+      } else if (log.action === 'DELETE') {
+        summary = `Deleted ${log.entityType}`;
+        if (
+          log.oldValue &&
+          (log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number)
+        ) {
+          summary += `: "${log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number}"`;
+        }
+      } else {
+        summary = `${log.action} performed on ${log.entityType}`;
       }
-    } else if (log.action === 'UPDATE') {
-      summary = `Updated ${log.entityType}`;
-      if (log.oldValue && (log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number)) {
-        summary += `: "${log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number}"`;
-      }
-    } else if (log.action === 'DELETE') {
-      summary = `Deleted ${log.entityType}`;
-      if (log.oldValue && (log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number)) {
-        summary += `: "${log.oldValue.name || log.oldValue.sku || log.oldValue.registration_number}"`;
-      }
-    } else {
-      summary = `${log.action} performed on ${log.entityType}`;
-    }
 
-    return `
+      return `
       <tr>
         <td><strong>${dateFormatted}</strong></td>
         <td>
@@ -249,7 +259,8 @@ function renderTable(logs) {
         </td>
       </tr>
     `;
-  }).join('');
+    })
+    .join('');
 
   // Add click listeners to details buttons
   tbody.querySelectorAll('.view-details-btn').forEach((btn) => {
@@ -266,7 +277,7 @@ function renderTable(logs) {
 // DETAILS MODAL WORKFLOW
 function openDetailsModal(log) {
   const modal = document.querySelector('#details-modal');
-  
+
   const dateFormatted = new Date(log.createdAt).toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -277,9 +288,11 @@ function openDetailsModal(log) {
   });
 
   document.querySelector('#modal-timestamp').textContent = dateFormatted;
-  document.querySelector('#modal-user').textContent = `${log.userName || 'System'} (@${log.userUsername || 'system'})`;
+  document.querySelector('#modal-user').textContent =
+    `${log.userName || 'System'} (@${log.userUsername || 'system'})`;
   document.querySelector('#modal-action').textContent = log.action;
-  document.querySelector('#modal-entity').textContent = `${log.entityType} (ID: ${log.entityId || '-'})`;
+  document.querySelector('#modal-entity').textContent =
+    `${log.entityType} (ID: ${log.entityId || '-'})`;
 
   const oldBox = document.querySelector('#modal-old-value');
   const newBox = document.querySelector('#modal-new-value');

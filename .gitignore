@@ -3,6 +3,10 @@ node_modules/
 
 # Environment files
 .env
+.env.*
+!.env.example
+.local-runtime/
+.github-publish/
 
 # Database files
 data/*.sqlite
@@ -24,6 +28,25 @@ Thumbs.db
 # Build output
 dist/
 build/
+release/
+.release-cache/
+coverage/
+graphify-out/
+resources/reference/
+data/**/test*.sqlite
+data/scratch_*
 
 # Backup files
 backups/
+
+# Private workshop records and generated binaries
+data/
+resources/
+Tax_Invoices/
+job_cards/
+goldy_automobile_data/
+scratch/
+*.sqlite
+*.sqlite-*
+*.db
+*.exe

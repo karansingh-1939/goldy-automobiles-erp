@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../shared/api/apiClient.js';
-import { useAppStore } from '../../shared/store/useAppStore.js';
-import { validateRequired, validateEmail, validatePhone, validateGstin } from '../../shared/utils/validation.js';
-import { usePermissions } from '../../shared/hooks/usePermissions.js';
+import { api } from '../../shared/api/api-client.js';
+import { useAppStore } from '../../shared/store/use-app-store.js';
+import {
+  validateRequired,
+  validateEmail,
+  validatePhone,
+  validateGstin,
+} from '../../shared/utils/validation.js';
+import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import DataTable from '../../shared/components/DataTable.jsx';
 import { Search, Plus, Truck, X, Edit2, Trash2 } from 'lucide-react';
 
 export default function SupplierManager() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
-  const showConfirm = useAppStore((state) => state.showConfirm);
+  const openDialog = useAppStore((state) => state.openDialog);
   const { hasPermission } = usePermissions();
 
   const canWrite = hasPermission('suppliers.write');
@@ -19,8 +24,8 @@ export default function SupplierManager() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const sortBy = 'name';
+  const sortOrder = 'asc';
 
   // Modal Control States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -37,10 +42,16 @@ export default function SupplierManager() {
   const [pincode, setPincode] = useState('');
 
   // Fetch Suppliers Query
-  const { data: response, isLoading, error } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['suppliers', search, page, sortBy, sortOrder],
-    queryFn: () => 
-      api.get(`/api/v1/suppliers?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`),
+    queryFn: () =>
+      api.get(
+        `/api/v1/suppliers?search=${encodeURIComponent(search)}&page=${page}&pageSize=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+      ),
   });
 
   const suppliers = response?.data || [];
@@ -50,32 +61,32 @@ export default function SupplierManager() {
   const createMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/suppliers', payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       addNotification('Supplier vendor registered.', 'success');
       setShowAddModal(false);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to create supplier.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to create supplier.', 'error'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => api.patch(`/api/v1/suppliers/${id}`, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       addNotification('Supplier profile updated.', 'success');
       setEditingSupplier(null);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to update supplier.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to update supplier.', 'error'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.del(`/api/v1/suppliers/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       addNotification('Supplier profile deleted.', 'success');
     },
-    onError: (err) => addNotification(err.message || 'Failed to delete supplier.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to delete supplier.', 'error'),
   });
 
   const resetForm = () => {
@@ -127,7 +138,7 @@ export default function SupplierManager() {
       address: address || undefined,
       city: city || undefined,
       state: state || undefined,
-      pincode: pincode || undefined
+      pincode: pincode || undefined,
     };
 
     if (editingSupplier) {
@@ -138,28 +149,30 @@ export default function SupplierManager() {
   };
 
   const handleDelete = (supplier) => {
-    showConfirm(
-      'Delete Vendor Profile',
-      `Are you sure you want to permanently delete supplier "${supplier.name}"? This action cannot be undone.`,
-      () => deleteMutation.mutate(supplier.id)
-    );
+    openDialog({
+      title: 'Delete Vendor Profile',
+      message: `Are you sure you want to permanently delete supplier "${supplier.name}"? This action cannot be undone.`,
+      onConfirm: () => deleteMutation.mutate(supplier.id),
+    });
   };
 
   const columns = [
     {
       accessorKey: 'name',
       header: 'Vendor Name',
-      cell: (info) => <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
+      cell: (info) => (
+        <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
+      ),
     },
     {
       accessorKey: 'phone',
       header: 'Phone',
-      cell: (info) => info.getValue() || '-'
+      cell: (info) => info.getValue() || '-',
     },
     {
       accessorKey: 'gstin',
       header: 'GSTIN',
-      cell: (info) => <span className="font-mono text-xs">{info.getValue() || '-'}</span>
+      cell: (info) => <span className="font-mono text-xs">{info.getValue() || '-'}</span>,
     },
     {
       accessorKey: 'city',
@@ -167,7 +180,7 @@ export default function SupplierManager() {
       cell: (info) => {
         const row = info.row.original;
         return row.city ? `${row.city}, ${row.state || ''}` : '-';
-      }
+      },
     },
     {
       id: 'actions',
@@ -175,7 +188,10 @@ export default function SupplierManager() {
       cell: (info) => {
         const s = info.row.original;
         return (
-          <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => handleOpenEdit(s)}
               disabled={!canWrite}
@@ -192,19 +208,27 @@ export default function SupplierManager() {
             </button>
           </div>
         );
-      }
-    }
+      },
+    },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Supplier Directory</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Complete vendor coordinate listings, contact cards, and GST filing indexes.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Supplier Directory
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Complete vendor coordinate listings, contact cards, and GST filing indexes.
+          </p>
         </div>
         <button
-          onClick={() => { resetForm(); setEditingSupplier(null); setShowAddModal(true); }}
+          onClick={() => {
+            resetForm();
+            setEditingSupplier(null);
+            setShowAddModal(true);
+          }}
           disabled={!canWrite}
           className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
         >
@@ -218,7 +242,10 @@ export default function SupplierManager() {
         <input
           type="text"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Filter by supplier name, phone, or GSTIN..."
           className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
         />
@@ -239,15 +266,17 @@ export default function SupplierManager() {
         <div className="flex items-center justify-between border-t border-gray-255 dark:border-gray-800 pt-4">
           <button
             disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
+            onClick={() => setPage((p) => p - 1)}
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="text-xs text-gray-500">Page {page} of {pagination.totalPages}</span>
+          <span className="text-xs text-gray-500">
+            Page {page} of {pagination.totalPages}
+          </span>
           <button
             disabled={page === pagination.totalPages}
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
           >
             Next
@@ -262,20 +291,30 @@ export default function SupplierManager() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                 <Truck className="h-5 w-5" />
-                <h3 className="text-lg font-bold">{editingSupplier ? 'Edit Vendor Coordinates' : 'New Supplier Profile'}</h3>
+                <h3 className="text-lg font-bold">
+                  {editingSupplier ? 'Edit Vendor Coordinates' : 'New Supplier Profile'}
+                </h3>
               </div>
               <button
-                onClick={() => { setShowAddModal(false); setEditingSupplier(null); }}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingSupplier(null);
+                }}
                 className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label htmlFor="supplier-name-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Vendor Name *</label>
+                  <label
+                    htmlFor="supplier-name-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Vendor Name *
+                  </label>
                   <input
                     id="supplier-name-field"
                     type="text"
@@ -286,7 +325,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="supplier-phone-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Phone Number</label>
+                  <label
+                    htmlFor="supplier-phone-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Phone Number
+                  </label>
                   <input
                     id="supplier-phone-field"
                     type="text"
@@ -296,7 +340,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="supplier-email-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Email Address</label>
+                  <label
+                    htmlFor="supplier-email-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Email Address
+                  </label>
                   <input
                     id="supplier-email-field"
                     type="email"
@@ -306,7 +355,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label htmlFor="supplier-gstin-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">GSTIN Number (15-digit)</label>
+                  <label
+                    htmlFor="supplier-gstin-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    GSTIN Number (15-digit)
+                  </label>
                   <input
                     id="supplier-gstin-field"
                     type="text"
@@ -316,7 +370,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label htmlFor="supplier-address-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">Billing Address</label>
+                  <label
+                    htmlFor="supplier-address-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    Billing Address
+                  </label>
                   <input
                     id="supplier-address-field"
                     type="text"
@@ -326,7 +385,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="supplier-city-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">City</label>
+                  <label
+                    htmlFor="supplier-city-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    City
+                  </label>
                   <input
                     id="supplier-city-field"
                     type="text"
@@ -336,7 +400,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="supplier-state-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">State</label>
+                  <label
+                    htmlFor="supplier-state-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    State
+                  </label>
                   <input
                     id="supplier-state-field"
                     type="text"
@@ -346,7 +415,12 @@ export default function SupplierManager() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="supplier-pincode-field" className="block text-xs font-semibold text-gray-600 dark:text-gray-400">PIN Code</label>
+                  <label
+                    htmlFor="supplier-pincode-field"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
+                  >
+                    PIN Code
+                  </label>
                   <input
                     id="supplier-pincode-field"
                     type="text"
@@ -356,11 +430,14 @@ export default function SupplierManager() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <button
                   type="button"
-                  onClick={() => { setShowAddModal(false); setEditingSupplier(null); }}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingSupplier(null);
+                  }}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel

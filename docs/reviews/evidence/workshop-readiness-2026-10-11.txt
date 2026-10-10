@@ -1,0 +1,19 @@
+11 October 2026 — all automated operations use disposable data.
+npm run check: PASS
+  Prettier: PASS
+  ESLint (--max-warnings 0): PASS
+  Vite production build: PASS
+  Backend: 196 passed, 0 failed, 0 skipped
+  Renderer: 27 passed, 0 failed
+npm audit --json: 0 known vulnerabilities
+git diff --check: PASS
+npm run build:win: PASS (fresh sequential rebuild)
+ASAR: 4,959 packed files checked, 0 integrity failures
+Packaged desktop/server entry points match current source.
+Packaged EXE embedded-Node smoke: PASS
+  Isolated startup, administrator onboarding, login
+  14 authenticated module reads
+  Compiled shell and JavaScript asset
+  Local calendar helper and six protected static module pages
+  Workshop job intake and SQLite manual backup
+Installer unsigned; actual installation, visual workflows, TallyPrime import and workshop trial unverified.

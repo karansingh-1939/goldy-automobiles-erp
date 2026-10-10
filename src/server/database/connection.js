@@ -1,11 +1,12 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { env } from '../config/env.js';
-import { DbSafetyService } from './dbSafetyService.js';
-import { IntegrityCheckService, HealthState } from './integrityCheckService.js';
-import { AppError } from '../shared/errors/AppError.js';
-import { CorruptionRecoveryService } from './corruptionRecoveryService.js';
+import { DbSafetyService } from './db-safety-service.js';
+import { IntegrityCheckService, HealthState } from './integrity-check-service.js';
+import { AppError } from '../shared/errors/app-error.js';
+import { CorruptionRecoveryService } from './corruption-recovery-service.js';
 
 let activeDatabase = null;
 
@@ -20,7 +21,6 @@ function ensureRequiredDirectories(dbPath) {
   const logsDir = path.join(baseDir, 'logs');
 
   if (!fs.existsSync(backupsDir)) {
-
     fs.mkdirSync(backupsDir, { recursive: true });
   }
   if (!fs.existsSync(logsDir)) {
@@ -28,8 +28,15 @@ function ensureRequiredDirectories(dbPath) {
   }
 }
 
-export function createDatabase(filePath = env.dbFile) {
+export function createDatabase(filePath = env.dbFile, { allowRestoreLock = false } = {}) {
   const resolvedPath = path.resolve(filePath);
+  if (!allowRestoreLock && fs.existsSync(path.join(path.dirname(resolvedPath), 'restore.lock'))) {
+    throw new AppError(
+      'An interrupted restore requires administrator recovery. Preserve the database and rollback files before removing restore.lock.',
+      500,
+      'DATABASE_MAINTENANCE_PENDING',
+    );
+  }
   ensureRequiredDirectories(resolvedPath);
 
   const db = new Database(resolvedPath);
@@ -49,11 +56,6 @@ export function createDatabase(filePath = env.dbFile) {
       const error = new AppError(errorMsg, 500, 'DATABASE_CORRUPTION');
       error.diagnostics = health;
 
-      // Trigger corruption recovery hook (to be resolved in Task B4)
-      if (global.onDatabaseCorruption) {
-        global.onDatabaseCorruption(resolvedPath, health);
-      }
-
       throw error;
     }
 
@@ -61,16 +63,17 @@ export function createDatabase(filePath = env.dbFile) {
   } catch (error) {
     db.close();
 
-    const isCorruption = error.message.includes('file is not a database') ||
-                         error.message.includes('database disk image is malformed') ||
-                         error.code === 'SQLITE_CORRUPT' ||
-                         error.message.includes('integrity check failed');
+    const isCorruption =
+      error.message.includes('file is not a database') ||
+      error.message.includes('database disk image is malformed') ||
+      error.code === 'SQLITE_CORRUPT' ||
+      error.message.includes('integrity check failed');
 
     if (isCorruption) {
       const health = {
         status: 'FAILED',
         errors: [error.message],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // 1. Execute recovery callback or use fallback service
@@ -79,7 +82,11 @@ export function createDatabase(filePath = env.dbFile) {
         try {
           recoveryResult = global.onDatabaseCorruption(resolvedPath, health);
         } catch (recoveryErr) {
-          throw new AppError(`Database recovery hook failed: ${recoveryErr.message}`, 500, 'DATABASE_RECOVERY_FAILED');
+          throw new AppError(
+            `Database recovery hook failed: ${recoveryErr.message}`,
+            500,
+            'DATABASE_RECOVERY_FAILED',
+          );
         }
       } else {
         recoveryResult = CorruptionRecoveryService.recover(resolvedPath);
@@ -87,8 +94,9 @@ export function createDatabase(filePath = env.dbFile) {
 
       // 2. If recovery succeeded, re-attempt connecting to recovered database
       if (recoveryResult && recoveryResult.status === 'SUCCESS') {
+        let recoveredDb;
         try {
-          const recoveredDb = new Database(resolvedPath);
+          recoveredDb = new Database(resolvedPath);
           recoveredDb.pragma('foreign_keys = ON');
           recoveredDb.pragma('journal_mode = WAL');
           recoveredDb.pragma('synchronous = NORMAL');
@@ -99,19 +107,26 @@ export function createDatabase(filePath = env.dbFile) {
           const healthCheck = IntegrityCheckService.check(recoveredDb, true);
           if (healthCheck.status === HealthState.FAILED) {
             recoveredDb.close();
-            throw new Error(`Recovered database failed integrity scan: ${healthCheck.errors.join('; ')}`);
+            throw new Error(
+              `Recovered database failed integrity scan: ${healthCheck.errors.join('; ')}`,
+            );
           }
 
           return recoveredDb;
         } catch (retryError) {
-          const appErr = new AppError(`Database connection failed after recovery: ${retryError.message}`, 500, 'DATABASE_RECOVERY_FAILED');
+          if (recoveredDb?.open) recoveredDb.close();
+          const appErr = new AppError(
+            `Database connection failed after recovery: ${retryError.message}`,
+            500,
+            'DATABASE_RECOVERY_FAILED',
+          );
           appErr.diagnostics = { recoveryResult, retryError: retryError.message };
           throw appErr;
         }
       }
 
       // Recovery failed
-      const recoveryInstructions = 
+      const recoveryInstructions =
         `RECOVERY INSTRUCTIONS:\n` +
         `1. Locate the backups folder (typically sibling to your 'data' folder: %APPDATA%/Goldy_Automobiles/backups).\n` +
         `2. Identify the latest valid backup file (e.g. goldy_erp_backup_YYYYMMDD.db).\n` +
@@ -139,23 +154,44 @@ const configFilePath = path.join(dbDir, 'setup', 'app_config.json');
 function readAppConfig() {
   try {
     if (fs.existsSync(configFilePath)) {
-      return JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+      const config = JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+      if (
+        !config ||
+        typeof config !== 'object' ||
+        Array.isArray(config) ||
+        (config.demoMode !== undefined && typeof config.demoMode !== 'boolean')
+      ) {
+        throw new Error('Invalid application mode configuration.');
+      }
+      return config;
     }
   } catch (err) {
-    console.error('Failed to read app_config.json:', err);
+    throw new AppError(
+      `Cannot read application mode configuration: ${err.message}`,
+      500,
+      'CONFIG_READ_FAILED',
+    );
   }
   return { demoMode: false };
 }
 
 function writeAppConfig(config) {
+  const temporary = `${configFilePath}.${randomUUID()}.tmp`;
   try {
     const configDir = path.dirname(configFilePath);
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
     }
-    fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
+    fs.writeFileSync(temporary, JSON.stringify(config, null, 2), { encoding: 'utf8', flag: 'wx' });
+    fs.renameSync(temporary, configFilePath);
   } catch (err) {
-    console.error('Failed to write app_config.json:', err);
+    throw new AppError(
+      `Failed to save application mode: ${err.message}`,
+      500,
+      'CONFIG_WRITE_FAILED',
+    );
+  } finally {
+    if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
   }
 }
 
@@ -164,13 +200,34 @@ export function isDemoMode() {
 }
 
 export function toggleDemoMode(enable) {
-  const config = readAppConfig();
-  config.demoMode = !!enable;
-  writeAppConfig(config);
-  
+  if (typeof enable !== 'boolean')
+    throw new AppError('Demo mode must be a boolean.', 400, 'VALIDATION_ERROR');
+  for (const file of [env.dbFile, demoDbFile]) {
+    if (
+      fs.existsSync(path.join(path.dirname(file), 'restore.lock')) ||
+      fs.existsSync(`${file}.backup.lock`)
+    ) {
+      throw new AppError('Database maintenance is in progress.', 409, 'MAINTENANCE_IN_PROGRESS');
+    }
+  }
+  const previousConfig = readAppConfig();
+  const config = { ...previousConfig, demoMode: enable };
   const filePath = config.demoMode ? demoDbFile : env.dbFile;
-  reopenDatabase(filePath);
-  return config.demoMode;
+  if (activeDatabase?.inTransaction)
+    throw new AppError('A database transaction is in progress.', 409, 'MAINTENANCE_IN_PROGRESS');
+  const candidate = createDatabase(filePath);
+  let saved = false;
+  try {
+    writeAppConfig(config);
+    saved = true;
+    if (activeDatabase?.open) activeDatabase.close();
+    activeDatabase = candidate;
+    return config.demoMode;
+  } catch (error) {
+    candidate.close();
+    if (saved) writeAppConfig(previousConfig);
+    throw error;
+  }
 }
 
 export function getDatabase() {
@@ -190,14 +247,14 @@ export function closeDatabase() {
   }
 }
 
-export function reopenDatabase(filePath = null) {
+export function reopenDatabase(filePath = null, { allowRestoreLock = false } = {}) {
   closeDatabase();
   let targetPath = filePath;
   if (!targetPath) {
     const config = readAppConfig();
     targetPath = config.demoMode ? demoDbFile : env.dbFile;
   }
-  activeDatabase = createDatabase(targetPath);
+  activeDatabase = createDatabase(targetPath, { allowRestoreLock });
   return activeDatabase;
 }
 

@@ -1,3 +1,4 @@
+import { localDate } from './local-date.js';
 const token = sessionStorage.getItem('goldy_auth_token');
 const message = document.querySelector('#message');
 const dateInput = document.querySelector('#dashboard-date');
@@ -6,7 +7,7 @@ let financialData = null;
 let currentFinancialPeriod = 'today'; // 'today' or 'month'
 
 // Initialize date input to today's local date
-const todayLocal = new Date().toISOString().slice(0, 10);
+const todayLocal = localDate();
 dateInput.value = todayLocal;
 
 // Message display helper
@@ -63,7 +64,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -115,7 +116,6 @@ async function loadAllDashboardData() {
     // 4. Fetch Inventory Metrics
     const invRes = await api(`/api/v1/dashboard/inventory`);
     renderInventory(invRes);
-
   } catch (err) {
     showMessage(err.message, true);
   }
@@ -133,8 +133,10 @@ function renderFinancialSection() {
   // Render workshop-wide sticky KPIs
   const todayRevenueVal = financialData.today?.revenue || 0;
   const outstandingVal = financialData.outstandingAmount || 0;
-  document.querySelector('#fin-today-revenue').textContent = `Rs. ${Number(todayRevenueVal).toFixed(2)}`;
-  document.querySelector('#fin-outstanding').textContent = `Rs. ${Number(outstandingVal).toFixed(2)}`;
+  document.querySelector('#fin-today-revenue').textContent =
+    `Rs. ${Number(todayRevenueVal).toFixed(2)}`;
+  document.querySelector('#fin-outstanding').textContent =
+    `Rs. ${Number(outstandingVal).toFixed(2)}`;
 
   const revEl = document.querySelector('#fin-revenue');
   const gpEl = document.querySelector('#fin-gross-profit');
@@ -165,7 +167,8 @@ function renderSales(data) {
   // Render Recent Invoices
   const recentContainer = document.querySelector('#recent-sales-container');
   if (!data.recentSales || data.recentSales.length === 0) {
-    recentContainer.innerHTML = '<p style="padding:10px; background:#f8fafc; text-align:center;">No recent finalized invoices.</p>';
+    recentContainer.innerHTML =
+      '<p style="padding:10px; background:#f8fafc; text-align:center;">No recent finalized invoices.</p>';
   } else {
     let html = `
       <table>
@@ -196,7 +199,8 @@ function renderSales(data) {
   // Render Top Services
   const topServicesContainer = document.querySelector('#top-services-container');
   if (!data.topServices || data.topServices.length === 0) {
-    topServicesContainer.innerHTML = '<p style="padding:10px; background:#f8fafc; text-align:center;">No service history available.</p>';
+    topServicesContainer.innerHTML =
+      '<p style="padding:10px; background:#f8fafc; text-align:center;">No service history available.</p>';
   } else {
     let html = `
       <table>
@@ -228,8 +232,9 @@ function renderSales(data) {
 function renderInventory(data) {
   document.querySelector('#inv-total-items').textContent = data.totalItems;
   document.querySelector('#inv-total-qty').textContent = data.totalQuantity;
-  document.querySelector('#inv-total-valuation').textContent = `Rs. ${Number(data.totalValuation).toFixed(2)}`;
-  
+  document.querySelector('#inv-total-valuation').textContent =
+    `Rs. ${Number(data.totalValuation).toFixed(2)}`;
+
   const lowCountEl = document.querySelector('#inv-low-stock-count');
   lowCountEl.textContent = data.lowStockCount;
 
@@ -243,7 +248,8 @@ function renderInventory(data) {
   // Warehouse summaries
   const warehouseContainer = document.querySelector('#warehouse-container');
   if (!data.warehouseSummary || data.warehouseSummary.length === 0) {
-    warehouseContainer.innerHTML = '<p style="padding:10px; background:#f8fafc; text-align:center;">No warehouse stock info.</p>';
+    warehouseContainer.innerHTML =
+      '<p style="padding:10px; background:#f8fafc; text-align:center;">No warehouse stock info.</p>';
   } else {
     let html = `
       <table>
@@ -274,7 +280,8 @@ function renderInventory(data) {
   // Low stock items detail
   const lowStockContainer = document.querySelector('#low-stock-container');
   if (!data.lowStockItems || data.lowStockItems.length === 0) {
-    lowStockContainer.innerHTML = '<p style="padding:10px; background:#f0fdf4; color:#15803d; text-align:center; font-weight:bold;">All inventory stock levels are good!</p>';
+    lowStockContainer.innerHTML =
+      '<p style="padding:10px; background:#f0fdf4; color:#15803d; text-align:center; font-weight:bold;">All inventory stock levels are good!</p>';
   } else {
     let html = `
       <table>

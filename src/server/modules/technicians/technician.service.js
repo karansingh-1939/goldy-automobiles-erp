@@ -1,7 +1,7 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { TechnicianRepository } from './technician.repository.js';
 import { AuditRepository } from '../audit/audit.repository.js';
-import { JobCardRepository } from '../jobCards/jobCard.repository.js';
+import { JobCardRepository } from '../job-cards/job-card.repository.js';
 
 function required(value, label) {
   if (value === undefined || value === null || value === '') {
@@ -23,7 +23,11 @@ function parseListQuery(query) {
 
 function normalizeDatabaseError(error) {
   if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-    return new AppError('A technician with this code already exists.', 409, 'DUPLICATE_TECHNICIAN_CODE');
+    return new AppError(
+      'A technician with this code already exists.',
+      409,
+      'DUPLICATE_TECHNICIAN_CODE',
+    );
   }
   return error;
 }
@@ -33,11 +37,14 @@ export class TechnicianService {
    * Constructs the TechnicianService
    * Supports constructor injection of repositories
    */
-  constructor(db, {
-    technicianRepository = new TechnicianRepository(db),
-    auditRepository = new AuditRepository(db),
-    jobCardRepository = new JobCardRepository(db)
-  } = {}) {
+  constructor(
+    db,
+    {
+      technicianRepository = new TechnicianRepository(db),
+      auditRepository = new AuditRepository(db),
+      jobCardRepository = new JobCardRepository(db),
+    } = {},
+  ) {
     this.db = db;
     this.repository = technicianRepository;
     this.auditRepository = auditRepository;
@@ -58,13 +65,21 @@ export class TechnicianService {
     if (payload.technician_code) {
       const codePattern = /^[a-zA-Z0-9_-]+$/;
       if (!codePattern.test(payload.technician_code)) {
-        throw new AppError('Technician Code contains invalid characters. Only alphanumeric, dashes, and underscores are allowed.', 400, 'INVALID_CODE_FORMAT');
+        throw new AppError(
+          'Technician Code contains invalid characters. Only alphanumeric, dashes, and underscores are allowed.',
+          400,
+          'INVALID_CODE_FORMAT',
+        );
       }
 
       // Check if code is already in use
       const existing = this.repository.findByCode(payload.technician_code);
       if (existing) {
-        throw new AppError(`Technician Code "${payload.technician_code}" is already in use.`, 409, 'DUPLICATE_TECHNICIAN_CODE');
+        throw new AppError(
+          `Technician Code "${payload.technician_code}" is already in use.`,
+          409,
+          'DUPLICATE_TECHNICIAN_CODE',
+        );
       }
     }
 
@@ -75,7 +90,7 @@ export class TechnicianService {
         phone_number: payload.phone_number.trim(),
         specialization: payload.specialization ? payload.specialization.trim() : null,
         notes: payload.notes ? payload.notes.trim() : null,
-        is_active: 1
+        is_active: 1,
       });
 
       const technician = this.repository.findById(technicianId);
@@ -119,16 +134,16 @@ export class TechnicianService {
       search: parsed.search,
       activeOnly,
       limit: parsed.pageSize,
-      offset: parsed.offset
+      offset: parsed.offset,
     });
 
     // Bulk load metrics to prevent N+1 queries
-    const ids = result.data.map(t => t.id);
+    const ids = result.data.map((t) => t.id);
     const bulkMetrics = this.repository.getBulkMetrics(ids);
 
-    const data = result.data.map(tech => ({
+    const data = result.data.map((tech) => ({
       ...tech,
-      metrics: bulkMetrics[tech.id] || { totalAssignedJobs: 0, completedJobs: 0, activeJobs: 0 }
+      metrics: bulkMetrics[tech.id] || { totalAssignedJobs: 0, completedJobs: 0, activeJobs: 0 },
     }));
 
     return {
@@ -138,7 +153,7 @@ export class TechnicianService {
         pageSize: parsed.pageSize,
         total: result.total,
         totalPages: Math.ceil(result.total / parsed.pageSize),
-      }
+      },
     };
   }
 
@@ -238,7 +253,11 @@ export class TechnicianService {
 
     // 3. Verify job card is editable (not in completed or cancelled states)
     if (['COMPLETED', 'CANCELLED'].includes(jobCard.status)) {
-      throw new AppError('Cannot assign technician to a finalized or cancelled job card.', 400, 'JOB_CARD_LOCKED');
+      throw new AppError(
+        'Cannot assign technician to a finalized or cancelled job card.',
+        400,
+        'JOB_CARD_LOCKED',
+      );
     }
 
     this.repository.assignToJobCard(jobCardId, technicianId, userId, notes);
@@ -271,21 +290,21 @@ export class TechnicianService {
     const metrics = this.repository.getMetrics(id);
     const history = this.repository.getServiceHistory(id, {
       limit: parsed.pageSize,
-      offset: parsed.offset
+      offset: parsed.offset,
     });
 
     return {
       technician: {
         id: technician.id,
         technician_code: technician.technician_code,
-        full_name: technician.full_name
+        full_name: technician.full_name,
       },
       metrics: {
         totalAssignedJobs: metrics.totalAssignedJobs,
         completedJobs: metrics.completedJobs,
-        activeJobs: metrics.activeJobs
+        activeJobs: metrics.activeJobs,
       },
-      history: history.map(row => ({
+      history: history.map((row) => ({
         jobCardId: row.jobCardId,
         jobCardNumber: row.jobCardNumber,
         jobCardStatus: row.jobCardStatus,
@@ -295,23 +314,25 @@ export class TechnicianService {
           id: row.vehicleId,
           registrationNumber: row.registrationNumber,
           make: row.vehicleMake,
-          model: row.vehicleModel
+          model: row.vehicleModel,
         },
         customer: {
           id: row.customerId,
-          name: row.customerName
+          name: row.customerName,
         },
-        invoice: row.invoiceId ? {
-          id: row.invoiceId,
-          invoiceNumber: row.invoiceNumber,
-          status: row.invoiceStatus,
-          grandTotal: row.invoiceGrandTotal
-        } : null
+        invoice: row.invoiceId
+          ? {
+              id: row.invoiceId,
+              invoiceNumber: row.invoiceNumber,
+              status: row.invoiceStatus,
+              grandTotal: row.invoiceGrandTotal,
+            }
+          : null,
       })),
       pagination: {
         page: parsed.page,
-        pageSize: parsed.pageSize
-      }
+        pageSize: parsed.pageSize,
+      },
     };
   }
 }

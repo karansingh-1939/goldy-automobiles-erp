@@ -1,4 +1,5 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 import { DashboardRepository } from './dashboard.repository.js';
 import { ProfitService } from '../profit/profit.service.js';
 import { InventoryService } from '../inventory/inventory.service.js';
@@ -32,7 +33,7 @@ export class DashboardService {
   getOperationsMetrics(todayDate) {
     let date = normalizeDate(todayDate, 'Today date');
     if (!date) {
-      date = new Date().toISOString().slice(0, 10);
+      date = localDate();
     }
     return this.repository.getOperationsMetrics(date);
   }
@@ -40,7 +41,7 @@ export class DashboardService {
   getFinancialMetrics(todayDate) {
     let date = normalizeDate(todayDate, 'Today date');
     if (!date) {
-      date = new Date().toISOString().slice(0, 10);
+      date = localDate();
     }
 
     const todayData = this.profitService.summary({
@@ -55,11 +56,23 @@ export class DashboardService {
       dateTo: date,
     }).data;
 
-    const outstandingAmount = this.repository.db.prepare(`
+    const outstandingAmount = this.repository.db
+      .prepare(
+        `
       SELECT COALESCE(SUM(grand_total - amount_paid), 0) AS balance
-      FROM invoices
-      WHERE status = 'FINALIZED'
-    `).get().balance;
+      FROM (
+        SELECT MAX(0, invoices.grand_total - invoices.amount_paid - COALESCE((
+          SELECT SUM(total_refund_amount) FROM customer_returns
+          WHERE invoice_id = invoices.id AND status = 'COMPLETED' AND company_id = 1
+        ), 0)) AS grand_total, 0 AS amount_paid
+        FROM invoices WHERE status = 'FINALIZED'
+        UNION ALL
+        SELECT grand_total, amount_paid FROM direct_invoices
+        WHERE status <> 'CANCELLED' AND company_id = 1
+      ) sales
+    `,
+      )
+      .get().balance;
 
     return {
       today: {
@@ -80,7 +93,7 @@ export class DashboardService {
   getSalesMetrics(todayDate) {
     let date = normalizeDate(todayDate, 'Today date');
     if (!date) {
-      date = new Date().toISOString().slice(0, 10);
+      date = localDate();
     }
 
     const todaySummary = this.repository.getSalesSummary(date, date);
@@ -90,15 +103,18 @@ export class DashboardService {
     const invoicesThisMonth = monthSummary.count;
     const totalAmountThisMonth = monthSummary.totalAmount;
 
-    const averageInvoiceValue = invoicesThisMonth > 0
-      ? Math.round((totalAmountThisMonth / invoicesThisMonth) * 100) / 100
-      : 0;
+    const averageInvoiceValue =
+      invoicesThisMonth > 0
+        ? Math.round((totalAmountThisMonth / invoicesThisMonth) * 100) / 100
+        : 0;
 
-    const topCustomers = this.profitService.byCustomer({
-      period: 'custom',
-      dateFrom: firstDayOfMonth(date),
-      dateTo: date,
-    }).data.slice(0, 5);
+    const topCustomers = this.profitService
+      .byCustomer({
+        period: 'custom',
+        dateFrom: firstDayOfMonth(date),
+        dateTo: date,
+      })
+      .data.slice(0, 5);
 
     const topServices = this.repository.getTopServices(5);
     const recentSales = this.repository.getRecentSales(5);

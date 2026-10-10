@@ -4,36 +4,56 @@ export class DashboardRepository {
   }
 
   getOperationsMetrics(todayDate) {
-    const openJobCards = this.db.prepare(`
+    const openJobCards = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM job_cards
       WHERE status = 'DRAFT'
-    `).get().count;
+    `,
+      )
+      .get().count;
 
-    const completedJobCards = this.db.prepare(`
+    const completedJobCards = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM job_cards
       WHERE status = 'COMPLETED'
-    `).get().count;
+    `,
+      )
+      .get().count;
 
-    const vehiclesServicedToday = this.db.prepare(`
+    const vehiclesServicedToday = this.db
+      .prepare(
+        `
       SELECT COUNT(DISTINCT vehicle_id) AS count
       FROM job_cards
       WHERE status = 'COMPLETED'
-        AND DATE(closed_at) = DATE(?)
-    `).get(todayDate).count;
+        AND DATE(closed_at, 'localtime') = DATE(?)
+    `,
+      )
+      .get(todayDate).count;
 
-    const todayJobCardsCount = this.db.prepare(`
+    const todayJobCardsCount = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM job_cards
-      WHERE DATE(opened_at) = DATE(?)
-    `).get(todayDate).count;
+      WHERE DATE(opened_at, 'localtime') = DATE(?)
+    `,
+      )
+      .get(todayDate).count;
 
-    const pendingDeliveriesCount = this.db.prepare(`
+    const pendingDeliveriesCount = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM job_cards
       WHERE status = 'DRAFT' AND promised_delivery_at IS NOT NULL
-    `).get().count;
+    `,
+      )
+      .get().count;
 
     return {
       openJobCards,
@@ -45,15 +65,21 @@ export class DashboardRepository {
   }
 
   getTotalItemCount() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM inventory_items
       WHERE is_active = 1
-    `).get().count;
+    `,
+      )
+      .get().count;
   }
 
   getWarehouseStockSummary() {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT 
         warehouses.id AS warehouseId,
         warehouses.name AS warehouseName,
@@ -65,23 +91,36 @@ export class DashboardRepository {
       WHERE warehouses.is_active = 1
       GROUP BY warehouses.id, warehouses.name, warehouses.code
       ORDER BY warehouses.name
-    `).all();
+    `,
+      )
+      .all();
   }
 
   getSalesSummary(dateFrom, dateTo) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT 
         COUNT(*) AS count,
         COALESCE(SUM(grand_total), 0) AS totalAmount
-      FROM invoices
-      WHERE status = 'FINALIZED'
+      FROM (
+        SELECT invoice_date, grand_total FROM invoices WHERE status = 'FINALIZED'
+        UNION ALL
+        SELECT invoice_date, grand_total FROM direct_invoices
+        WHERE status <> 'CANCELLED' AND company_id = 1
+      ) sales
+      WHERE 1 = 1
         AND DATE(invoice_date) >= DATE(?)
         AND DATE(invoice_date) <= DATE(?)
-    `).get(dateFrom, dateTo);
+    `,
+      )
+      .get(dateFrom, dateTo);
   }
 
   getRecentSales(limit) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT 
         invoices.id,
         invoices.invoice_number AS invoiceNumber,
@@ -93,11 +132,15 @@ export class DashboardRepository {
       WHERE invoices.status = 'FINALIZED'
       ORDER BY invoices.invoice_date DESC, invoices.id DESC
       LIMIT ?
-    `).all(limit);
+    `,
+      )
+      .all(limit);
   }
 
   getTopServices(limit) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT 
         TRIM(description) AS description,
         COUNT(*) AS count,
@@ -110,11 +153,15 @@ export class DashboardRepository {
       GROUP BY TRIM(description)
       ORDER BY count DESC, totalRevenue DESC
       LIMIT ?
-    `).all(limit);
+    `,
+      )
+      .all(limit);
   }
 
   getRevenueByCategory(dateFrom, dateTo) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT 
         item_type AS category,
         ROUND(SUM(line_revenue), 2) AS revenue
@@ -125,6 +172,8 @@ export class DashboardRepository {
         AND DATE(invoices.invoice_date) <= DATE(?)
       GROUP BY item_type
       ORDER BY revenue DESC
-    `).all(dateFrom, dateTo);
+    `,
+      )
+      .all(dateFrom, dateTo);
   }
 }

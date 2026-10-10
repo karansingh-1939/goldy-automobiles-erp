@@ -60,7 +60,7 @@ export class WarrantyController {
         customerId: req.query.customerId ? Number(req.query.customerId) : undefined,
         vehicleId: req.query.vehicleId ? Number(req.query.vehicleId) : undefined,
         itemId: req.query.itemId ? Number(req.query.itemId) : undefined,
-        status: req.query.status
+        status: req.query.status,
       };
       const data = this.service.repository.listWarrantyRegistrations(query);
       res.status(200).json({ data });
@@ -85,7 +85,7 @@ export class WarrantyController {
     try {
       const query = {
         companyId: req.query.companyId ? Number(req.query.companyId) : 1,
-        status: req.query.status
+        status: req.query.status,
       };
       const data = this.service.repository.listWarrantyClaims(query);
       res.status(200).json({ data });
@@ -107,12 +107,16 @@ export class WarrantyController {
   getStatusCountReport = async (req, res, next) => {
     try {
       const companyId = req.query.companyId ? Number(req.query.companyId) : 1;
-      const rows = this.service.db.prepare(`
+      const rows = this.service.db
+        .prepare(
+          `
         SELECT w.status, COUNT(*) as count
         FROM warranty_registrations w
         WHERE w.company_id = ?
         GROUP BY w.status
-      `).all(companyId);
+      `,
+        )
+        .all(companyId);
       res.status(200).json({ data: rows });
     } catch (error) {
       next(error);
@@ -122,7 +126,9 @@ export class WarrantyController {
   getFailureAnalysisReport = async (req, res, next) => {
     try {
       const companyId = req.query.companyId ? Number(req.query.companyId) : 1;
-      const rows = this.service.db.prepare(`
+      const rows = this.service.db
+        .prepare(
+          `
         SELECT item.sku, item.item_name, COUNT(*) as claimCount
         FROM warranty_claims c
         JOIN warranty_registrations w ON c.warranty_registration_id = w.id
@@ -130,7 +136,9 @@ export class WarrantyController {
         WHERE c.company_id = ?
         GROUP BY item.id
         ORDER BY claimCount DESC
-      `).all(companyId);
+      `,
+        )
+        .all(companyId);
       res.status(200).json({ data: rows });
     } catch (error) {
       next(error);

@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Supplier Ledger</title>
     <style>
       :root {
@@ -148,7 +148,8 @@
         margin-top: 12px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 10px;
         text-align: left;
@@ -192,8 +193,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html">Job Cards</a>
@@ -212,18 +213,20 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
-      <h2 style="margin: 0; color:#0f766e; font-size: 20px;">Supplier Financial Ledger</h2>
-      
+      <h2 style="margin: 0; color: #0f766e; font-size: 20px">Supplier Financial Ledger</h2>
+
       <section>
         <p id="message" role="status"></p>
 
         <!-- Toolbar Selector -->
         <div class="toolbar">
-          <span style="font-weight: bold; color: #475569;">Select Supplier:</span>
+          <span style="font-weight: bold; color: #475569">Select Supplier:</span>
           <select id="supplier-select">
             <option value="">-- Loading Suppliers --</option>
           </select>
@@ -231,46 +234,61 @@
         </div>
 
         <!-- Selection view wrapper -->
-        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b;">
+        <div id="no-selection-view" style="padding: 40px; text-align: center; color: #64748b">
           <h3>Please select a supplier from the dropdown list to inspect ledger records.</h3>
         </div>
 
         <!-- Ledger Content (Initially hidden) -->
-        <div id="ledger-view" style="display: none;">
+        <div id="ledger-view" style="display: none">
           <div class="supplier-card">
             <!-- Supplier Profile -->
             <div class="card-info">
               <h3 id="supplier-name">Supplier Details</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px"
+              >
                 <div><strong>Phone Number:</strong> <span id="supplier-phone">-</span></div>
                 <div><strong>Email Address:</strong> <span id="supplier-email">-</span></div>
                 <div><strong>GSTIN (Tax ID):</strong> <span id="supplier-gstin">-</span></div>
                 <div><strong>City / State:</strong> <span id="supplier-city-state">-</span></div>
-                <div style="grid-column: span 2; margin-top: 4px;"><strong>Address:</strong> <span id="supplier-address">-</span></div>
+                <div style="grid-column: span 2; margin-top: 4px">
+                  <strong>Address:</strong> <span id="supplier-address">-</span>
+                </div>
               </div>
             </div>
-            
+
             <!-- Outstanding balance card -->
             <div class="card-metric warning" id="balance-card">
               <h4>Total Outstanding Balance</h4>
               <div class="value" id="outstanding-balance">Rs. 0.00</div>
-              <div style="font-size: 11px; color: #b45309; margin-top: 6px; font-weight: bold;">Amount payable to this supplier</div>
+              <div style="font-size: 11px; color: #b45309; margin-top: 6px; font-weight: bold">
+                Amount payable to this supplier
+              </div>
             </div>
           </div>
 
           <!-- Ledger Table -->
-          <h3 style="color:#0f766e; margin-top:20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px;">Statement of Account</h3>
-          <div id="table-container" style="overflow-x: auto;">
+          <h3
+            style="
+              color: #0f766e;
+              margin-top: 20px;
+              border-bottom: 2px solid #cbd5e1;
+              padding-bottom: 6px;
+            "
+          >
+            Statement of Account
+          </h3>
+          <div id="table-container" style="overflow-x: auto">
             <!-- Dynamically populated table -->
           </div>
 
           <!-- Pagination -->
-          <div class="form-actions" style="margin-top: 14px; justify-content: space-between;">
+          <div class="form-actions" style="margin-top: 14px; justify-content: space-between">
             <div>
               <button id="prev-btn">Previous</button>
               <button id="next-btn">Next</button>
             </div>
-            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+            <span id="page-info" style="align-self: center; font-size: 14px"></span>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
-import { AppError } from '../../shared/errors/AppError.js';
+import { localDate } from '../../shared/utils/local-date.js';
+import { AppError } from '../../shared/errors/app-error.js';
 
 export const expenseCategories = [
   'Rent',
@@ -74,8 +75,9 @@ function normalizeDescription(value) {
 
 export function validateExpensePayload(payload = {}, { partial = false } = {}) {
   const data = {};
-  const unknownFields = Object.keys(payload)
-    .filter((field) => !['date', 'expense_date', 'category', 'amount', 'description'].includes(field));
+  const unknownFields = Object.keys(payload).filter(
+    (field) => !['date', 'expense_date', 'category', 'amount', 'description'].includes(field),
+  );
 
   if (unknownFields.length) {
     throw new AppError(`Unknown fields: ${unknownFields.join(', ')}`, 400, 'VALIDATION_ERROR');
@@ -89,11 +91,12 @@ export function validateExpensePayload(payload = {}, { partial = false } = {}) {
   if (!partial) {
     if (!expenseDate) throw new AppError('Expense date is required.', 400, 'VALIDATION_ERROR');
     if (!category) throw new AppError('Expense category is required.', 400, 'VALIDATION_ERROR');
-    if (amount === undefined) throw new AppError('Expense amount is required.', 400, 'VALIDATION_ERROR');
+    if (amount === undefined)
+      throw new AppError('Expense amount is required.', 400, 'VALIDATION_ERROR');
   }
 
   if (expenseDate !== undefined) {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = localDate();
     if (process.env.ALLOW_FUTURE_EXPENSES !== 'true' && expenseDate > todayStr) {
       throw new AppError('Expense date cannot be in the future.', 400, 'VALIDATION_ERROR');
     }

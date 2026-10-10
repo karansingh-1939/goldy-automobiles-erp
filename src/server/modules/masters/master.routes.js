@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createAuditService } from '../audit/audit.service.js';
 import { createAuthService } from '../auth/auth.routes.js';
-import { authenticate, requirePermission } from '../../shared/middleware/authMiddleware.js';
+import { authenticate, requirePermission } from '../../shared/middleware/auth-middleware.js';
 import { masterConfigs } from './master.config.js';
 import { MasterController } from './master.controller.js';
 import { MasterRepository } from './master.repository.js';

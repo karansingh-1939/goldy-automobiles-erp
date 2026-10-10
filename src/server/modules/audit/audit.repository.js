@@ -4,7 +4,9 @@ export class AuditRepository {
   }
 
   create({ userId, action, entityType, entityId, oldValue, newValue }) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO audit_logs (
         user_id,
         action,
@@ -14,14 +16,16 @@ export class AuditRepository {
         new_value_json
       )
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      userId || null,
-      action,
-      entityType,
-      entityId || null,
-      oldValue ? JSON.stringify(oldValue) : null,
-      newValue ? JSON.stringify(newValue) : null,
-    );
+    `,
+      )
+      .run(
+        userId || null,
+        action,
+        entityType,
+        entityId || null,
+        oldValue ? JSON.stringify(oldValue) : null,
+        newValue ? JSON.stringify(newValue) : null,
+      );
   }
 
   list(filters = {}) {
@@ -54,7 +58,9 @@ export class AuditRepository {
     }
 
     if (filters.search) {
-      clauses.push('(audit_logs.action LIKE @search OR audit_logs.entity_type LIKE @search OR users.name LIKE @search OR users.username LIKE @search)');
+      clauses.push(
+        '(audit_logs.action LIKE @search OR audit_logs.entity_type LIKE @search OR users.name LIKE @search OR users.username LIKE @search)',
+      );
       params.search = `%${filters.search}%`;
     }
 
@@ -62,7 +68,9 @@ export class AuditRepository {
     const pageSize = Number(filters.pageSize) || 50;
     const offset = Number(filters.offset) || 0;
 
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT
         audit_logs.id,
         audit_logs.user_id,
@@ -79,17 +87,23 @@ export class AuditRepository {
       ${clause}
       ORDER BY audit_logs.created_at DESC, audit_logs.id DESC
       LIMIT @pageSize OFFSET @offset
-    `).all({ ...params, pageSize, offset });
+    `,
+      )
+      .all({ ...params, pageSize, offset });
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count
       FROM audit_logs
       LEFT JOIN users ON users.id = audit_logs.user_id
       ${clause}
-    `).get(params).count;
+    `,
+      )
+      .get(params).count;
 
     return {
-      data: data.map(row => ({
+      data: data.map((row) => ({
         id: row.id,
         userId: row.user_id,
         userName: row.user_name,
@@ -99,10 +113,9 @@ export class AuditRepository {
         entityId: row.entity_id,
         oldValue: row.old_value_json ? JSON.parse(row.old_value_json) : null,
         newValue: row.new_value_json ? JSON.parse(row.new_value_json) : null,
-        createdAt: row.created_at
+        createdAt: row.created_at,
       })),
-      total
+      total,
     };
   }
 }
-

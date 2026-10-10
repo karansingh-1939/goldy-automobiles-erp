@@ -5,13 +5,13 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2
+  maximumFractionDigits: 2,
 });
 
 /**
  * KPI Section Component.
  * Maps dashboard summary numbers to individual KpiCards.
- * 
+ *
  * @param {object} props
  * @param {object} props.summary - The dashboard summary DTO containing count aggregates
  * @param {number} props.summary.invoicesToday - Count of finalized invoices today
@@ -24,16 +24,8 @@ export function KpiSection({ summary, isLoading }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <KpiCard
-        title="Invoices Today"
-        value={invoicesToday}
-        isLoading={isLoading}
-      />
-      <KpiCard
-        title="Invoices This Month"
-        value={invoicesThisMonth}
-        isLoading={isLoading}
-      />
+      <KpiCard title="Invoices Today" value={invoicesToday} isLoading={isLoading} />
+      <KpiCard title="Invoices This Month" value={invoicesThisMonth} isLoading={isLoading} />
       <KpiCard
         title="Average Invoice Value"
         value={inrFormatter.format(averageInvoiceValue)}

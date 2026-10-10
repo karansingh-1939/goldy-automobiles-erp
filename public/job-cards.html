@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOLDY AUTOMOBILE - Job Cards</title>
     <style>
       :root {
@@ -69,7 +69,7 @@
         width: 100%;
       }
 
-      nav.sidebar button[aria-selected="true"] {
+      nav.sidebar button[aria-selected='true'] {
         background: #0f766e;
         border-color: #0f766e;
         color: #ffffff;
@@ -89,13 +89,16 @@
         flex-wrap: wrap;
       }
 
-      .toolbar input, .toolbar select {
+      .toolbar input,
+      .toolbar select {
         width: auto;
         flex: 1;
         min-width: 150px;
       }
 
-      input, textarea, select {
+      input,
+      textarea,
+      select {
         border: 1px solid #b8c1ce;
         border-radius: 6px;
         box-sizing: border-box;
@@ -144,7 +147,8 @@
         margin-top: 10px;
       }
 
-      th, td {
+      th,
+      td {
         border-bottom: 1px solid #e1e7ef;
         padding: 9px;
         text-align: left;
@@ -183,9 +187,15 @@
         font-size: 12px;
       }
 
-      .stock-ok { color: #16a34a; }
-      .stock-low { color: #d97706; }
-      .stock-none { color: #dc2626; }
+      .stock-ok {
+        color: #16a34a;
+      }
+      .stock-low {
+        color: #d97706;
+      }
+      .stock-none {
+        color: #dc2626;
+      }
 
       .summary-box {
         background: #f8fafc;
@@ -210,12 +220,23 @@
         font-weight: bold;
         text-transform: uppercase;
       }
-      .badge-draft { background: #e2e8f0; color: #475569; }
-      .badge-completed { background: #dcfce7; color: #15803d; }
-      .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+      .badge-draft {
+        background: #e2e8f0;
+        color: #475569;
+      }
+      .badge-completed {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .badge-cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
 
       @media (max-width: 900px) {
-        main, form.grid-form, .detail-grid {
+        main,
+        form.grid-form,
+        .detail-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -227,7 +248,14 @@
           color: #000000;
         }
 
-        header, main > nav, .toolbar, .form-actions, #message, #print-job-card-btn, #workspace-controls-container, #finalize-action-container {
+        header,
+        main > nav,
+        .toolbar,
+        .form-actions,
+        #message,
+        #print-job-card-btn,
+        #workspace-controls-container,
+        #finalize-action-container {
           display: none !important;
         }
 
@@ -255,7 +283,8 @@
           border: 1px solid #000000 !important;
         }
 
-        th, td {
+        th,
+        td {
           border-bottom: 1px solid #000000 !important;
           color: #000000 !important;
         }
@@ -270,7 +299,9 @@
         background: #ffffff;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -2px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         max-height: 250px;
         overflow-y: auto;
@@ -290,7 +321,8 @@
         border-bottom: none;
       }
 
-      .autocomplete-item:hover, .autocomplete-item.selected {
+      .autocomplete-item:hover,
+      .autocomplete-item.selected {
         background: #f1f5f9;
         color: #0f766e;
         font-weight: bold;
@@ -300,8 +332,8 @@
   </head>
   <body>
     <header>
-      <div style="display: flex; align-items: center; gap: 24px;">
-        <h1 style="margin: 0; font-size: 22px;">GOLDY AUTOMOBILE ERP</h1>
+      <div style="display: flex; align-items: center; gap: 24px">
+        <h1 style="margin: 0; font-size: 22px">GOLDY AUTOMOBILE ERP</h1>
         <nav class="nav-links">
           <a href="/masters.html">Masters</a>
           <a href="/job-cards.html" class="active">Job Cards</a>
@@ -320,32 +352,72 @@
           <a href="/settings.html">Settings</a>
         </nav>
       </div>
-      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c;">Logout</a>
+      <a href="/" id="logout-btn" style="font-weight: bold; text-decoration: none; color: #b91c1c"
+        >Logout</a
+      >
     </header>
 
     <main>
       <nav class="sidebar" id="job-card-tabs" aria-label="Job Card operations">
         <button type="button" data-tab="list" aria-selected="true">Job Cards List</button>
         <button type="button" data-tab="create">Create Job Card</button>
-        <button type="button" data-tab="details" id="details-tab-btn" style="display: none;">Job Card Details</button>
+        <button type="button" data-tab="details" id="details-tab-btn" style="display: none">
+          Job Card Details
+        </button>
       </nav>
 
       <section>
         <!-- Tab 1: Job Cards List -->
         <div id="tab-list">
           <h2>Job Cards Registry</h2>
-          <div class="toolbar" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px;">
-            <div style="flex: 2; min-width: 280px; display: flex; flex-direction: column; gap: 4px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label for="search-query" style="font-weight: bold; font-size: 12px; color: #4b5563; margin: 0; width: auto;">Search</label>
-                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; font-weight: bold; color: #4b5563; width: auto; margin: 0;">
-                  <input type="checkbox" id="filter-exact-match" checked style="width: auto; margin: 0;"> Exact Match Only
+          <div
+            class="toolbar"
+            style="
+              display: flex;
+              gap: 10px;
+              align-items: flex-end;
+              flex-wrap: wrap;
+              margin-bottom: 10px;
+            "
+          >
+            <div style="flex: 2; min-width: 280px; display: flex; flex-direction: column; gap: 4px">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <label
+                  for="search-query"
+                  style="font-weight: bold; font-size: 12px; color: #4b5563; margin: 0; width: auto"
+                  >Search</label
+                >
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #4b5563;
+                    width: auto;
+                    margin: 0;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="filter-exact-match"
+                    checked
+                    style="width: auto; margin: 0"
+                  />
+                  Exact Match Only
                 </label>
               </div>
-              <input id="search-query" placeholder="Search Registration No, Phone No, Customer Name or Job Card No">
+              <input
+                id="search-query"
+                placeholder="Search Registration No, Phone No, Customer Name or Job Card No"
+              />
             </div>
-            <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px;">
-              <label for="filter-status" style="font-weight: bold; font-size: 12px; color: #4b5563;">Status</label>
+            <div style="flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px">
+              <label for="filter-status" style="font-weight: bold; font-size: 12px; color: #4b5563"
+                >Status</label
+              >
               <select id="filter-status">
                 <option value="">All</option>
                 <option value="DRAFT">Open</option>
@@ -355,31 +427,106 @@
                 <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
-            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px;">
-              <label for="filter-from-date" style="font-weight: bold; font-size: 12px; color: #4b5563;">From Date</label>
-              <input type="date" id="filter-from-date">
+            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px">
+              <label
+                for="filter-from-date"
+                style="font-weight: bold; font-size: 12px; color: #4b5563"
+                >From Date</label
+              >
+              <input type="date" id="filter-from-date" />
             </div>
-            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px;">
-              <label for="filter-to-date" style="font-weight: bold; font-size: 12px; color: #4b5563;">To Date</label>
-              <input type="date" id="filter-to-date">
+            <div style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 4px">
+              <label for="filter-to-date" style="font-weight: bold; font-size: 12px; color: #4b5563"
+                >To Date</label
+              >
+              <input type="date" id="filter-to-date" />
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button id="search-btn" class="primary" style="height: 40px;">Search</button>
-              <button id="clear-btn" type="button" style="height: 40px; white-space: nowrap;">Clear Filters</button>
+            <div style="display: flex; gap: 8px">
+              <button id="search-btn" class="primary" style="height: 40px">Search</button>
+              <button id="clear-btn" type="button" style="height: 40px; white-space: nowrap">
+                Clear Filters
+              </button>
             </div>
           </div>
 
-          <div class="quick-filters" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px;">
-            <span style="align-self: center; font-size: 12px; font-weight: bold; color: #4b5563; margin-right: 4px;">Quick Date:</span>
-            <button type="button" class="quick-filter-btn" data-range="today" style="padding: 6px 10px; font-size: 12px;">Today</button>
-            <button type="button" class="quick-filter-btn" data-range="yesterday" style="padding: 6px 10px; font-size: 12px;">Yesterday</button>
-            <button type="button" class="quick-filter-btn" data-range="last7" style="padding: 6px 10px; font-size: 12px;">Last 7 Days</button>
-            <button type="button" class="quick-filter-btn" data-range="thisMonth" style="padding: 6px 10px; font-size: 12px;">This Month</button>
-            <button type="button" class="quick-filter-btn" data-range="lastMonth" style="padding: 6px 10px; font-size: 12px;">Last Month</button>
-            <button type="button" class="quick-filter-btn" data-range="all" style="padding: 6px 10px; font-size: 12px; background: #f1f5f9;">All Records</button>
+          <div
+            class="quick-filters"
+            style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px"
+          >
+            <span
+              style="
+                align-self: center;
+                font-size: 12px;
+                font-weight: bold;
+                color: #4b5563;
+                margin-right: 4px;
+              "
+              >Quick Date:</span
+            >
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="today"
+              style="padding: 6px 10px; font-size: 12px"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="yesterday"
+              style="padding: 6px 10px; font-size: 12px"
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="last7"
+              style="padding: 6px 10px; font-size: 12px"
+            >
+              Last 7 Days
+            </button>
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="thisMonth"
+              style="padding: 6px 10px; font-size: 12px"
+            >
+              This Month
+            </button>
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="lastMonth"
+              style="padding: 6px 10px; font-size: 12px"
+            >
+              Last Month
+            </button>
+            <button
+              type="button"
+              class="quick-filter-btn"
+              data-range="all"
+              style="padding: 6px 10px; font-size: 12px; background: #f1f5f9"
+            >
+              All Records
+            </button>
           </div>
 
-          <div id="filter-summary" style="font-size: 14px; font-weight: bold; color: #0f766e; margin-bottom: 12px; padding: 6px 10px; background: #f0fdfa; border-left: 4px solid #0f766e; border-radius: 4px; display: inline-block;">
+          <div
+            id="filter-summary"
+            style="
+              font-size: 14px;
+              font-weight: bold;
+              color: #0f766e;
+              margin-bottom: 12px;
+              padding: 6px 10px;
+              background: #f0fdfa;
+              border-left: 4px solid #0f766e;
+              border-radius: 4px;
+              display: inline-block;
+            "
+          >
             Total Job Cards: 0
           </div>
 
@@ -389,47 +536,109 @@
             <!-- Dynamically populated table -->
           </div>
 
-          <div class="form-actions" style="margin-top: 14px;">
+          <div class="form-actions" style="margin-top: 14px">
             <button id="prev-btn">Previous</button>
             <button id="next-btn">Next</button>
-            <span id="page-info" style="align-self: center; font-size: 14px;"></span>
+            <span id="page-info" style="align-self: center; font-size: 14px"></span>
           </div>
         </div>
 
         <!-- Tab 2: Create Job Card -->
-        <div id="tab-create" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 14px;">
-            <h2 style="margin:0; color:#0f766e;">Initiate Repair Job Card</h2>
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; width: auto; font-size: 14px;">
-              <input type="checkbox" id="quick-entry-toggle" style="width: auto;"> Quick Entry Mode
+        <div id="tab-create" style="display: none">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #cbd5e1;
+              padding-bottom: 10px;
+              margin-bottom: 14px;
+            "
+          >
+            <h2 style="margin: 0; color: #0f766e">Initiate Repair Job Card</h2>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                width: auto;
+                font-size: 14px;
+              "
+            >
+              <input type="checkbox" id="quick-entry-toggle" style="width: auto" /> Quick Entry Mode
             </label>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px;">
+          <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px">
             <!-- Left Side: Form -->
             <div>
-              <form id="job-card-form" class="grid-form" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
-                <label style="position: relative;">
+              <form
+                id="job-card-form"
+                class="grid-form"
+                style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px"
+              >
+                <label style="position: relative">
                   Registration Number *
-                  <input id="form-registration-number" type="text" name="registration_number" required placeholder="e.g. HR26AB1234" autocomplete="off" style="text-transform: uppercase;">
-                  <div id="reg-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                  <input
+                    id="form-registration-number"
+                    type="text"
+                    name="registration_number"
+                    required
+                    placeholder="e.g. HR26AB1234"
+                    autocomplete="off"
+                    style="text-transform: uppercase"
+                  />
+                  <div
+                    id="reg-suggestions"
+                    class="autocomplete-dropdown"
+                    style="display: none"
+                  ></div>
                 </label>
 
-                <label style="position: relative;">
+                <label style="position: relative">
                   Phone Number
-                  <input id="form-phone" type="text" name="phone" placeholder="e.g. 9876543210" autocomplete="off">
-                  <div id="phone-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                  <input
+                    id="form-phone"
+                    type="text"
+                    name="phone"
+                    placeholder="e.g. 9876543210"
+                    autocomplete="off"
+                  />
+                  <div
+                    id="phone-suggestions"
+                    class="autocomplete-dropdown"
+                    style="display: none"
+                  ></div>
                 </label>
 
-                <label style="position: relative; grid-column: span 2;">
+                <label style="position: relative; grid-column: span 2">
                   Customer Name *
-                  <input id="form-customer-name" type="text" name="customer_name" required placeholder="Enter customer name" autocomplete="off">
-                  <div id="name-suggestions" class="autocomplete-dropdown" style="display: none;"></div>
+                  <input
+                    id="form-customer-name"
+                    type="text"
+                    name="customer_name"
+                    required
+                    placeholder="Enter customer name"
+                    autocomplete="off"
+                  />
+                  <div
+                    id="name-suggestions"
+                    class="autocomplete-dropdown"
+                    style="display: none"
+                  ></div>
                 </label>
 
                 <label>
                   Vehicle Model *
-                  <input id="form-model" type="text" name="model" required placeholder="e.g. Swift, City">
+                  <input
+                    id="form-model"
+                    type="text"
+                    name="model"
+                    required
+                    placeholder="e.g. Swift, City"
+                  />
                 </label>
 
                 <label>
@@ -446,27 +655,49 @@
 
                 <label>
                   Chassis Number
-                  <input id="form-chassis-number" type="text" name="chassis_number" placeholder="Enter chassis number">
+                  <input
+                    id="form-chassis-number"
+                    type="text"
+                    name="chassis_number"
+                    placeholder="Enter chassis number"
+                  />
                 </label>
 
                 <label>
                   Engine Number
-                  <input id="form-engine-number" type="text" name="engine_number" placeholder="Enter engine number">
+                  <input
+                    id="form-engine-number"
+                    type="text"
+                    name="engine_number"
+                    placeholder="Enter engine number"
+                  />
                 </label>
 
                 <label>
                   Address
-                  <input id="form-address" type="text" name="address" placeholder="Customer address">
+                  <input
+                    id="form-address"
+                    type="text"
+                    name="address"
+                    placeholder="Customer address"
+                  />
                 </label>
 
                 <label>
                   City
-                  <input id="form-city" type="text" name="city" placeholder="e.g. Karnal">
+                  <input id="form-city" type="text" name="city" placeholder="e.g. Karnal" />
                 </label>
 
                 <label>
                   Odometer Reading *
-                  <input id="form-odometer" type="number" name="odometer_reading" min="0" required placeholder="Enter current km">
+                  <input
+                    id="form-odometer"
+                    type="number"
+                    name="odometer_reading"
+                    min="0"
+                    required
+                    placeholder="Enter current km"
+                  />
                 </label>
 
                 <label>
@@ -476,9 +707,14 @@
                   </select>
                 </label>
 
-                <label style="grid-column: span 2;">
+                <label style="grid-column: span 2">
                   Complaint / Description *
-                  <textarea id="form-complaint" name="complaint" required placeholder="Describe vehicle issue..."></textarea>
+                  <textarea
+                    id="form-complaint"
+                    name="complaint"
+                    required
+                    placeholder="Describe vehicle issue..."
+                  ></textarea>
                 </label>
 
                 <label>
@@ -495,33 +731,113 @@
 
                 <label>
                   Promised Delivery Time
-                  <input id="form-promised-delivery" type="datetime-local" name="promised_delivery_at">
+                  <input
+                    id="form-promised-delivery"
+                    type="datetime-local"
+                    name="promised_delivery_at"
+                  />
                 </label>
 
-                <label style="grid-column: span 2;">
+                <label style="grid-column: span 2">
                   Customer Notes
-                  <textarea id="form-customer-notes" name="notes" placeholder="Enter customer notes, habits, reminders..."></textarea>
+                  <textarea
+                    id="form-customer-notes"
+                    name="notes"
+                    placeholder="Enter customer notes, habits, reminders..."
+                  ></textarea>
                 </label>
 
-                <label style="grid-column: span 2;">
+                <label style="grid-column: span 2">
                   Battery Brand
-                  <input id="form-battery-brand" type="text" name="battery_brand" placeholder="e.g. Exide, Amaron">
+                  <input
+                    id="form-battery-brand"
+                    type="text"
+                    name="battery_brand"
+                    placeholder="e.g. Exide, Amaron"
+                  />
                 </label>
 
-                <div style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 12px; margin-top: 8px;">
-                  <strong style="display: block; margin-bottom: 8px;">Accessories Checklist</strong>
-                  <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
-                      <input type="checkbox" id="form-toolkit" name="toolkit_present" style="width: auto;"> Toolkit
+                <div
+                  style="
+                    grid-column: span 2;
+                    border-top: 1px solid #cbd5e1;
+                    padding-top: 12px;
+                    margin-top: 8px;
+                  "
+                >
+                  <strong style="display: block; margin-bottom: 8px">Accessories Checklist</strong>
+                  <div style="display: flex; gap: 20px; flex-wrap: wrap">
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        font-weight: normal;
+                        width: auto;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        id="form-toolkit"
+                        name="toolkit_present"
+                        style="width: auto"
+                      />
+                      Toolkit
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
-                      <input type="checkbox" id="form-spare-wheel" name="spare_wheel_present" style="width: auto;"> Spare Wheel
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        font-weight: normal;
+                        width: auto;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        id="form-spare-wheel"
+                        name="spare_wheel_present"
+                        style="width: auto"
+                      />
+                      Spare Wheel
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
-                      <input type="checkbox" id="form-jack" name="jack_present" style="width: auto;"> Jack
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        font-weight: normal;
+                        width: auto;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        id="form-jack"
+                        name="jack_present"
+                        style="width: auto"
+                      />
+                      Jack
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; width: auto;">
-                      <input type="checkbox" id="form-stereo" name="stereo_present" style="width: auto;"> Stereo
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        font-weight: normal;
+                        width: auto;
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        id="form-stereo"
+                        name="stereo_present"
+                        style="width: auto"
+                      />
+                      Stereo
                     </label>
                   </div>
                 </div>
@@ -533,51 +849,143 @@
             </div>
 
             <!-- Right Side: Information Panels -->
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <div id="registration-lookup-status" style="font-weight: bold; font-size: 13px; padding: 10px; border-radius: 6px; display: none;"></div>
+            <div style="display: flex; flex-direction: column; gap: 16px">
+              <div
+                id="registration-lookup-status"
+                style="
+                  font-weight: bold;
+                  font-size: 13px;
+                  padding: 10px;
+                  border-radius: 6px;
+                  display: none;
+                "
+              ></div>
 
               <!-- Customer Info Panel -->
-              <div id="customer-info-panel" class="card" style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0;">
-                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 6px; font-size: 15px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+              <div
+                id="customer-info-panel"
+                class="card"
+                style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0"
+              >
+                <h3
+                  style="
+                    margin-top: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 15px;
+                    color: #0f766e;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding-bottom: 6px;
+                  "
+                >
                   👤 Customer Information
                 </h3>
-                <div style="font-size: 13px; line-height: 1.6;">
+                <div style="font-size: 13px; line-height: 1.6">
                   <div><strong>Name:</strong> <span id="info-cust-name"></span></div>
                   <div><strong>Phone:</strong> <span id="info-cust-phone"></span></div>
-                  <div><strong>Total Vehicles:</strong> <span id="info-cust-total-vehicles">0</span></div>
-                  <div><strong>Total Job Cards:</strong> <span id="info-cust-total-job-cards">0</span></div>
-                  <div><strong>Last Visit:</strong> <span id="info-cust-last-visit">Never</span></div>
-                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-                    <strong>Customer Notes:</strong>
-                    <div id="info-cust-notes" style="font-style: italic; color: #4b5563; max-height: 80px; overflow-y: auto; white-space: pre-wrap;">None</div>
+                  <div>
+                    <strong>Total Vehicles:</strong> <span id="info-cust-total-vehicles">0</span>
                   </div>
-                  <div style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+                  <div>
+                    <strong>Total Job Cards:</strong> <span id="info-cust-total-job-cards">0</span>
+                  </div>
+                  <div>
+                    <strong>Last Visit:</strong> <span id="info-cust-last-visit">Never</span>
+                  </div>
+                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px">
+                    <strong>Customer Notes:</strong>
+                    <div
+                      id="info-cust-notes"
+                      style="
+                        font-style: italic;
+                        color: #4b5563;
+                        max-height: 80px;
+                        overflow-y: auto;
+                        white-space: pre-wrap;
+                      "
+                    >
+                      None
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px">
                     <strong>Linked Vehicles:</strong>
-                    <div id="info-cust-linked-vehicles" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
+                    <div
+                      id="info-cust-linked-vehicles"
+                      style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px"
+                    ></div>
                   </div>
                 </div>
               </div>
 
               <!-- Vehicle History Panel -->
-              <div id="vehicle-history-panel" class="card" style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0;">
-                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 6px; font-size: 15px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+              <div
+                id="vehicle-history-panel"
+                class="card"
+                style="display: none; border-color: #cbd5e1; background: #fafafb; margin-bottom: 0"
+              >
+                <h3
+                  style="
+                    margin-top: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 15px;
+                    color: #0f766e;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding-bottom: 6px;
+                  "
+                >
                   🚗 Vehicle History & Service Due
                 </h3>
-                <div style="font-size: 13px; line-height: 1.6;">
-                  <div><strong>Total Job Cards:</strong> <span id="info-veh-total-job-cards">0</span></div>
-                  <div><strong>Last Service Date:</strong> <span id="info-veh-last-service">Never</span></div>
-                  <div><strong>Last Odometer:</strong> <span id="info-veh-last-odometer">0</span> km</div>
-                  <div><strong>Outstanding Balance:</strong> <span id="info-veh-outstanding" style="font-weight: bold; color: #b91c1c;">Rs. 0.00</span></div>
-                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-                    <strong>Last Complaint:</strong>
-                    <div id="info-veh-last-complaint" style="font-style: italic; color: #4b5563; white-space: pre-wrap;">None</div>
+                <div style="font-size: 13px; line-height: 1.6">
+                  <div>
+                    <strong>Total Job Cards:</strong> <span id="info-veh-total-job-cards">0</span>
                   </div>
-                  
+                  <div>
+                    <strong>Last Service Date:</strong>
+                    <span id="info-veh-last-service">Never</span>
+                  </div>
+                  <div>
+                    <strong>Last Odometer:</strong> <span id="info-veh-last-odometer">0</span> km
+                  </div>
+                  <div>
+                    <strong>Outstanding Balance:</strong>
+                    <span id="info-veh-outstanding" style="font-weight: bold; color: #b91c1c"
+                      >Rs. 0.00</span
+                    >
+                  </div>
+                  <div style="margin-top: 6px; border-top: 1px dashed #e2e8f0; padding-top: 6px">
+                    <strong>Last Complaint:</strong>
+                    <div
+                      id="info-veh-last-complaint"
+                      style="font-style: italic; color: #4b5563; white-space: pre-wrap"
+                    >
+                      None
+                    </div>
+                  </div>
+
                   <!-- Service Due Section -->
-                  <div style="margin-top: 8px; background: #f0fdf4; border-radius: 4px; padding: 8px; border: 1px solid #bbf7d0;">
-                    <strong style="color: #15803d; display: block; margin-bottom: 4px;">📅 Next Recommended Service:</strong>
-                    <div><strong>Due Date:</strong> <span id="due-service-date">N/A</span> <span id="due-service-days" style="font-weight: bold;"></span></div>
-                    <div><strong>Due Odometer:</strong> <span id="due-service-odometer">N/A</span> <span id="due-service-km" style="font-weight: bold;"></span></div>
+                  <div
+                    style="
+                      margin-top: 8px;
+                      background: #f0fdf4;
+                      border-radius: 4px;
+                      padding: 8px;
+                      border: 1px solid #bbf7d0;
+                    "
+                  >
+                    <strong style="color: #15803d; display: block; margin-bottom: 4px"
+                      >📅 Next Recommended Service:</strong
+                    >
+                    <div>
+                      <strong>Due Date:</strong> <span id="due-service-date">N/A</span>
+                      <span id="due-service-days" style="font-weight: bold"></span>
+                    </div>
+                    <div>
+                      <strong>Due Odometer:</strong> <span id="due-service-odometer">N/A</span>
+                      <span id="due-service-km" style="font-weight: bold"></span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -585,8 +993,10 @@
           </div>
 
           <!-- Bottom: Recent Customers Section -->
-          <div style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 16px;">
-            <h3 style="margin-top: 0; color: #0f766e; font-size: 16px;">⏱️ Recent Workshop Visits</h3>
+          <div style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 16px">
+            <h3 style="margin-top: 0; color: #0f766e; font-size: 16px">
+              ⏱️ Recent Workshop Visits
+            </h3>
             <div id="recent-visits-container">
               <!-- Dynamically populated table -->
             </div>
@@ -594,11 +1004,32 @@
         </div>
 
         <!-- Tab 3: Job Card Details -->
-        <div id="tab-details" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 14px;">
-            <h2 id="detail-job-number" style="margin:0;">Job Card Detail</h2>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span id="detail-previous-visits-badge" style="cursor: pointer; background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; display: none;">
+        <div id="tab-details" style="display: none">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #cbd5e1;
+              padding-bottom: 10px;
+              margin-bottom: 14px;
+            "
+          >
+            <h2 id="detail-job-number" style="margin: 0">Job Card Detail</h2>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <span
+                id="detail-previous-visits-badge"
+                style="
+                  cursor: pointer;
+                  background: #e0f2fe;
+                  color: #0369a1;
+                  padding: 6px 10px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  font-weight: bold;
+                  display: none;
+                "
+              >
                 Previous Visits: <span id="lbl-previous-visits-count">0</span>
               </span>
               <button id="print-job-card-btn" class="primary">Print Job Card</button>
@@ -611,18 +1042,33 @@
             <div>
               <div class="card">
                 <h3>Customer & Vehicle Information</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                <div
+                  style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px"
+                >
                   <div><strong>Customer:</strong> <span id="detail-customer-name"></span></div>
                   <div><strong>Reg Number:</strong> <span id="detail-vehicle-reg"></span></div>
                   <div><strong>Odometer:</strong> <span id="detail-odometer"></span> km</div>
-                  <div><strong>Technician:</strong> <span id="detail-assigned-mechanic"></span></div>
+                  <div>
+                    <strong>Technician:</strong> <span id="detail-assigned-mechanic"></span>
+                  </div>
                   <div><strong>Engine No:</strong> <span id="detail-engine-number"></span></div>
                   <div><strong>Chassis No:</strong> <span id="detail-chassis-number"></span></div>
                   <div><strong>Fuel Level:</strong> <span id="detail-fuel-level"></span></div>
-                  <div><strong>Promised Delivery:</strong> <span id="detail-promised-delivery"></span></div>
+                  <div>
+                    <strong>Promised Delivery:</strong> <span id="detail-promised-delivery"></span>
+                  </div>
                   <div><strong>Battery Brand:</strong> <span id="detail-battery-brand"></span></div>
-                  <div style="grid-column: span 2; margin-top: 4px;"><strong>Complaint:</strong> <span id="detail-complaint"></span></div>
-                  <div style="grid-column: span 2; margin-top: 4px; border-top: 1px dashed #e1e7ef; padding-top: 4px;">
+                  <div style="grid-column: span 2; margin-top: 4px">
+                    <strong>Complaint:</strong> <span id="detail-complaint"></span>
+                  </div>
+                  <div
+                    style="
+                      grid-column: span 2;
+                      margin-top: 4px;
+                      border-top: 1px dashed #e1e7ef;
+                      padding-top: 4px;
+                    "
+                  >
                     <strong>Checklist:</strong> <span id="detail-checklist"></span>
                   </div>
                 </div>
@@ -657,15 +1103,29 @@
               </div>
 
               <div class="summary-box">
-                <div>Parts Total: <strong><span id="sum-parts-total">0.00</span></strong></div>
-                <div>Lubricants Total: <strong><span id="sum-lubricants-total">0.00</span></strong></div>
-                <div>Labour Total: <strong><span id="sum-labour-total">0.00</span></strong></div>
-                <div>Outside Job Total: <strong><span id="sum-outside-job-total">0.00</span></strong></div>
-                <div style="margin: 6px 0; border-top: 1px solid #cbd5e1;"></div>
-                <div style="font-size: 18px; color: #0f766e;">Grand Total (inc. Tax): <strong><span id="sum-grand-total">0.00</span></strong></div>
+                <div>
+                  Parts Total: <strong><span id="sum-parts-total">0.00</span></strong>
+                </div>
+                <div>
+                  Lubricants Total: <strong><span id="sum-lubricants-total">0.00</span></strong>
+                </div>
+                <div>
+                  Labour Total: <strong><span id="sum-labour-total">0.00</span></strong>
+                </div>
+                <div>
+                  Outside Job Total: <strong><span id="sum-outside-job-total">0.00</span></strong>
+                </div>
+                <div style="margin: 6px 0; border-top: 1px solid #cbd5e1"></div>
+                <div style="font-size: 18px; color: #0f766e">
+                  Grand Total (inc. Tax): <strong><span id="sum-grand-total">0.00</span></strong>
+                </div>
               </div>
 
-              <div class="form-actions" id="finalize-action-container" style="margin-top:14px; justify-content: flex-end;">
+              <div
+                class="form-actions"
+                id="finalize-action-container"
+                style="margin-top: 14px; justify-content: flex-end"
+              >
                 <!-- Finalize button will go here -->
               </div>
             </div>
@@ -675,7 +1135,7 @@
               <!-- Add Parts Panel -->
               <div class="card">
                 <h3>Add Consumable Part</h3>
-                <form id="add-part-form" style="display: flex; flex-direction: column; gap: 8px;">
+                <form id="add-part-form" style="display: flex; flex-direction: column; gap: 8px">
                   <label>
                     Select Inventory Item *
                     <select id="part-item-id" required>
@@ -691,54 +1151,87 @@
                   </label>
                   <div id="stock-indicator-message" class="stock-indicator"></div>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
                     <label>
                       Quantity *
-                      <input id="part-quantity" type="number" min="0.01" step="any" required>
+                      <input id="part-quantity" type="number" min="0.01" step="any" required />
                     </label>
 
                     <label>
                       Unit Selling Price *
-                      <input id="part-price" type="number" min="0" step="0.01" required>
+                      <input id="part-price" type="number" min="0" step="0.01" required />
                     </label>
                   </div>
 
                   <label>
                     GST Rate (%) *
-                    <input id="part-gst-rate" type="number" min="0" max="100" step="any" value="18" required>
+                    <input
+                      id="part-gst-rate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="any"
+                      value="18"
+                      required
+                    />
                   </label>
 
-                  <button type="submit" class="primary" style="margin-top: 8px;">Add Part to Job Card</button>
+                  <button type="submit" class="primary" style="margin-top: 8px">
+                    Add Part to Job Card
+                  </button>
                 </form>
               </div>
 
               <!-- Add Labour Panel -->
               <div class="card">
                 <h3>Add Labour Charge</h3>
-                <form id="add-labour-form" style="display: flex; flex-direction: column; gap: 8px;">
+                <form id="add-labour-form" style="display: flex; flex-direction: column; gap: 8px">
                   <label>
                     Labour Description *
-                    <input id="labour-description" required placeholder="e.g. Engine tune-up, Oil replacement">
+                    <input
+                      id="labour-description"
+                      required
+                      placeholder="e.g. Engine tune-up, Oil replacement"
+                    />
                   </label>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
                     <label>
                       Labour Charge (excluding tax) *
-                      <input id="labour-charge" type="number" min="0" step="0.01" required>
+                      <input id="labour-charge" type="number" min="0" step="0.01" required />
                     </label>
 
                     <label>
                       GST Rate (%) *
-                      <input id="labour-gst-rate" type="number" min="0" max="100" step="any" value="18" required>
+                      <input
+                        id="labour-gst-rate"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        value="18"
+                        required
+                      />
                     </label>
                   </div>
 
-                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px; margin-bottom: 4px;">
-                    <input id="labour-is-outside" type="checkbox" style="width: auto;">
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      cursor: pointer;
+                      margin-top: 4px;
+                      margin-bottom: 4px;
+                    "
+                  >
+                    <input id="labour-is-outside" type="checkbox" style="width: auto" />
                     <span>Is Outside Job / Subcontracted?</span>
                   </label>
 
-                  <button type="submit" class="primary" style="margin-top: 8px;">Add Labour Charge</button>
+                  <button type="submit" class="primary" style="margin-top: 8px">
+                    Add Labour Charge
+                  </button>
                 </form>
               </div>
             </div>

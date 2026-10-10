@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Print Job Card - GOLDY AUTOMOBILE</title>
     <style>
       :root {
@@ -27,7 +27,7 @@
         justify-content: space-between;
         align-items: center;
         z-index: 100;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .toolbar-title {
@@ -73,7 +73,9 @@
       /* Paper sheet layout (Screen preview) */
       .sheet {
         background: #ffffff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
         box-sizing: border-box;
         margin: 30px auto;
         max-width: 800px;
@@ -205,7 +207,8 @@
         margin-bottom: 16px;
       }
 
-      th, td {
+      th,
+      td {
         border: 1px solid #cbd5e1;
         padding: 7px 9px;
         text-align: left;
@@ -296,7 +299,8 @@
           color: #000000;
         }
 
-        .toolbar, #pdf-tip {
+        .toolbar,
+        #pdf-tip {
           display: none !important;
         }
 
@@ -319,7 +323,8 @@
           color: #000000 !important;
         }
 
-        th, td {
+        th,
+        td {
           border: 1px solid #000000 !important;
         }
 
@@ -341,7 +346,7 @@
     <div class="toolbar">
       <div class="toolbar-title">Job Card Print Preview</div>
       <div class="actions">
-        <button onclick="window.close()" id="back-btn">Close Preview</button>
+        <button id="back-btn">Close Preview</button>
         <button id="download-pdf-btn">Download PDF</button>
         <button id="print-btn" class="primary">Print Job Card</button>
       </div>
@@ -351,7 +356,8 @@
     <div class="sheet">
       <!-- Tip box for PDF download -->
       <div id="pdf-tip">
-        <strong>Tip:</strong> In the print prompt, select "Save as PDF" as the Destination, then click Save.
+        <strong>Tip:</strong> In the print prompt, select "Save as PDF" as the Destination, then
+        click Save.
       </div>
 
       <div id="print-content">
@@ -366,7 +372,9 @@
             <h2>JOB CARD</h2>
             <p><strong>Job Card No:</strong> <span id="lbl-job-number">-</span></p>
             <p><strong>Date:</strong> <span id="lbl-job-date">-</span></p>
-            <p><strong>Status:</strong> <span id="lbl-job-status" style="font-weight:bold;">-</span></p>
+            <p>
+              <strong>Status:</strong> <span id="lbl-job-status" style="font-weight: bold">-</span>
+            </p>
           </div>
         </div>
 
@@ -394,7 +402,7 @@
             <h3>Vehicle Information</h3>
             <div class="meta-row">
               <span class="meta-label">Registration No:</span>
-              <span class="meta-value" id="lbl-vehicle-reg" style="font-weight:bold;">-</span>
+              <span class="meta-value" id="lbl-vehicle-reg" style="font-weight: bold">-</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">Make & Model:</span>
@@ -415,35 +423,62 @@
           </div>
 
           <!-- Checklist & Metadata Box -->
-          <div class="meta-box" style="grid-column: span 2;">
+          <div class="meta-box" style="grid-column: span 2">
             <h3>Inventory Checklist & Repair Details</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px">
               <div>
-                <span class="meta-label" style="font-weight: bold; color: #475569;">Fuel Level:</span>
+                <span class="meta-label" style="font-weight: bold; color: #475569"
+                  >Fuel Level:</span
+                >
                 <span class="meta-value" id="lbl-fuel-level">-</span>
               </div>
               <div>
-                <span class="meta-label" style="font-weight: bold; color: #475569;">Promised Delivery:</span>
+                <span class="meta-label" style="font-weight: bold; color: #475569"
+                  >Promised Delivery:</span
+                >
                 <span class="meta-value" id="lbl-promised-delivery">-</span>
               </div>
               <div>
-                <span class="meta-label" style="font-weight: bold; color: #475569;">Battery Brand:</span>
+                <span class="meta-label" style="font-weight: bold; color: #475569"
+                  >Battery Brand:</span
+                >
                 <span class="meta-value" id="lbl-battery-brand">-</span>
               </div>
             </div>
-            <div style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 8px; display: flex; gap: 20px;">
-              <span class="meta-label" style="font-weight: bold; color: #475569; width: auto; margin-right: 12px;">Accessories Present:</span>
-              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
-                <input type="checkbox" id="chk-toolkit" disabled style="width: auto;"> Toolkit
+            <div
+              style="
+                margin-top: 10px;
+                border-top: 1px dashed #cbd5e1;
+                padding-top: 8px;
+                display: flex;
+                gap: 20px;
+              "
+            >
+              <span
+                class="meta-label"
+                style="font-weight: bold; color: #475569; width: auto; margin-right: 12px"
+                >Accessories Present:</span
+              >
+              <label
+                style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal"
+              >
+                <input type="checkbox" id="chk-toolkit" disabled style="width: auto" /> Toolkit
               </label>
-              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
-                <input type="checkbox" id="chk-spare-wheel" disabled style="width: auto;"> Spare Wheel
+              <label
+                style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal"
+              >
+                <input type="checkbox" id="chk-spare-wheel" disabled style="width: auto" /> Spare
+                Wheel
               </label>
-              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
-                <input type="checkbox" id="chk-jack" disabled style="width: auto;"> Jack
+              <label
+                style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal"
+              >
+                <input type="checkbox" id="chk-jack" disabled style="width: auto" /> Jack
               </label>
-              <label style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal;">
-                <input type="checkbox" id="chk-stereo" disabled style="width: auto;"> Stereo
+              <label
+                style="display: inline-flex; align-items: center; gap: 4px; font-weight: normal"
+              >
+                <input type="checkbox" id="chk-stereo" disabled style="width: auto" /> Stereo
               </label>
             </div>
           </div>
@@ -570,9 +605,14 @@
         </div>
 
         <!-- Terms & Conditions Section -->
-        <div class="complaint-section" id="print-terms-section" style="margin-top: 20px;">
+        <div class="complaint-section" id="print-terms-section" style="margin-top: 20px">
           <h3>TERMS & CONDITIONS</h3>
-          <div id="lbl-terms" style="font-size: 11px; color: #4b5563; font-weight: bold; line-height: 1.4;">Vehicle stored repaired & driven at customer's risk.</div>
+          <div
+            id="lbl-terms"
+            style="font-size: 11px; color: #4b5563; font-weight: bold; line-height: 1.4"
+          >
+            Vehicle stored repaired & driven at customer's risk.
+          </div>
         </div>
 
         <!-- Signatures Section -->
@@ -580,12 +620,16 @@
           <div class="signature-block">
             <div class="signature-line"></div>
             <div class="signature-label">Customer's Signature</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold;">Received vehicle duly repaired to my entire satisfaction.</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold">
+              Received vehicle duly repaired to my entire satisfaction.
+            </div>
           </div>
           <div class="signature-block">
             <div class="signature-line"></div>
             <div class="signature-label">Assigned Technician</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;" id="lbl-technician">-</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px" id="lbl-technician">
+              -
+            </div>
           </div>
         </div>
       </div>

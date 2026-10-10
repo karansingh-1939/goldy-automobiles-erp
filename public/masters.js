@@ -16,7 +16,12 @@ const resources = {
     label: 'Vehicles',
     endpoint: '/api/v1/vehicles',
     fields: [
-      ['registration_number', 'Registration Number', 'text', { required: true, minlength: 4, maxlength: 15, pattern: '^[A-Za-z0-9-\\s]+$' }],
+      [
+        'registration_number',
+        'Registration Number',
+        'text',
+        { required: true, minlength: 4, maxlength: 15, pattern: '^[A-Za-z0-9-\\s]+$' },
+      ],
       ['make', 'Make', 'text', { maxlength: 80 }],
       ['model', 'Model', 'text', { maxlength: 80 }],
       ['fuel_type', 'Fuel Type', 'text', { maxlength: 40 }],
@@ -25,7 +30,15 @@ const resources = {
       ['chassis_number', 'Chassis Number', 'text', { maxlength: 80 }],
       ['odometer_reading', 'Odometer', 'number', { min: 0 }],
     ],
-    columns: ['id', 'registration_number', 'make', 'model', 'fuel_type', 'engine_number', 'chassis_number'],
+    columns: [
+      'id',
+      'registration_number',
+      'make',
+      'model',
+      'fuel_type',
+      'engine_number',
+      'chassis_number',
+    ],
   },
   suppliers: {
     label: 'Suppliers',
@@ -34,7 +47,16 @@ const resources = {
       ['name', 'Name', 'text', { required: true, minlength: 2, maxlength: 160 }],
       ['phone', 'Phone', 'text', { minlength: 10, maxlength: 15, pattern: '^[0-9]{10,15}$' }],
       ['email', 'Email', 'email', { maxlength: 160 }],
-      ['gstin', 'GSTIN', 'text', { minlength: 15, maxlength: 15, pattern: '^\\d{2}[A-Z]{5}\\d{4}[A-Z]{1}[A-Z\\d]{1}[Z]{1}[A-Z\\d]{1}$' }],
+      [
+        'gstin',
+        'GSTIN',
+        'text',
+        {
+          minlength: 15,
+          maxlength: 15,
+          pattern: '^\\d{2}[A-Z]{5}\\d{4}[A-Z]{1}[A-Z\\d]{1}[Z]{1}[A-Z\\d]{1}$',
+        },
+      ],
       ['address', 'Address', 'text', { maxlength: 500 }],
       ['city', 'City', 'text', { maxlength: 80 }],
       ['state', 'State', 'text', { maxlength: 80 }],
@@ -48,7 +70,12 @@ const resources = {
     endpoint: '/api/v1/warehouses',
     fields: [
       ['name', 'Name', 'text', { required: true, minlength: 2, maxlength: 120 }],
-      ['code', 'Code', 'text', { required: true, minlength: 2, maxlength: 10, pattern: '^[A-Za-z0-9]{2,10}$' }],
+      [
+        'code',
+        'Code',
+        'text',
+        { required: true, minlength: 2, maxlength: 10, pattern: '^[A-Za-z0-9]{2,10}$' },
+      ],
       ['address', 'Address', 'text', { maxlength: 500 }],
       ['is_active', 'Active', 'checkbox'],
     ],
@@ -75,7 +102,7 @@ const resources = {
 const urlParams = new URLSearchParams(window.location.search);
 const showAll = urlParams.get('show_all') === 'true' || urlParams.get('admin') === 'true';
 const initialResource = urlParams.get('resource');
-let currentKey = (initialResource && resources[initialResource]) ? initialResource : 'customers';
+let currentKey = initialResource && resources[initialResource] ? initialResource : 'customers';
 
 if (!showAll && ['warehouses', 'inventoryCategories', 'inventorySettings'].includes(currentKey)) {
   currentKey = 'customers';
@@ -213,7 +240,9 @@ function renderTable(rows) {
         </tr>
       </thead>
       <tbody>
-        ${rows.map((row) => `
+        ${rows
+          .map(
+            (row) => `
           <tr>
             ${resource.columns.map((column) => `<td>${row[column] ?? ''}</td>`).join('')}
             <td>
@@ -222,7 +251,9 @@ function renderTable(rows) {
               ${currentKey === 'suppliers' ? `<a href="/supplier-ledger.html?id=${row.id}" class="button" style="padding:6px 10px; font-size:12px; margin-left: 6px; text-decoration: none; display: inline-block; background: #0f766e; color: white; border-radius: 4px; font-weight: bold;">Ledger</a>` : ''}
             </td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </tbody>
     </table>
   `;
@@ -261,7 +292,9 @@ async function loadRows() {
   });
   const body = await api(`${resource.endpoint}?${params}`);
   renderTable(body.data);
-  showMessage(`Page ${body.pagination.page} of ${body.pagination.totalPages || 1}. Total: ${body.pagination.total}.`);
+  showMessage(
+    `Page ${body.pagination.page} of ${body.pagination.totalPages || 1}. Total: ${body.pagination.total}.`,
+  );
 }
 
 async function checkSeedStatus() {
@@ -299,7 +332,7 @@ async function checkSeedStatus() {
 
 function render() {
   renderTabs();
-  
+
   const settingsContainer = document.querySelector('#settings-container');
   const toolbar = document.querySelector('.toolbar');
   const editorForm = document.querySelector('#editor');
@@ -321,7 +354,7 @@ function render() {
     if (actionsDiv) actionsDiv.style.display = '';
     if (tableDiv) tableDiv.style.display = '';
     if (settingsContainer) settingsContainer.style.display = 'none';
-    
+
     renderForm();
     loadRows().catch((error) => showMessage(error.message));
   }
@@ -393,7 +426,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -411,11 +444,12 @@ document.querySelector('#load-starter-btn')?.addEventListener('click', async () 
 
   btn.disabled = true;
   btn.innerHTML = `<svg style="animation: spin 1s linear infinite;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Loading...`;
-  
+
   if (!document.getElementById('spin-keyframes')) {
     const style = document.createElement('style');
     style.id = 'spin-keyframes';
-    style.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+    style.innerHTML =
+      '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
     document.head.appendChild(style);
   }
 
@@ -426,7 +460,7 @@ document.querySelector('#load-starter-btn')?.addEventListener('click', async () 
     statusBox.style.border = '1px solid #bbf7d0';
     statusBox.style.color = '#166534';
     statusBox.textContent = `Success! ${res.itemsSeeded} starter inventory items loaded successfully.`;
-    
+
     btn.innerHTML = `<span>Starter inventory loaded</span>`;
     btn.disabled = true;
     btn.style.opacity = '0.5';

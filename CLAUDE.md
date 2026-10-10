@@ -1,36 +1,18 @@
 @AGENTS.md
 
-# Project Status
+# Development context
 
-Completed:
-
-* Authentication & RBAC
-* Masters Module
-* Inventory Management
-* Purchasing
-* Job Cards
-* Invoice Finalization
-* Profit Recording
-* Expense Management
-* Profit & Loss Reporting
-
-Current Test Status:
-
-19 tests passing.
-
-Current Phase:
-
-Phase 6 - GST Reporting
+Read docs/architecture.md before changing the application.
 
 Important Rules:
 
-* Transaction correctness before UI
-* SQLite is the source of truth
-* Weighted Average Costing
-* Invoice cancellation must reverse stock and profit
-* Audit logging required
-* Do not recreate existing modules
-* Analyze existing code before changes
+- Transaction correctness before UI
+- SQLite is the source of truth
+- Weighted Average Costing
+- Invoice cancellation must reverse stock and profit
+- Audit logging required
+- Do not recreate existing modules
+- Analyze existing code before changes
 
 Project Location:
 

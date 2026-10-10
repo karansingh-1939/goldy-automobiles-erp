@@ -20,9 +20,13 @@ export class TechnicianRepository {
   create(data) {
     return this.transaction(() => {
       const hasCode = data.technician_code && data.technician_code.trim() !== '';
-      const tempCode = hasCode ? data.technician_code.trim() : `TEMP-${Date.now()}-${Math.random()}`;
+      const tempCode = hasCode
+        ? data.technician_code.trim()
+        : `TEMP-${Date.now()}-${Math.random()}`;
 
-      const result = this.db.prepare(`
+      const result = this.db
+        .prepare(
+          `
         INSERT INTO technicians (
           technician_code,
           full_name,
@@ -39,18 +43,22 @@ export class TechnicianRepository {
           @is_active,
           @notes
         )
-      `).run(tempCode, {
-        specialization: null,
-        notes: null,
-        is_active: 1, // default active
-        ...data
-      });
+      `,
+        )
+        .run(tempCode, {
+          specialization: null,
+          notes: null,
+          is_active: 1, // default active
+          ...data,
+        });
 
       const insertId = result.lastInsertRowid;
 
       if (!hasCode) {
         const finalCode = String(insertId);
-        this.db.prepare('UPDATE technicians SET technician_code = ? WHERE id = ?').run(finalCode, insertId);
+        this.db
+          .prepare('UPDATE technicians SET technician_code = ? WHERE id = ?')
+          .run(finalCode, insertId);
       }
 
       return insertId;
@@ -89,7 +97,9 @@ export class TechnicianRepository {
     const clauses = [];
 
     if (search) {
-      clauses.push('(technician_code LIKE ? COLLATE NOCASE OR full_name LIKE ? COLLATE NOCASE OR specialization LIKE ? COLLATE NOCASE)');
+      clauses.push(
+        '(technician_code LIKE ? COLLATE NOCASE OR full_name LIKE ? COLLATE NOCASE OR specialization LIKE ? COLLATE NOCASE)',
+      );
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
@@ -99,17 +109,25 @@ export class TechnicianRepository {
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
 
-    const data = this.db.prepare(`
+    const data = this.db
+      .prepare(
+        `
       SELECT * FROM technicians
       ${where}
       ORDER BY full_name ASC, id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, limit, offset);
+    `,
+      )
+      .all(...params, limit, offset);
 
-    const total = this.db.prepare(`
+    const total = this.db
+      .prepare(
+        `
       SELECT COUNT(*) AS count FROM technicians
       ${where}
-    `).get(...params).count;
+    `,
+      )
+      .get(...params).count;
 
     return { data, total };
   }
@@ -121,18 +139,22 @@ export class TechnicianRepository {
    * @returns {object} Updated technician record
    */
   update(id, data) {
-    const columns = Object.keys(data).filter(col => col !== 'id' && col !== 'technician_code');
+    const columns = Object.keys(data).filter((col) => col !== 'id' && col !== 'technician_code');
     if (columns.length === 0) {
       return this.findById(id);
     }
 
-    const setClause = columns.map(col => `${col} = @${col}`).join(', ');
-    this.db.prepare(`
+    const setClause = columns.map((col) => `${col} = @${col}`).join(', ');
+    this.db
+      .prepare(
+        `
       UPDATE technicians
       SET ${setClause},
           updated_at = CURRENT_TIMESTAMP
       WHERE id = @id
-    `).run({ ...data, id });
+    `,
+      )
+      .run({ ...data, id });
 
     return this.findById(id);
   }
@@ -143,12 +165,16 @@ export class TechnicianRepository {
    * @returns {object} Updated technician record
    */
   deactivate(id) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       UPDATE technicians
       SET is_active = 0,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(id);
+    `,
+      )
+      .run(id);
 
     return this.findById(id);
   }
@@ -165,15 +191,21 @@ export class TechnicianRepository {
   assignToJobCard(jobCardId, technicianId, userId, notes = null) {
     return this.transaction(() => {
       // 1. Update job card currently assigned technician
-      this.db.prepare(`
+      this.db
+        .prepare(
+          `
         UPDATE job_cards
         SET technician_id = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).run(technicianId, jobCardId);
+      `,
+        )
+        .run(technicianId, jobCardId);
 
       // 2. Insert reassignment history record
-      const result = this.db.prepare(`
+      const result = this.db
+        .prepare(
+          `
         INSERT INTO job_card_assignments (
           job_card_id,
           technician_id,
@@ -181,7 +213,9 @@ export class TechnicianRepository {
           notes
         )
         VALUES (?, ?, ?, ?)
-      `).run(jobCardId, technicianId, userId, notes);
+      `,
+        )
+        .run(jobCardId, technicianId, userId, notes);
 
       return result.lastInsertRowid;
     });
@@ -193,7 +227,9 @@ export class TechnicianRepository {
    * @returns {Array} List of historical assignments
    */
   getAssignmentHistory(jobCardId) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         a.id,
         a.job_card_id AS jobCardId,
@@ -209,7 +245,9 @@ export class TechnicianRepository {
       LEFT JOIN users u ON u.id = a.assigned_by
       WHERE a.job_card_id = ?
       ORDER BY a.assigned_at DESC, a.id DESC
-    `).all(jobCardId);
+    `,
+      )
+      .all(jobCardId);
   }
 
   /**
@@ -218,14 +256,20 @@ export class TechnicianRepository {
    * @returns {object} { totalAssignedJobs, completedJobs, activeJobs }
    */
   getMetrics(technicianId) {
-    return this.db.prepare(`
+    return (
+      this.db
+        .prepare(
+          `
       SELECT
         COUNT(id) AS totalAssignedJobs,
         COALESCE(SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END), 0) AS completedJobs,
         COALESCE(SUM(CASE WHEN status IN ('DRAFT', 'IN_PROGRESS') THEN 1 ELSE 0 END), 0) AS activeJobs
       FROM job_cards
       WHERE technician_id = ?
-    `).get(technicianId) || { totalAssignedJobs: 0, completedJobs: 0, activeJobs: 0 };
+    `,
+        )
+        .get(technicianId) || { totalAssignedJobs: 0, completedJobs: 0, activeJobs: 0 }
+    );
   }
 
   /**
@@ -239,7 +283,9 @@ export class TechnicianRepository {
     }
 
     const placeholders = technicianIds.map(() => '?').join(', ');
-    const rows = this.db.prepare(`
+    const rows = this.db
+      .prepare(
+        `
       SELECT
         technician_id AS technicianId,
         COUNT(id) AS totalAssignedJobs,
@@ -248,7 +294,9 @@ export class TechnicianRepository {
       FROM job_cards
       WHERE technician_id IN (${placeholders})
       GROUP BY technician_id
-    `).all(...technicianIds);
+    `,
+      )
+      .all(...technicianIds);
 
     const metricsMap = {};
     for (const id of technicianIds) {
@@ -258,7 +306,7 @@ export class TechnicianRepository {
       metricsMap[row.technicianId] = {
         totalAssignedJobs: row.totalAssignedJobs,
         completedJobs: row.completedJobs,
-        activeJobs: row.activeJobs
+        activeJobs: row.activeJobs,
       };
     }
 
@@ -274,7 +322,9 @@ export class TechnicianRepository {
    * @returns {Array} List of service visit logs
    */
   getServiceHistory(technicianId, { limit = 20, offset = 0 } = {}) {
-    return this.db.prepare(`
+    return this.db
+      .prepare(
+        `
       SELECT
         jc.id AS jobCardId,
         jc.job_card_number AS jobCardNumber,
@@ -298,6 +348,8 @@ export class TechnicianRepository {
       WHERE jc.technician_id = ?
       ORDER BY jc.id DESC
       LIMIT ? OFFSET ?
-    `).all(technicianId, limit, offset);
+    `,
+      )
+      .all(technicianId, limit, offset);
   }
 }

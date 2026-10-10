@@ -40,7 +40,7 @@ export class AuthController {
         httpOnly: true,
         secure: false, // Omit/false since it's local HTTP
         sameSite: 'strict',
-        maxAge: (env.sessionTtlHours || 12) * 60 * 60 * 1000 // In milliseconds
+        maxAge: (env.sessionTtlHours || 12) * 60 * 60 * 1000, // In milliseconds
       });
       res.status(200).json(result);
     } catch (error) {

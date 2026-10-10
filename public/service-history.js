@@ -49,7 +49,7 @@ if (!token) {
 function init() {
   setupListeners();
   setupLogout();
-  
+
   // Check if we have vehicle ID in URL to preload
   const params = new URLSearchParams(window.location.search);
   const vehicleId = params.get('vehicleId');
@@ -66,7 +66,7 @@ function setupLogout() {
       try {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Logout API failed:', err);
@@ -88,24 +88,27 @@ async function searchVehicles() {
   showMessage('');
   const query = searchQuery.value.trim();
   if (!query) {
-    searchResults.innerHTML = '<li style="text-align:center; color:#64748b; cursor:default; background:none;">Enter query to search...</li>';
+    searchResults.innerHTML =
+      '<li style="text-align:center; color:#64748b; cursor:default; background:none;">Enter query to search...</li>';
     return;
   }
 
   try {
-    searchResults.innerHTML = '<li style="text-align:center; color:#64748b; cursor:default; background:none;">Searching...</li>';
-    
+    searchResults.innerHTML =
+      '<li style="text-align:center; color:#64748b; cursor:default; background:none;">Searching...</li>';
+
     // Search vehicles via masters endpoint
     const res = await api(`/api/v1/vehicles?search=${encodeURIComponent(query)}&pageSize=50`);
     const vehicles = res.data;
 
     if (vehicles.length === 0) {
-      searchResults.innerHTML = '<li style="text-align:center; color:#dc2626; cursor:default; background:none;">No vehicles found.</li>';
+      searchResults.innerHTML =
+        '<li style="text-align:center; color:#dc2626; cursor:default; background:none;">No vehicles found.</li>';
       return;
     }
 
     searchResults.innerHTML = '';
-    
+
     // Query each vehicle's owner to show name
     for (const veh of vehicles) {
       let ownerName = 'Loading...';
@@ -122,7 +125,7 @@ async function searchVehicles() {
         <span class="reg-no">${veh.registration_number}</span>
         <span class="sub">${veh.make || ''} ${veh.model || ''} - ${ownerName}</span>
       `;
-      
+
       li.addEventListener('click', () => {
         searchResults.querySelectorAll('li').forEach((item) => item.classList.remove('selected'));
         li.classList.add('selected');
@@ -131,7 +134,6 @@ async function searchVehicles() {
 
       searchResults.appendChild(li);
     }
-
   } catch (err) {
     showMessage(err.message, true);
     searchResults.innerHTML = `<li style="text-align:center; color:#dc2626; cursor:default; background:none;">Error: ${err.message}</li>`;
@@ -149,21 +151,30 @@ async function loadVehicleServiceHistory(vehicleId) {
 
     // Render Vehicle Header details
     document.querySelector('#detail-reg').textContent = data.vehicle.registration_number;
-    document.querySelector('#detail-owner-name').textContent = data.customer ? data.customer.name : 'N/A';
-    document.querySelector('#detail-owner-phone').textContent = data.customer ? data.customer.phone : 'N/A';
-    document.querySelector('#detail-model').textContent = `${data.vehicle.make || ''} ${data.vehicle.model || ''} ${data.vehicle.variant || ''}`.trim() || 'N/A';
+    document.querySelector('#detail-owner-name').textContent = data.customer
+      ? data.customer.name
+      : 'N/A';
+    document.querySelector('#detail-owner-phone').textContent = data.customer
+      ? data.customer.phone
+      : 'N/A';
+    document.querySelector('#detail-model').textContent =
+      `${data.vehicle.make || ''} ${data.vehicle.model || ''} ${data.vehicle.variant || ''}`.trim() ||
+      'N/A';
     document.querySelector('#detail-engine-no').textContent = data.vehicle.engine_number || '-';
     document.querySelector('#detail-chassis-no').textContent = data.vehicle.chassis_number || '-';
-    document.querySelector('#detail-fuel-year').textContent = `${data.vehicle.fuel_type || 'N/A'} / ${data.vehicle.year || 'N/A'}`;
+    document.querySelector('#detail-fuel-year').textContent =
+      `${data.vehicle.fuel_type || 'N/A'} / ${data.vehicle.year || 'N/A'}`;
 
     // Render Summary metrics
     document.querySelector('#sum-visits').textContent = data.summary.totalVisits;
-    document.querySelector('#sum-revenue').textContent = `Rs. ${Number(data.summary.totalRevenue || 0).toFixed(2)}`;
-    document.querySelector('#sum-last-date').textContent = data.summary.lastVisitDate ? data.summary.lastVisitDate : '-';
+    document.querySelector('#sum-revenue').textContent =
+      `Rs. ${Number(data.summary.totalRevenue || 0).toFixed(2)}`;
+    document.querySelector('#sum-last-date').textContent = data.summary.lastVisitDate
+      ? data.summary.lastVisitDate
+      : '-';
 
     // Render chronological Timeline
     renderTimeline(data.history);
-
   } catch (err) {
     showMessage(err.message, true);
     noSelectionView.innerHTML = `<h3 style="color:#dc2626;">Failed to load service history: ${err.message}</h3>`;
@@ -175,7 +186,8 @@ async function loadVehicleServiceHistory(vehicleId) {
 function renderTimeline(history) {
   const container = document.querySelector('#timeline-container');
   if (!history || history.length === 0) {
-    container.innerHTML = '<p style="padding:20px; background:#f8fafc; text-align:center; color:#64748b; border-radius:6px;">No maintenance visits recorded for this vehicle.</p>';
+    container.innerHTML =
+      '<p style="padding:20px; background:#f8fafc; text-align:center; color:#64748b; border-radius:6px;">No maintenance visits recorded for this vehicle.</p>';
     return;
   }
 
@@ -230,7 +242,9 @@ function renderTimeline(history) {
             </div>
           </div>
 
-          ${servicesRows ? `
+          ${
+            servicesRows
+              ? `
             <div style="margin-bottom:12px;">
               <h5 style="margin:0 0 4px 0; color:#475569; font-size:12px; text-transform:uppercase;">Services & Labour Billed</h5>
               <table>
@@ -248,9 +262,13 @@ function renderTimeline(history) {
                 </tbody>
               </table>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${partsRows ? `
+          ${
+            partsRows
+              ? `
             <div>
               <h5 style="margin:0 0 4px 0; color:#475569; font-size:12px; text-transform:uppercase;">Parts & Lubricants Replaced</h5>
               <table>
@@ -268,7 +286,9 @@ function renderTimeline(history) {
                 </tbody>
               </table>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
           ${!servicesRows && !partsRows ? '<p style="margin:0; font-size:12px; color:#64748b; font-style:italic;">No services or parts billed in this visit.</p>' : ''}
         </div>

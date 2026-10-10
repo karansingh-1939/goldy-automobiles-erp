@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../shared/api/apiClient.js';
-import { useAppStore } from '../../shared/store/useAppStore.js';
+import { api } from '../../shared/api/api-client.js';
+import { useAppStore } from '../../shared/store/use-app-store.js';
 import { validateRequired, validateNumericRange } from '../../shared/utils/validation.js';
-import { usePermissions } from '../../shared/hooks/usePermissions.js';
+import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import DataTable from '../../shared/components/DataTable.jsx';
-import { 
-  Search, 
-  Plus, 
-  Package, 
-  X, 
-  Layers, 
-  AlertCircle, 
-  Edit2, 
-  Check, 
+import {
+  Search,
+  Plus,
+  Package,
+  X,
+  Layers,
+  AlertCircle,
+  Edit2,
+  Check,
   XCircle,
-  ClipboardList
+  ClipboardList,
 } from 'lucide-react';
 
 export default function InventoryManager() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
-  const showConfirm = useAppStore((state) => state.showConfirm);
+  const openDialog = useAppStore((state) => state.openDialog);
   const { hasPermission } = usePermissions();
 
   const canWrite = hasPermission('inventory.write');
@@ -34,8 +34,8 @@ export default function InventoryManager() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
-  const [sortBy, setSortBy] = useState('sku');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const sortBy = 'sku';
+  const sortOrder = 'asc';
 
   // Selected item detail and modal state
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -55,11 +55,17 @@ export default function InventoryManager() {
   // ==========================================
   // TAB 1: CATALOG QUERIES & MUTATIONS
   // ==========================================
-  const { data: response, isLoading, error } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['inventory-items', search, page, sortBy, sortOrder],
-    queryFn: () => 
-      api.get(`/api/v1/inventory/items?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`),
-    enabled: activeTab === 'catalog'
+    queryFn: () =>
+      api.get(
+        `/api/v1/inventory/items?search=${encodeURIComponent(search)}&page=${page}&pageSize=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+      ),
+    enabled: activeTab === 'catalog',
   });
 
   const items = response?.data || [];
@@ -68,7 +74,7 @@ export default function InventoryManager() {
   const { data: batchesResponse, isLoading: loadingBatches } = useQuery({
     queryKey: ['item-batches', selectedItemId],
     queryFn: () => api.get(`/api/v1/inventory/items/${selectedItemId}/batches`),
-    enabled: !!selectedItemId && activeTab === 'catalog'
+    enabled: !!selectedItemId && activeTab === 'catalog',
   });
 
   const batches = batchesResponse?.data || [];
@@ -76,23 +82,23 @@ export default function InventoryManager() {
   const createMutation = useMutation({
     mutationFn: (newItem) => api.post('/api/v1/inventory/items', newItem),
     onSuccess: () => {
-      queryClient.invalidateQueries(['inventory-items']);
+      queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       addNotification('Inventory item created successfully.', 'success');
       setShowAddModal(false);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to create item.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to create item.', 'error'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => api.patch(`/api/v1/inventory/items/${id}`, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['inventory-items']);
+      queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       addNotification('Inventory item details updated.', 'success');
       setEditingItem(null);
       resetForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to update item.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to update item.', 'error'),
   });
 
   const resetForm = () => {
@@ -110,10 +116,10 @@ export default function InventoryManager() {
     setEditingItem(item);
     setSku(item.sku || '');
     setItemName(item.item_name || '');
-    setPurchaseCost(item.purchase_cost || '');
-    setSellingPrice(item.selling_price || '');
-    setReorderLevel(item.reorder_level || '5');
-    setGstRate(item.gst_rate || '18');
+    setPurchaseCost(item.purchase_cost ?? '');
+    setSellingPrice(item.selling_price ?? '');
+    setReorderLevel(item.reorder_level ?? '5');
+    setGstRate(item.gst_rate ?? '18');
     setUnitOfMeasure(item.unit_of_measure || 'pcs');
     setWarrantyMonths(item.warranty_period_months || '0');
     setShowAddModal(true);
@@ -122,12 +128,17 @@ export default function InventoryManager() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!validateRequired(itemName)) return addNotification('Catalog item name is required.', 'error');
-    if (!validateRequired(purchaseCost)) return addNotification('Purchase cost is required.', 'error');
-    if (!validateRequired(sellingPrice)) return addNotification('Selling price is required.', 'error');
+    if (!validateRequired(itemName))
+      return addNotification('Catalog item name is required.', 'error');
+    if (!validateRequired(purchaseCost))
+      return addNotification('Purchase cost is required.', 'error');
+    if (!validateRequired(sellingPrice))
+      return addNotification('Selling price is required.', 'error');
 
-    if (!validateNumericRange(purchaseCost, 0)) return addNotification('Purchase cost cannot be negative.', 'error');
-    if (!validateNumericRange(sellingPrice, 0)) return addNotification('Selling price cannot be negative.', 'error');
+    if (!validateNumericRange(purchaseCost, 0))
+      return addNotification('Purchase cost cannot be negative.', 'error');
+    if (!validateNumericRange(sellingPrice, 0))
+      return addNotification('Selling price cannot be negative.', 'error');
 
     const payload = {
       sku: sku || undefined,
@@ -137,7 +148,7 @@ export default function InventoryManager() {
       reorder_level: Number(reorderLevel),
       gst_rate: Number(gstRate),
       unit_of_measure: unitOfMeasure,
-      warranty_period_months: Number(warrantyMonths)
+      warranty_period_months: Number(warrantyMonths),
     };
 
     if (editingItem) {
@@ -160,8 +171,8 @@ export default function InventoryManager() {
   // Fetch past verifications
   const { data: verificationsResponse, isLoading: loadingVerifications } = useQuery({
     queryKey: ['stock-verifications'],
-    queryFn: () => api.get('/api/v1/inventory/verifications?limit=50'),
-    enabled: activeTab === 'audit'
+    queryFn: () => api.get('/api/v1/inventory/verifications?pageSize=50'),
+    enabled: activeTab === 'audit',
   });
 
   const verifications = verificationsResponse?.data?.items || [];
@@ -170,15 +181,15 @@ export default function InventoryManager() {
   const { data: warehousesResponse } = useQuery({
     queryKey: ['warehouses-list'],
     queryFn: () => api.get('/api/v1/warehouses'),
-    enabled: showAuditModal
+    enabled: showAuditModal,
   });
   const warehouses = warehousesResponse?.data || [];
 
   // Fetch All Items for dropdown
   const { data: allItemsResponse } = useQuery({
     queryKey: ['all-items'],
-    queryFn: () => api.get('/api/v1/inventory/items?limit=100'),
-    enabled: showAuditModal
+    queryFn: () => api.get('/api/v1/inventory/items?pageSize=100'),
+    enabled: showAuditModal,
   });
   const allItems = allItemsResponse?.data || [];
 
@@ -186,11 +197,11 @@ export default function InventoryManager() {
   const { data: auditBatchesResponse } = useQuery({
     queryKey: ['audit-item-batches', auditItemId],
     queryFn: () => api.get(`/api/v1/inventory/items/${auditItemId}/batches`),
-    enabled: !!auditItemId && showAuditModal
+    enabled: !!auditItemId && showAuditModal,
   });
   const auditBatches = auditBatchesResponse?.data || [];
 
-  const selectedAuditBatch = auditBatches.find(b => String(b.id) === String(auditBatchId));
+  const selectedAuditBatch = auditBatches.find((b) => String(b.id) === String(auditBatchId));
   const expectedQty = selectedAuditBatch ? Number(selectedAuditBatch.quantity) : 0;
   const variance = auditCountedQty !== '' ? Number(auditCountedQty) - expectedQty : 0;
 
@@ -198,31 +209,31 @@ export default function InventoryManager() {
   const createVerificationMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/inventory/verifications', payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['stock-verifications']);
+      queryClient.invalidateQueries({ queryKey: ['stock-verifications'] });
       addNotification('Stock verification audit submitted.', 'success');
       setShowAuditModal(false);
       resetAuditForm();
     },
-    onError: (err) => addNotification(err.message || 'Failed to submit verification.', 'error')
+    onError: (err) => addNotification(err.message || 'Failed to submit verification.', 'error'),
   });
 
   const approveVerificationMutation = useMutation({
     mutationFn: (id) => api.post(`/api/v1/inventory/verifications/${id}/approve`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['stock-verifications']);
-      queryClient.invalidateQueries(['inventory-items']);
+      queryClient.invalidateQueries({ queryKey: ['stock-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       addNotification('Inventory reconciliation adjustment approved.', 'success');
     },
-    onError: (err) => addNotification(err.message || 'Approval failed.', 'error')
+    onError: (err) => addNotification(err.message || 'Approval failed.', 'error'),
   });
 
   const rejectVerificationMutation = useMutation({
     mutationFn: (id) => api.post(`/api/v1/inventory/verifications/${id}/reject`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['stock-verifications']);
+      queryClient.invalidateQueries({ queryKey: ['stock-verifications'] });
       addNotification('Verification adjustment rejected.', 'success');
     },
-    onError: (err) => addNotification(err.message || 'Rejection failed.', 'error')
+    onError: (err) => addNotification(err.message || 'Rejection failed.', 'error'),
   });
 
   const resetAuditForm = () => {
@@ -236,10 +247,12 @@ export default function InventoryManager() {
   const handleSaveAudit = (e) => {
     e.preventDefault();
 
-    if (!validateRequired(auditWarehouseId)) return addNotification('Warehouse selection is required.', 'error');
+    if (!validateRequired(auditWarehouseId))
+      return addNotification('Warehouse selection is required.', 'error');
     if (!validateRequired(auditItemId)) return addNotification('Item is required.', 'error');
     if (!validateRequired(auditBatchId)) return addNotification('Batch is required.', 'error');
-    if (!validateRequired(auditCountedQty)) return addNotification('Counted quantity is required.', 'error');
+    if (!validateRequired(auditCountedQty))
+      return addNotification('Counted quantity is required.', 'error');
 
     createVerificationMutation.mutate({
       verification_type: 'Single Item',
@@ -247,7 +260,7 @@ export default function InventoryManager() {
       item_id: Number(auditItemId),
       batch_id: Number(auditBatchId),
       counted_quantity: Number(auditCountedQty),
-      notes: auditNotes || undefined
+      notes: auditNotes || undefined,
     });
   };
 
@@ -256,7 +269,11 @@ export default function InventoryManager() {
     {
       accessorKey: 'sku',
       header: 'SKU',
-      cell: (info) => <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">{info.getValue()}</span>
+      cell: (info) => (
+        <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
+          {info.getValue()}
+        </span>
+      ),
     },
     {
       accessorKey: 'item_name',
@@ -269,17 +286,17 @@ export default function InventoryManager() {
             <p className="text-xs text-gray-400">{row.category_name || 'Uncategorized'}</p>
           </div>
         );
-      }
+      },
     },
     {
       accessorKey: 'purchase_cost',
       header: 'Cost',
-      cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`
+      cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`,
     },
     {
       accessorKey: 'selling_price',
       header: 'Price',
-      cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`
+      cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`,
     },
     {
       accessorKey: 'current_quantity',
@@ -288,15 +305,17 @@ export default function InventoryManager() {
         const row = info.row.original;
         const isLow = Number(row.current_quantity) <= Number(row.reorder_level);
         return (
-          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${
-            isLow 
-              ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-450' 
-              : 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-450'
-          }`}>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${
+              isLow
+                ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-450'
+                : 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-450'
+            }`}
+          >
             {row.current_quantity} {row.unit_of_measure}
           </span>
         );
-      }
+      },
     },
     {
       id: 'actions',
@@ -314,8 +333,8 @@ export default function InventoryManager() {
             </button>
           </div>
         );
-      }
-    }
+      },
+    },
   ];
 
   // Audit Columns
@@ -323,12 +342,16 @@ export default function InventoryManager() {
     {
       accessorKey: 'verification_number',
       header: 'Verification ID',
-      cell: (info) => <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">{info.getValue()}</span>
+      cell: (info) => (
+        <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
+          {info.getValue()}
+        </span>
+      ),
     },
     {
       accessorKey: 'warehouse_name',
       header: 'Warehouse',
-      cell: (info) => info.getValue()
+      cell: (info) => info.getValue(),
     },
     {
       accessorKey: 'item_name',
@@ -336,19 +359,21 @@ export default function InventoryManager() {
       cell: (info) => (
         <div>
           <p className="font-semibold text-gray-950 dark:text-white">{info.getValue()}</p>
-          <p className="text-[10px] text-gray-400 font-mono">Batch: {info.row.original.batch_number || 'N/A'}</p>
+          <p className="text-[10px] text-gray-400 font-mono">
+            Batch: {info.row.original.batch_number || 'N/A'}
+          </p>
         </div>
-      )
+      ),
     },
     {
       accessorKey: 'expected_quantity',
       header: 'Expected',
-      cell: (info) => <span className="font-mono">{info.getValue()}</span>
+      cell: (info) => <span className="font-mono">{info.getValue()}</span>,
     },
     {
       accessorKey: 'counted_quantity',
       header: 'Counted',
-      cell: (info) => <span className="font-mono font-bold">{info.getValue()}</span>
+      cell: (info) => <span className="font-mono font-bold">{info.getValue()}</span>,
     },
     {
       id: 'variance',
@@ -357,11 +382,13 @@ export default function InventoryManager() {
         const row = info.row.original;
         const diff = Number(row.counted_quantity) - Number(row.expected_quantity);
         return (
-          <span className={`font-bold font-mono ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-500' : 'text-gray-450'}`}>
+          <span
+            className={`font-bold font-mono ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-500' : 'text-gray-450'}`}
+          >
             {diff > 0 ? `+${diff}` : diff}
           </span>
         );
-      }
+      },
     },
     {
       accessorKey: 'status',
@@ -369,28 +396,37 @@ export default function InventoryManager() {
       cell: (info) => {
         const val = info.getValue();
         return (
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold ${
-            val === 'APPROVED' 
-              ? 'bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-400'
-              : val === 'REJECTED'
-              ? 'bg-red-50 text-red-800 dark:bg-red-950/20 dark:text-red-400'
-              : 'bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400'
-          }`}>
+          <span
+            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold ${
+              val === 'APPROVED'
+                ? 'bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-400'
+                : val === 'REJECTED'
+                  ? 'bg-red-50 text-red-800 dark:bg-red-950/20 dark:text-red-400'
+                  : 'bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400'
+            }`}
+          >
             {val}
           </span>
         );
-      }
+      },
     },
     {
       id: 'actions',
       header: 'Approvals',
       cell: (info) => {
         const row = info.row.original;
-        if (row.status !== 'PENDING') return <span className="text-xs text-gray-400">Archived</span>;
+        if (row.status !== 'PENDING')
+          return <span className="text-xs text-gray-400">Archived</span>;
         return (
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={() => showConfirm('Approve Adjustment', 'Post this stock adjustment and reconcile inventory values?', () => approveVerificationMutation.mutate(row.id))}
+              onClick={() =>
+                openDialog({
+                  title: 'Approve Adjustment',
+                  message: 'Post this stock adjustment and reconcile inventory values?',
+                  onConfirm: () => approveVerificationMutation.mutate(row.id),
+                })
+              }
               disabled={!canAdjust}
               className="p-1 hover:bg-green-50 dark:hover:bg-green-950/30 rounded text-green-600 hover:text-green-700 disabled:opacity-30"
               title="Approve reconciliation"
@@ -398,7 +434,13 @@ export default function InventoryManager() {
               <Check className="h-4.5 w-4.5" />
             </button>
             <button
-              onClick={() => showConfirm('Reject Adjustment', 'Reject this stock adjustment?', () => rejectVerificationMutation.mutate(row.id))}
+              onClick={() =>
+                openDialog({
+                  title: 'Reject Adjustment',
+                  message: 'Reject this stock adjustment?',
+                  onConfirm: () => rejectVerificationMutation.mutate(row.id),
+                })
+              }
               disabled={!canAdjust}
               className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded text-red-500 hover:text-red-655 disabled:opacity-30"
               title="Reject adjustment"
@@ -407,8 +449,8 @@ export default function InventoryManager() {
             </button>
           </div>
         );
-      }
-    }
+      },
+    },
   ];
 
   return (
@@ -444,11 +486,19 @@ export default function InventoryManager() {
         <>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Items Registry</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Complete items index, automatic sequential SKU allocation, and stock batch tracking.</p>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Items Registry
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Complete items index, automatic sequential SKU allocation, and stock batch tracking.
+              </p>
             </div>
             <button
-              onClick={() => { resetForm(); setEditingItem(null); setShowAddModal(true); }}
+              onClick={() => {
+                resetForm();
+                setEditingItem(null);
+                setShowAddModal(true);
+              }}
               disabled={!canWrite}
               className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
@@ -464,7 +514,10 @@ export default function InventoryManager() {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
                   placeholder="Search by SKU, name, or barcode..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
                 />
@@ -484,15 +537,17 @@ export default function InventoryManager() {
                 <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-800 pt-4">
                   <button
                     disabled={page === 1}
-                    onClick={() => setPage(p => p - 1)}
+                    onClick={() => setPage((p) => p - 1)}
                     className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
                   >
                     Previous
                   </button>
-                  <span className="text-xs text-gray-500">Page {page} of {pagination.totalPages}</span>
+                  <span className="text-xs text-gray-500">
+                    Page {page} of {pagination.totalPages}
+                  </span>
                   <button
                     disabled={page === pagination.totalPages}
-                    onClick={() => setPage(p => p + 1)}
+                    onClick={() => setPage((p) => p + 1)}
                     className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-xs font-semibold rounded hover:bg-gray-100 disabled:opacity-50"
                   >
                     Next
@@ -505,7 +560,9 @@ export default function InventoryManager() {
             <div className="col-span-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm h-fit space-y-6">
               <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3">
                 <Layers className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-                <h3 className="font-bold text-gray-950 dark:text-white">Active Warehouse Batches</h3>
+                <h3 className="font-bold text-gray-950 dark:text-white">
+                  Active Warehouse Batches
+                </h3>
               </div>
 
               {!selectedItemId ? (
@@ -513,7 +570,9 @@ export default function InventoryManager() {
                   Select an item on the left to inspect warehouse locations and batch details.
                 </div>
               ) : loadingBatches ? (
-                <div className="p-12 text-center text-xs text-gray-400">Loading batch details...</div>
+                <div className="p-12 text-center text-xs text-gray-400">
+                  Loading batch details...
+                </div>
               ) : batches.length === 0 ? (
                 <div className="p-12 text-center text-xs text-gray-400 flex flex-col items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-amber-500" />
@@ -522,18 +581,27 @@ export default function InventoryManager() {
               ) : (
                 <div className="space-y-4">
                   {batches.map((b) => (
-                    <div key={b.id} className="p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 rounded-xl space-y-2">
+                    <div
+                      key={b.id}
+                      className="p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 rounded-xl space-y-2"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold font-mono text-gray-900 dark:text-white">{b.batch_number}</span>
+                        <span className="text-xs font-bold font-mono text-gray-900 dark:text-white">
+                          {b.batch_number}
+                        </span>
                         <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full dark:bg-green-950/30 dark:text-green-450">
                           {b.quantity} remaining
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800/60 pt-2">
                         <span>Warehouse:</span>
-                        <span className="font-semibold text-right text-gray-850 dark:text-gray-200">{b.warehouse_name}</span>
+                        <span className="font-semibold text-right text-gray-850 dark:text-gray-200">
+                          {b.warehouse_name}
+                        </span>
                         <span>Cost snapshot:</span>
-                        <span className="font-semibold text-right text-gray-850 dark:text-gray-200 font-mono">₹{b.purchase_cost}</span>
+                        <span className="font-semibold text-right text-gray-850 dark:text-gray-200 font-mono">
+                          ₹{b.purchase_cost}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -549,11 +617,18 @@ export default function InventoryManager() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Physical Stock Audits</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Reconcile system counts with physical warehouse inventory states and log variances.</p>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Physical Stock Audits
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Reconcile system counts with physical warehouse inventory states and log variances.
+              </p>
             </div>
             <button
-              onClick={() => { resetAuditForm(); setShowAuditModal(true); }}
+              onClick={() => {
+                resetAuditForm();
+                setShowAuditModal(true);
+              }}
               disabled={!canAdjust}
               className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
@@ -579,9 +654,17 @@ export default function InventoryManager() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                 <Package className="h-5 w-5" />
-                <h3 className="text-lg font-bold">{editingItem ? 'Edit Item Details' : 'New Catalog Item'}</h3>
+                <h3 className="text-lg font-bold">
+                  {editingItem ? 'Edit Item Details' : 'New Catalog Item'}
+                </h3>
               </div>
-              <button onClick={() => { setShowAddModal(false); setEditingItem(null); }} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingItem(null);
+                }}
+                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -589,25 +672,77 @@ export default function InventoryManager() {
               {/* Form inputs identical to previous CRUD definitions */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-650 dark:text-gray-400">SKU (Auto if blank)</label>
-                  <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} disabled={!!editingItem} placeholder="E.g. SPARE-ALT-01" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring font-mono text-gray-950 dark:text-white" />
+                  <label className="block text-xs font-semibold text-gray-650 dark:text-gray-400">
+                    SKU (Auto if blank)
+                  </label>
+                  <input
+                    type="text"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    disabled={!!editingItem}
+                    placeholder="E.g. SPARE-ALT-01"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring font-mono text-gray-950 dark:text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-650 dark:text-gray-400">Item Name *</label>
-                  <input type="text" required value={itemName} onChange={(e) => setItemName(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white" />
+                  <label className="block text-xs font-semibold text-gray-650 dark:text-gray-400">
+                    Item Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={itemName}
+                    onChange={(e) => setItemName(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Purchase Cost (₹) *</label>
-                  <input type="number" required value={purchaseCost} onChange={(e) => setPurchaseCost(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white" />
+                  <label className="block text-xs font-semibold text-gray-655 dark:text-gray-400">
+                    Purchase Cost (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={purchaseCost}
+                    min="0"
+                    step="0.01"
+                    onChange={(e) => setPurchaseCost(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Selling Price (₹) *</label>
-                  <input type="number" required value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white" />
+                  <label className="block text-xs font-semibold text-gray-655 dark:text-gray-400">
+                    Selling Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={sellingPrice}
+                    min="0"
+                    step="0.01"
+                    onChange={(e) => setSellingPrice(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
-                <button type="button" onClick={() => { setShowAddModal(false); setEditingItem(null); }} className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700">Save Item</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingItem(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700"
+                >
+                  Save Item
+                </button>
               </div>
             </form>
           </div>
@@ -623,15 +758,23 @@ export default function InventoryManager() {
                 <ClipboardList className="h-5 w-5" />
                 <h3 className="text-lg font-bold">Physical Stock Audit count</h3>
               </div>
-              <button onClick={() => setShowAuditModal(false)} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
+              <button
+                onClick={() => setShowAuditModal(false)}
+                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveAudit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label htmlFor="audit-warehouse-select" className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Target Warehouse *</label>
+                  <label
+                    htmlFor="audit-warehouse-select"
+                    className="block text-xs font-semibold text-gray-655 dark:text-gray-400"
+                  >
+                    Target Warehouse *
+                  </label>
                   <select
                     id="audit-warehouse-select"
                     required
@@ -640,30 +783,47 @@ export default function InventoryManager() {
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
                   >
                     <option value="">Select warehouse location...</option>
-                    {warehouses.map(w => (
-                      <option key={w.id} value={w.id}>{w.name} ({w.code})</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-span-2">
-                  <label htmlFor="audit-item-select" className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Select Audited Item *</label>
-                  <select
-                    id="audit-item-select"
-                    required
-                    value={auditItemId}
-                    onChange={(e) => { setAuditItemId(e.target.value); setAuditBatchId(''); }}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-                  >
-                    <option value="">Select inventory item...</option>
-                    {allItems.map(i => (
-                      <option key={i.id} value={i.id}>{i.item_name} ({i.sku})</option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} ({w.code})
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="col-span-2">
-                  <label htmlFor="audit-batch-select" className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Select Item Batch *</label>
+                  <label
+                    htmlFor="audit-item-select"
+                    className="block text-xs font-semibold text-gray-655 dark:text-gray-400"
+                  >
+                    Select Audited Item *
+                  </label>
+                  <select
+                    id="audit-item-select"
+                    required
+                    value={auditItemId}
+                    onChange={(e) => {
+                      setAuditItemId(e.target.value);
+                      setAuditBatchId('');
+                    }}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
+                  >
+                    <option value="">Select inventory item...</option>
+                    {allItems.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.item_name} ({i.sku})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-span-2">
+                  <label
+                    htmlFor="audit-batch-select"
+                    className="block text-xs font-semibold text-gray-655 dark:text-gray-400"
+                  >
+                    Select Item Batch *
+                  </label>
                   <select
                     id="audit-batch-select"
                     required
@@ -673,14 +833,21 @@ export default function InventoryManager() {
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white disabled:opacity-50"
                   >
                     <option value="">Select stock batch...</option>
-                    {auditBatches.map(b => (
-                      <option key={b.id} value={b.id}>{b.batch_number} (Qty: {b.quantity})</option>
+                    {auditBatches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.batch_number} (Qty: {b.quantity})
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label htmlFor="audit-counted-field" className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Counted Quantity *</label>
+                  <label
+                    htmlFor="audit-counted-field"
+                    className="block text-xs font-semibold text-gray-655 dark:text-gray-400"
+                  >
+                    Counted Quantity *
+                  </label>
                   <input
                     id="audit-counted-field"
                     type="number"
@@ -692,17 +859,26 @@ export default function InventoryManager() {
                 </div>
 
                 <div className="flex flex-col justify-end p-2 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase">Variance Summary</span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase">
+                    Variance Summary
+                  </span>
                   <div className="flex justify-between text-xs mt-1">
                     <span>Expected: {expectedQty}</span>
-                    <span className={`font-bold ${variance > 0 ? 'text-green-600' : variance < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                    <span
+                      className={`font-bold ${variance > 0 ? 'text-green-600' : variance < 0 ? 'text-red-500' : 'text-gray-500'}`}
+                    >
                       Variance: {variance > 0 ? `+${variance}` : variance}
                     </span>
                   </div>
                 </div>
 
                 <div className="col-span-2">
-                  <label htmlFor="audit-notes-field" className="block text-xs font-semibold text-gray-655 dark:text-gray-400">Audit Notes / Reason</label>
+                  <label
+                    htmlFor="audit-notes-field"
+                    className="block text-xs font-semibold text-gray-655 dark:text-gray-400"
+                  >
+                    Audit Notes / Reason
+                  </label>
                   <input
                     id="audit-notes-field"
                     type="text"
