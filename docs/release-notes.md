@@ -63,6 +63,8 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 
 # Workshop improvements
 
+- Expenses, technician maintenance and job assignment, audit history, and backup scheduling now have React screens in the main application shell. Other maintained static workshop pages remain accessible during migration.
+
 - Current receivable ageing reconciles invoice dues against posted customer ledger balances, applies unmatched credits to the oldest invoice ages for reporting, and shows unaged ledger dues separately. It is a current-state report, not a historical as-of reconstruction.
 - Daily cash reconciliation calculates opening cash, inflows, outflows and closing cash from active vouchers. Cash counts retain the book balance, physical count, variance, explanation and staff identity at the time of recording; saving a count does not create a financial adjustment.
 

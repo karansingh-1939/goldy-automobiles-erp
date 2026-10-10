@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
 import { Settings, Database, RefreshCw, Play } from 'lucide-react';
+import BackupSchedule from './BackupSchedule.jsx';
 
 export default function SettingsPortal() {
   const queryClient = useQueryClient();
@@ -250,6 +251,7 @@ export default function SettingsPortal() {
             )}
           </form>
 
+          <BackupSchedule />
           {/* Backups List */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">

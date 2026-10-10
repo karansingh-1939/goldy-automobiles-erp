@@ -57,6 +57,9 @@ export default function Layout() {
     { name: 'Purchasing', path: '/purchasing', icon: ShoppingCart, shortcut: 'F5' },
     { name: 'Accounting Ledger', path: '/accounting', icon: BookOpen, shortcut: 'F6' },
     { name: 'Cash & Receivables', path: '/cash-receivables', icon: BookOpen, shortcut: '' },
+    { name: 'Expenses', path: '/expenses', icon: BookOpen, shortcut: '' },
+    { name: 'Technicians', path: '/technicians', icon: Users, shortcut: '' },
+    { name: 'Audit Logs', path: '/audit-logs', icon: FileSpreadsheet, shortcut: '' },
     { name: 'GST & Exports', path: '/reports', icon: FileSpreadsheet, shortcut: 'F7' },
     { name: 'Customers', path: '/customers', icon: Users, shortcut: 'F8' },
     { name: 'Vehicles Database', path: '/vehicles', icon: Car, shortcut: 'F10' },
@@ -185,14 +188,10 @@ export default function Layout() {
               <p className="px-4 text-xs font-semibold text-gray-500 mb-2">Workshop tools</p>
               {[
                 ['Invoices & Billing', '/invoices.html'],
-                ['Expenses', '/expenses.html'],
                 ['Warehouses & Masters', '/masters.html'],
                 ['Purchasing Entry', '/purchasing.html'],
                 ['Stock Verification', '/stock-verification.html'],
-                ['Technicians', '/technicians.html'],
                 ['Service History', '/service-history.html'],
-                ['Backup Schedule', '/settings.html'],
-                ['Audit Logs', '/audit-logs.html'],
               ].map(([name, href]) => (
                 <a
                   key={href}

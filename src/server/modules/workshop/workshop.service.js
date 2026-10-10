@@ -28,16 +28,14 @@ export class WorkshopService {
   timeEntries(id) {
     if (!this.repository.job(id)) fail('Job card not found.', 'JOB_CARD_NOT_FOUND', 404);
     const now = Date.now();
-    return this.repository
-      .timeEntries(id)
-      .map((entry) => ({
-        ...entry,
-        elapsedMinutes: Math.max(
-          0,
-          ((entry.stopped_at ? Date.parse(entry.stopped_at) : now) - Date.parse(entry.started_at)) /
-            60000,
-        ),
-      }));
+    return this.repository.timeEntries(id).map((entry) => ({
+      ...entry,
+      elapsedMinutes: Math.max(
+        0,
+        ((entry.stopped_at ? Date.parse(entry.stopped_at) : now) - Date.parse(entry.started_at)) /
+          60000,
+      ),
+    }));
   }
   startTimer(id, payload = {}, actor) {
     return this.repository.transaction(() => {
@@ -74,7 +72,8 @@ export class WorkshopService {
     });
   }
   history(id) {
-    this.activeJob(id);
+    if (!Number.isSafeInteger(id) || id < 1) fail('Invalid job card ID.');
+    if (!this.repository.job(id)) fail('Job card not found.', 'JOB_CARD_NOT_FOUND', 404);
     return this.repository.history(id);
   }
   delivery(id, payload = {}) {

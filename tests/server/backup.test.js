@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import fs from 'node:fs';
 import path from 'node:path';
+import Database from 'better-sqlite3';
+import { verifyBackupSnapshot } from '../../src/server/modules/backup/snapshot-verification.js';
 import { createTestContext } from './helpers.js';
 import { BackupService } from '../../src/server/modules/backup/backup.service.js';
 
@@ -27,6 +29,11 @@ test('external backups verify restore compatibility and retain local copies when
     assert.ok(!fs.existsSync(directory));
     fs.writeFileSync(disconnected.filepath, 'corrupted snapshot');
     await assert.rejects(() => service.verifyBackup(disconnected.id), { code: 'BACKUP_INVALID' });
+    const impostorPath = path.join(path.dirname(context.db.name), 'not-an-erp.sqlite');
+    const impostor = new Database(impostorPath);
+    impostor.exec('CREATE TABLE schema_migrations (id INTEGER)');
+    impostor.close();
+    await assert.rejects(() => verifyBackupSnapshot(impostorPath), /not an ERP backup/);
   } finally {
     await context.close();
   }

@@ -23,6 +23,9 @@ import SettingsPortal from './modules/settings/SettingsPortal.jsx';
 import WorkshopBoard from './modules/workshop/WorkshopBoard.jsx';
 import ServiceReminders from './modules/workshop/ServiceReminders.jsx';
 import WorkshopFinance from './modules/accounting/WorkshopFinance.jsx';
+import ExpenseManager from './modules/expenses/ExpenseManager.jsx';
+import TechnicianManager from './modules/workshop/TechnicianManager.jsx';
+import AuditLogManager from './modules/audit/AuditLogManager.jsx';
 
 export default function App() {
   const token = useAppStore((state) => state.token);
@@ -50,6 +53,9 @@ export default function App() {
               <Route path="/warranties" element={<WarrantyManager />} />
               <Route path="/returns" element={<ReturnsManager />} />
               <Route path="/settings" element={<SettingsPortal />} />
+              <Route path="/expenses" element={<ExpenseManager />} />
+              <Route path="/technicians" element={<TechnicianManager />} />
+              <Route path="/audit-logs" element={<AuditLogManager />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           ) : (

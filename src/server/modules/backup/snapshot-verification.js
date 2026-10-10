@@ -13,7 +13,24 @@ export async function verifyBackupSnapshot(filepath) {
   try {
     source = new Database(filepath, { readonly: true, fileMustExist: true });
     verifySnapshot(source);
-    if (!source.prepare("SELECT name FROM sqlite_master WHERE name = 'schema_migrations'").get()) {
+    const tables = new Set(
+      source
+        .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+        .all()
+        .map((row) => row.name),
+    );
+    if (
+      [
+        'schema_migrations',
+        'users',
+        'roles',
+        'customers',
+        'vehicles',
+        'inventory_items',
+        'job_cards',
+        'invoices',
+      ].some((table) => !tables.has(table))
+    ) {
       throw new Error('This file is not an ERP backup.');
     }
     await source.backup(path.join(directory, 'snapshot.sqlite'));

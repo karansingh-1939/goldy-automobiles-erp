@@ -82,6 +82,11 @@ test('estimate decisions retain history, gate billing and enforce the approved t
     const queue = await context.request('/api/v1/workshop/queue', { headers });
     assert.equal(queue.body.data.find((row) => row.id === id).overdue, 1);
     assert.equal((await call(`/api/v1/job-cards/${id}/finalize`, {})).response.status, 201);
+    const completedHistory = await context.request(`/api/v1/workshop/jobs/${id}/estimates`, {
+      headers,
+    });
+    assert.equal(completedHistory.response.status, 200);
+    assert.equal(completedHistory.body.data.length, 3);
     assert.equal(
       (await call(`/api/v1/workshop/jobs/${id}/estimates`, { amount: 1, scope: 'Closed job' }))
         .response.status,

@@ -275,7 +275,7 @@ export class BackupService {
 
     if (settings['backup.preferred_time'] !== undefined) {
       const time = String(settings['backup.preferred_time']).trim();
-      if (!/^\d{2}:\d{2}$/.test(time)) {
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
         throw new AppError('Preferred time must be in HH:MM format.', 400, 'VALIDATION_ERROR');
       }
       cleanSettings['backup.preferred_time'] = time;
