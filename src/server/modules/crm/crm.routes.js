@@ -51,6 +51,7 @@ export function createCrmRouter(db) {
 
   // Reminders endpoints
   router.get('/reminders', requirePermission('customers.read'), controller.listReminders);
+  router.post('/reminders', requirePermission('customers.write'), controller.createReminder);
   router.post(
     '/reminders/:id/dismiss',
     requirePermission('customers.write'),

@@ -20,6 +20,21 @@ export function createWorkshopRouter(db) {
     handle(() => service.queue()),
   );
   router.get(
+    '/jobs/:id/time',
+    requirePermission('job_cards.read'),
+    handle((req) => service.timeEntries(Number(req.params.id))),
+  );
+  router.post(
+    '/jobs/:id/time',
+    requirePermission('job_cards.write'),
+    handle((req) => service.startTimer(Number(req.params.id), req.body, req.user.id)),
+  );
+  router.post(
+    '/time/:id/stop',
+    requirePermission('job_cards.write'),
+    handle((req) => service.stopTimer(Number(req.params.id), req.user.id)),
+  );
+  router.get(
     '/jobs/:id/estimates',
     requirePermission('job_cards.read'),
     handle((req) => service.history(Number(req.params.id))),

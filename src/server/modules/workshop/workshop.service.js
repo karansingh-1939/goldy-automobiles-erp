@@ -25,6 +25,54 @@ export class WorkshopService {
   queue() {
     return this.repository.queue();
   }
+  timeEntries(id) {
+    if (!this.repository.job(id)) fail('Job card not found.', 'JOB_CARD_NOT_FOUND', 404);
+    const now = Date.now();
+    return this.repository
+      .timeEntries(id)
+      .map((entry) => ({
+        ...entry,
+        elapsedMinutes: Math.max(
+          0,
+          ((entry.stopped_at ? Date.parse(entry.stopped_at) : now) - Date.parse(entry.started_at)) /
+            60000,
+        ),
+      }));
+  }
+  startTimer(id, payload = {}, actor) {
+    return this.repository.transaction(() => {
+      this.activeJob(id);
+      const technicianId = Number(payload.technicianId);
+      if (!Number.isSafeInteger(technicianId) || !this.repository.technician(technicianId))
+        fail('Choose an active mechanic.');
+      if (this.repository.runningTimer(technicianId))
+        fail(
+          'This mechanic already has a running timer. Stop it first.',
+          'TIMER_ALREADY_RUNNING',
+          409,
+        );
+      if (
+        payload.notes !== undefined &&
+        (typeof payload.notes !== 'string' || payload.notes.length > 1000)
+      )
+        fail('Notes must be text up to 1000 characters.');
+      return this.repository.startTimer(id, technicianId, payload.notes?.trim() || '', actor);
+    });
+  }
+  stopTimer(id, actor) {
+    return this.repository.transaction(() => {
+      const entry = this.repository.timeEntry(id);
+      if (!entry) fail('Timer not found.', 'TIMER_NOT_FOUND', 404);
+      if (entry.stopped_at) fail('This timer is already stopped.', 'TIMER_ALREADY_STOPPED', 409);
+      if (Date.now() < Date.parse(entry.started_at))
+        fail(
+          'The laptop clock is earlier than the timer start. Correct the clock before stopping.',
+          'TIMER_CLOCK_INVALID',
+          409,
+        );
+      return this.repository.stopTimer(id, actor);
+    });
+  }
   history(id) {
     this.activeJob(id);
     return this.repository.history(id);

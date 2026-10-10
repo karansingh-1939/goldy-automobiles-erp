@@ -57,6 +57,38 @@ export class WorkshopRepository {
       .prepare('SELECT * FROM estimate_approvals WHERE job_card_id = ? ORDER BY id DESC')
       .all(jobId);
   }
+  timeEntries(jobId) {
+    return this.db
+      .prepare(
+        `SELECT e.*, t.full_name AS technician_name FROM mechanic_time_entries e JOIN technicians t ON t.id = e.technician_id WHERE e.job_card_id = ? ORDER BY e.id DESC`,
+      )
+      .all(jobId);
+  }
+  technician(id) {
+    return this.db.prepare('SELECT * FROM technicians WHERE id = ? AND is_active = 1').get(id);
+  }
+  runningTimer(technicianId) {
+    return this.db
+      .prepare('SELECT * FROM mechanic_time_entries WHERE technician_id = ? AND stopped_at IS NULL')
+      .get(technicianId);
+  }
+  timeEntry(id) {
+    return this.db.prepare('SELECT * FROM mechanic_time_entries WHERE id = ?').get(id);
+  }
+  startTimer(jobId, technicianId, notes, actor) {
+    const result = this.db
+      .prepare(
+        'INSERT INTO mechanic_time_entries (job_card_id, technician_id, started_at, notes, started_by) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run(jobId, technicianId, new Date().toISOString(), notes, actor);
+    return this.timeEntry(result.lastInsertRowid);
+  }
+  stopTimer(id, actor) {
+    this.db
+      .prepare('UPDATE mechanic_time_entries SET stopped_at = ?, stopped_by = ? WHERE id = ?')
+      .run(new Date().toISOString(), actor, id);
+    return this.timeEntry(id);
+  }
   decide(id, data, actor) {
     this.db
       .prepare(

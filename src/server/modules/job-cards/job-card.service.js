@@ -567,6 +567,19 @@ export class JobCardService {
         const jobCard = this.getMutableJobCard(jobCardId);
         const parts = this.repository.listParts(jobCard.id);
         const labourRows = this.repository.listLabour(jobCard.id);
+        if (
+          this.db
+            .prepare(
+              'SELECT id FROM mechanic_time_entries WHERE job_card_id = ? AND stopped_at IS NULL LIMIT 1',
+            )
+            .get(jobCard.id)
+        ) {
+          throw new AppError(
+            'Stop all mechanic timers before billing this job.',
+            409,
+            'JOB_TIMER_RUNNING',
+          );
+        }
         const approval = this.db
           .prepare(
             'SELECT * FROM estimate_approvals WHERE job_card_id = ? ORDER BY id DESC LIMIT 1',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { usePermissions } from '../../shared/hooks/use-permissions.js';
+import MechanicTimePanel from './MechanicTimePanel.jsx';
 
 const input =
   'block w-full rounded border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800';
@@ -179,6 +180,7 @@ function EstimateEditor({ job, refresh }) {
           ))}
         </ul>
       )}
+      <MechanicTimePanel jobId={job.id} />
     </section>
   );
 }

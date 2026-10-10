@@ -63,6 +63,9 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 
 # Workshop improvements
 
+- Mechanic timers persist across restarts, prevent concurrent timers for one mechanic and must be stopped before a job is billed. Recorded time is operational data and does not automatically change invoice charges or payroll.
+- The React reminder screen schedules vehicle follow-ups and lists overdue reminders with customer contact details. Handled reminders can be dismissed; no messages are sent automatically.
+
 - The React workshop queue lists open jobs by promised delivery, flags overdue work and records revised estimates with customer contact evidence. Requested or rejected estimates block billing; invoices cannot exceed the latest approved tax-inclusive amount. Older jobs without requested estimates keep their existing workflow.
 
 - Manual and scheduled backups can keep a second copy in a configured existing USB or network folder. A disconnected destination reports a failure while retaining the successful local backup. External copies are never removed by local retention.

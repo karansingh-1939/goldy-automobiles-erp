@@ -201,7 +201,15 @@ export class CrmRepository {
       INSERT INTO service_reminders (customer_id, vehicle_id, reminder_type, due_date, status, notes)
       VALUES (?, ?, ?, ?, 'PENDING', ?)
     `);
-    stmt.run(customerId, vehicleId, reminderType, dueDate, notes || null);
+    const result = stmt.run(customerId, vehicleId, reminderType, dueDate, notes || null);
+    return this.getReminder(result.lastInsertRowid);
+  }
+
+  getReminder(id) {
+    return this.db.prepare('SELECT * FROM service_reminders WHERE id = ?').get(id);
+  }
+  getVehicle(id) {
+    return this.db.prepare('SELECT * FROM vehicles WHERE id = ?').get(id);
   }
 
   getPendingReminders(asOfDate) {

@@ -118,6 +118,13 @@ export class CrmController {
       next(error);
     }
   };
+  createReminder = (req, res, next) => {
+    try {
+      res.status(201).json({ data: this.crmService.createReminderForVehicle(req.body) });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   dismissReminder = (req, res, next) => {
     try {

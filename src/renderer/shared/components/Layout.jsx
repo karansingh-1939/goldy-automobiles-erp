@@ -51,6 +51,7 @@ export default function Layout() {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, shortcut: 'F1' },
     { name: 'Job Cards', path: '/job-cards', icon: Wrench, shortcut: 'F2' },
     { name: 'Workshop Queue', path: '/workshop', icon: Wrench, shortcut: '' },
+    { name: 'Service Reminders', path: '/reminders', icon: Car, shortcut: '' },
     { name: 'Sales Orders', path: '/sales-orders', icon: ShoppingBag, shortcut: 'F3' },
     { name: 'Inventory & Batches', path: '/inventory', icon: Package, shortcut: 'F4' },
     { name: 'Purchasing', path: '/purchasing', icon: ShoppingCart, shortcut: 'F5' },
