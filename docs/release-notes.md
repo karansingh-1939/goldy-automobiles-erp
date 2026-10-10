@@ -63,6 +63,9 @@ We are excited to announce the v1.0.0-Beta release of Goldy Automobiles ERP, a c
 
 # Workshop improvements
 
+- Current receivable ageing reconciles invoice dues against posted customer ledger balances, applies unmatched credits to the oldest invoice ages for reporting, and shows unaged ledger dues separately. It is a current-state report, not a historical as-of reconstruction.
+- Daily cash reconciliation calculates opening cash, inflows, outflows and closing cash from active vouchers. Cash counts retain the book balance, physical count, variance, explanation and staff identity at the time of recording; saving a count does not create a financial adjustment.
+
 - Mechanic timers persist across restarts, prevent concurrent timers for one mechanic and must be stopped before a job is billed. Recorded time is operational data and does not automatically change invoice charges or payroll.
 - The React reminder screen schedules vehicle follow-ups and lists overdue reminders with customer contact details. Handled reminders can be dismissed; no messages are sent automatically.
 

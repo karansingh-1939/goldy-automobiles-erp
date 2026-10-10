@@ -56,6 +56,7 @@ export default function Layout() {
     { name: 'Inventory & Batches', path: '/inventory', icon: Package, shortcut: 'F4' },
     { name: 'Purchasing', path: '/purchasing', icon: ShoppingCart, shortcut: 'F5' },
     { name: 'Accounting Ledger', path: '/accounting', icon: BookOpen, shortcut: 'F6' },
+    { name: 'Cash & Receivables', path: '/cash-receivables', icon: BookOpen, shortcut: '' },
     { name: 'GST & Exports', path: '/reports', icon: FileSpreadsheet, shortcut: 'F7' },
     { name: 'Customers', path: '/customers', icon: Users, shortcut: 'F8' },
     { name: 'Vehicles Database', path: '/vehicles', icon: Car, shortcut: 'F10' },

@@ -22,6 +22,7 @@ import ReportsManager from './modules/reports/ReportsManager.jsx';
 import SettingsPortal from './modules/settings/SettingsPortal.jsx';
 import WorkshopBoard from './modules/workshop/WorkshopBoard.jsx';
 import ServiceReminders from './modules/workshop/ServiceReminders.jsx';
+import WorkshopFinance from './modules/accounting/WorkshopFinance.jsx';
 
 export default function App() {
   const token = useAppStore((state) => state.token);
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/inventory" element={<InventoryManager />} />
               <Route path="/purchasing" element={<PurchasingManager />} />
               <Route path="/accounting" element={<AccountingPortal />} />
+              <Route path="/cash-receivables" element={<WorkshopFinance />} />
               <Route path="/reports" element={<ReportsManager />} />
               <Route path="/customers" element={<CustomerManager />} />
               <Route path="/vehicles" element={<VehicleManager />} />

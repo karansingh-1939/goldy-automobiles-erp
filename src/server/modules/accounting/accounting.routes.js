@@ -12,6 +12,7 @@ import { SupplierService } from './supplier.service.js';
 import { PurchaseBillService } from './purchase-bill.service.js';
 import { SupplierPaymentService } from './supplier-payment.service.js';
 import { AppError } from '../../shared/errors/app-error.js';
+import { WorkshopFinanceService } from './workshop-finance.service.js';
 
 export function createAccountingRouter(db) {
   const router = Router();
@@ -31,6 +32,28 @@ export function createAccountingRouter(db) {
 
   // Authenticate all routes
   router.use(requireAuth);
+  const workshopFinance = new WorkshopFinanceService(db);
+  router.get('/receivable-ageing', requirePermission('accounting.read'), (req, res, next) => {
+    try {
+      res.json({ data: workshopFinance.ageing() });
+    } catch (error) {
+      next(error);
+    }
+  });
+  router.get('/daily-cash', requirePermission('accounting.read'), (req, res, next) => {
+    try {
+      res.json({ data: workshopFinance.cashSummary(req.query.date) });
+    } catch (error) {
+      next(error);
+    }
+  });
+  router.post('/daily-cash', requirePermission('accounting.write'), (req, res, next) => {
+    try {
+      res.status(201).json({ data: workshopFinance.saveCount(req.body, req.user.id) });
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // --- LEDGER MASTER READ ENDPOINT ---
   router.get('/ledgers', requirePermission('accounting.read'), (req, res, next) => {
