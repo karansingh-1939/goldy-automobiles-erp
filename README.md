@@ -51,7 +51,7 @@ See [architecture](docs/architecture.md), [administrator guide](docs/admin-guide
 
 ## Status and verification
 
-The 0.2.0 workshop milestone passes 202 backend tests and 35 renderer tests, formatting, lint and production compilation. Windows installer packaging and packaged backend/assets checks are recorded separately. This is a release candidate. Actual installer use on a clean laptop, visual workflow review, a workshop trial and a real TallyPrime test-company import remain release gates. The installer is unsigned.
+The 0.2.0 workshop milestone passes 202 backend tests and 35 renderer tests, formatting, lint and production compilation. GitHub's Windows quality checks also pass. Installer packaging, all 5,034 packaged-file integrity checks and seven packaged renderer/API smoke checks pass with synthetic data. See the [publication verification record](docs/reviews/publication-verification-2026-10-11.md). This is a release candidate. Actual installer use on a clean laptop, a full visual workflow review, a workshop trial and a real TallyPrime test-company import remain release gates. The installer is unsigned.
 
 The repository contains application source, migrations, synthetic test fixtures, dependency lockfiles and engineering documentation. Customer records, tax-invoice scans, workshop photos, live databases, backups, credentials and generated installers are excluded, including from published history.
 
