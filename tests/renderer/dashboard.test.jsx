@@ -15,7 +15,6 @@ import assert from 'assert';
 import { useSalesDashboard } from '../../src/renderer/modules/dashboard/hooks/use-sales-dashboard.js';
 import { DateFilterHeader } from '../../src/renderer/modules/dashboard/components/DateFilterHeader.jsx';
 import { KpiCard } from '../../src/renderer/modules/dashboard/components/KpiCard.jsx';
-import { KpiSection } from '../../src/renderer/modules/dashboard/components/KpiSection.jsx';
 import { TopCustomersCard } from '../../src/renderer/modules/dashboard/components/TopCustomersCard.jsx';
 import { TopServicesCard } from '../../src/renderer/modules/dashboard/components/TopServicesCard.jsx';
 import { RecentSalesTable } from '../../src/renderer/modules/dashboard/components/RecentSalesTable.jsx';
@@ -151,7 +150,7 @@ describe('Sales Dashboard Frontend Test Suite', () => {
   });
 
   // ==========================================
-  // 3. KPI Component Tests (KpiCard & KpiSection)
+  // 3. KPI Component Tests
   // ==========================================
   describe('KPI Components', () => {
     it('KpiCard renders numerical formatted values and pulse skeletons', () => {
@@ -164,22 +163,6 @@ describe('Sales Dashboard Frontend Test Suite', () => {
 
       rerender(<KpiCard title="Total" value={100} isLoading={false} />);
       assert.equal(screen.getByText('100').textContent, '100');
-    });
-
-    it('KpiSection handles INR conversion and zero defaults', () => {
-      const summary = {
-        invoicesToday: 1,
-        invoicesThisMonth: 5,
-        averageInvoiceValue: 12500.5,
-      };
-
-      render(<KpiSection summary={summary} isLoading={false} />);
-
-      // Verify localized Indian Rupee layout
-      const currencyText = screen.getByText(/₹12,500.50/);
-      assert.ok(currencyText);
-      assert.equal(screen.getByText('1').textContent, '1');
-      assert.equal(screen.getByText('5').textContent, '5');
     });
   });
 

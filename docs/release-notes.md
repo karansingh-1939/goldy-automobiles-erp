@@ -1,5 +1,12 @@
 # Release Notes - GOLDY AUTOMOBILE ERP
 
+## Unreleased — production cleanup, 10 November 2026
+
+- Removed dead code: an unused dashboard KPI component, duplicate dashboard API wrappers and unused validation helpers.
+- Removed superseded 3 October analysis/restructure reviews and orphaned evidence files that referenced artefacts no longer in the repository.
+- Dropped the unused `autoprefixer` dependency (Tailwind 4 handles prefixing) and applied non-breaking dependency security updates, so the high-severity audit gate passes. Six moderate findings remain in electron-builder's build-time `minimatch` chain and need a breaking upgrade.
+- Verification: formatting, lint, 228 backend tests, 72 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
+
 ## Unreleased — audit fixes, 15 October 2026
 
 The specialist inventory, warehouse, physical-count, asset, purchasing, invoice, service-history, supplier-ledger and staff workflows now use React. Dedicated GST details and raw backup upload restoration are included. Old application URLs redirect with record selectors preserved; duplicate application pages are removed. See [unified UI verification](reviews/react-migration-2026-10-15.md).
@@ -13,7 +20,7 @@ The specialist inventory, warehouse, physical-count, asset, purchasing, invoice,
 
 Upgrade/data limitations and current validation are recorded in [audit fixes](reviews/audit-fixes-2026-10-15.md).
 
-## 0.2.0 workshop milestone ? 11 October 2026
+## 0.2.0 workshop milestone — 11 October 2026
 
 - Expenses, technician maintenance and job assignment, audit history, and backup scheduling now have React screens in the main application shell. Other maintained static workshop pages remain accessible during migration.
 

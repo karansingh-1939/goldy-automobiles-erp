@@ -5,14 +5,7 @@ import hooks from 'eslint-plugin-react-hooks';
 
 export default [
   {
-    ignores: [
-      'dist/**',
-      'release/**',
-      'node_modules/**',
-      'data/**',
-      'resources/**',
-      'graphify-out/**',
-    ],
+    ignores: ['dist/**', 'release/**', 'node_modules/**', 'data/**', 'resources/**'],
   },
   js.configs.recommended,
   {

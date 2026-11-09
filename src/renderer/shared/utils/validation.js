@@ -25,26 +25,9 @@ export function validateGstin(gstin) {
   return gstinRegex.test(gstin);
 }
 
-export function validatePan(pan) {
-  if (!pan) return true;
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  return panRegex.test(pan);
-}
-
 export function validateVehicleReg(reg) {
   if (!reg) return false;
   // Standard Indian vehicle registration formats
   const regRegex = /^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/;
   return regRegex.test(reg.replace(/[-\s]/g, '').toUpperCase());
-}
-
-export function validateNumericRange(value, min = 0, max = Infinity) {
-  const num = Number(value);
-  if (isNaN(num)) return false;
-  return num >= min && num <= max;
-}
-
-export function validateDateRange(start, end) {
-  if (!start || !end) return false;
-  return new Date(start) <= new Date(end);
 }
