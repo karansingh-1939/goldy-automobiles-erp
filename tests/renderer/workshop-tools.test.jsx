@@ -77,6 +77,22 @@ it('displays the actual audit response fields and safe change snapshots', async 
   expect(screen.getByText(/"amount": 20/)).toBeTruthy();
 });
 
+it('preserves audit action, module and date filters in the React register', async () => {
+  const get = vi.spyOn(api, 'get').mockResolvedValue({ data: [], pagination: { totalPages: 1 } });
+  mount(AuditLogManager);
+  fireEvent.change(screen.getByLabelText('Audit action'), { target: { value: 'UPDATE' } });
+  fireEvent.change(screen.getByLabelText('Audit module'), { target: { value: 'expenses' } });
+  fireEvent.change(screen.getByLabelText('Audit from date'), { target: { value: '2026-10-01' } });
+  fireEvent.change(screen.getByLabelText('Audit to date'), { target: { value: '2026-10-14' } });
+  await waitFor(() =>
+    expect(get).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'action=UPDATE&entityType=expenses&dateFrom=2026-10-01&dateTo=2026-10-14',
+      ),
+    ),
+  );
+});
+
 it('saves the backup schedule without rewriting its last successful run', async () => {
   vi.spyOn(api, 'get').mockResolvedValue({
     data: { 'backup.auto_enabled': false, 'backup.last_run_at': '2026-01-01' },

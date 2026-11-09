@@ -1,0 +1,185 @@
+
+ RUN  v5.0.3 C:/Goldy_Automobiles
+
+ ❯ tests/renderer/recheck-regressions.test.jsx (4 tests | 1 failed) 1388ms
+   × editing a warehouse refreshes cached selectors in stock and sales screens 1272ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/renderer/recheck-regressions.test.jsx > editing a warehouse refreshes cached selectors in stock and sales screens
+AssertionError: expected false to be true // Object.is equality
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <section
+        class="p-6 space-y-5"
+      >
+        <h1
+          class="text-xl font-bold"
+        >
+          Reference masters
+        </h1>
+        <nav
+          aria-label="Master types"
+          class="flex flex-wrap gap-2"
+        >
+          <button
+            aria-pressed="true"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Warehouses
+          </button>
+          <button
+            aria-pressed="false"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Inventory categories
+          </button>
+          <button
+            aria-pressed="false"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Customers
+          </button>
+          <button
+            aria-pressed="false"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Suppliers
+          </button>
+          <button
+            aria-pressed="false"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Vehicles
+          </button>
+          <button
+            aria-pressed="false"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            Starter inventory
+          </button>
+        </nav>
+        <div
+          class="space-y-4"
+        >
+          <h2
+            class="text-lg font-semibold"
+          >
+            Warehouses
+          </h2>
+          <form
+            class="space-y-3"
+          >
+            <fieldset
+              class="grid gap-4 md:grid-cols-3"
+            >
+              <label
+                class="block space-y-1 text-sm"
+              >
+                <span>
+                  Name
+                </span>
+                <input
+                  aria-label="Name"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  required=""
+                  type="text"
+                  value=""
+                />
+              </label>
+              <label
+                class="block space-y-1 text-sm"
+              >
+                <span>
+                  Code
+                </span>
+                <input
+                  aria-label="Code"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  required=""
+                  type="text"
+                  value=""
+                />
+              </label>
+              <label
+                class="block space-y-1 text-sm"
+              >
+                <span>
+                  Address
+                </span>
+                <input
+                  aria-label="Address"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  type="text"
+                  value=""
+                />
+              </label>
+              <label
+                class="flex items-center gap-2"
+              >
+                <input
+                  checked=""
+                  type="checkbox"
+                />
+                Active
+              </label>
+              <div>
+                <label
+                  class="text-sm"
+                  for=":r0:"
+                >
+                  Parent warehouse
+                </label>
+                <div
+                  class="mt-1 space-y-2"
+                >
+                  <input
+                    aria-label="Search parent warehouse"
+                    class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 focus-ring"
+                    placeholder="Search parent warehouse"
+                    type="search"
+                    value=""
+                  />
+                  <select
+                    aria-busy="false"
+                    class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-950 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus-ring"
+                    id=":r0:"
+                  >
+                    <option
+                      value=""
+                    >
+                      Select a record...
+                    </option>
+                    <option
+                      value="7"
+              ...
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/renderer/recheck-regressions.test.jsx:23:93
+     21|   fireEvent.change(screen.getByLabelText('Name'),{target:{value:'Main …
+     22|   fireEvent.submit(screen.getByRole('button',{name:'Update record'}).c…
+     23|   await waitFor(()=>{for(const key of keys) expect(client.getQueryStat…
+       |                                                                                             ^
+     24| });
+     25|
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  15:38:37
+   Duration  3.52s (environment 42%, tests 41%, setup 7%, transform 5%, import 5%)
+

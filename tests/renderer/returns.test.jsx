@@ -27,10 +27,18 @@ it('creates a return with the real invoice ID and its sold part and batch', asyn
           status: 'FINALIZED',
           items: [
             {
+              id: 63,
               inventory_item_id: 3,
               batch_id: 9,
               description: 'Sold Filter',
               quantity: 2,
+            },
+            {
+              id: 64,
+              inventory_item_id: 3,
+              batch_id: 10,
+              description: 'Sold Filter from second batch',
+              quantity: 1,
             },
           ],
         },
@@ -49,12 +57,12 @@ it('creates a return with the real invoice ID and its sold part and batch', asyn
   await screen.findByRole('option', { name: 'JC-7 (Owner: Workshop Customer)' });
   fireEvent.change(screen.getByLabelText('Select Invoice *'), { target: { value: '7' } });
   await screen.findByRole('option', { name: 'Sold Filter (sold: 2)' });
-  fireEvent.change(screen.getByLabelText('Select Returned Part *'), { target: { value: '3' } });
+  fireEvent.change(screen.getByLabelText('Select Returned Part *'), { target: { value: '64' } });
   fireEvent.submit(screen.getByLabelText('Return Quantity *').closest('form'));
   await waitFor(() =>
     expect(post).toHaveBeenCalledWith('/api/v1/returns/customer', {
       invoiceId: 42,
-      items: [{ itemId: 3, quantity: 1, batchId: 9, condition: 'GOOD' }],
+      items: [{ invoiceItemId: 64, itemId: 3, quantity: 1, batchId: 10, condition: 'GOOD' }],
     }),
   );
 });

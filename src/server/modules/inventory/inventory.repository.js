@@ -78,17 +78,20 @@ export class InventoryRepository {
     return this.findItemById(id);
   }
 
-  listItems({ search, pageSize, offset }) {
+  listItems({ search, categoryId = null, pageSize, offset }) {
     const params = [];
-    const where = search
-      ? `WHERE inventory_items.sku LIKE ? COLLATE NOCASE
-          OR inventory_items.barcode LIKE ? COLLATE NOCASE
-          OR inventory_items.item_name LIKE ? COLLATE NOCASE`
-      : '';
-
+    const conditions = [];
     if (search) {
+      conditions.push(`(inventory_items.sku LIKE ? COLLATE NOCASE
+          OR inventory_items.barcode LIKE ? COLLATE NOCASE
+          OR inventory_items.item_name LIKE ? COLLATE NOCASE)`);
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
+    if (categoryId !== null) {
+      conditions.push('inventory_items.category_id = ?');
+      params.push(categoryId);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const data = this.db
       .prepare(

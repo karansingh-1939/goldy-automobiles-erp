@@ -10,6 +10,7 @@ export class BackupScheduler {
     this.activeTimeout = null;
     this.isExecutionLocked = false;
     this.isRunning = false;
+    this.retryNotBefore = 0;
   }
 
   start() {
@@ -188,6 +189,8 @@ export class BackupScheduler {
       }
     }
 
+    if (this.retryNotBefore > Date.now()) delayMs = this.retryNotBefore - Date.now();
+
     this.activeTimeout = setTimeout(async () => {
       await this.runScheduledBackup();
       this.scheduleNextRun();
@@ -200,12 +203,14 @@ export class BackupScheduler {
       const lockFilePath = path.join(path.dirname(dbPath), 'restore.lock');
       if (fs.existsSync(lockFilePath)) {
         console.warn('Backup scheduler execution blocked by active restore.lock file');
+        this.retryNotBefore = Date.now() + 5 * 60 * 1000;
         return;
       }
     }
 
     if (this.isExecutionLocked) {
       console.warn('Backup execution locked: skipping scheduled backup execution');
+      this.retryNotBefore = Date.now() + 5 * 60 * 1000;
       return;
     }
 
@@ -214,7 +219,9 @@ export class BackupScheduler {
       const now = new Date().toISOString();
       await this.backupService.backupDatabase({ type: 'AUTO' });
       this.backupService.recordSuccessfulRun(now);
+      this.retryNotBefore = 0;
     } catch (err) {
+      this.retryNotBefore = Date.now() + 5 * 60 * 1000;
       console.error('Automated backup scheduled run failed:', err.message);
     } finally {
       this.isExecutionLocked = false;

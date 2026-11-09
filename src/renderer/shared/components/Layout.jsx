@@ -187,19 +187,20 @@ export default function Layout() {
             <div className="border-t border-gray-200 pt-3 mt-3 dark:border-gray-800">
               <p className="px-4 text-xs font-semibold text-gray-500 mb-2">Workshop tools</p>
               {[
-                ['Invoices & Billing', '/invoices.html'],
-                ['Warehouses & Masters', '/masters.html'],
-                ['Purchasing Entry', '/purchasing.html'],
-                ['Stock Verification', '/stock-verification.html'],
-                ['Service History', '/service-history.html'],
-              ].map(([name, href]) => (
-                <a
-                  key={href}
-                  href={href}
+                ['Invoices & Billing', '/invoices'],
+                ['Warehouses & Masters', '/masters'],
+                ['Stock Verification', '/stock-verification'],
+                ['Fixed Assets', '/assets'],
+                ['Supplier Ledger', '/supplier-ledger'],
+                ['Service History', '/service-history'],
+              ].map(([name, path]) => (
+                <button
+                  key={path}
+                  onClick={() => navigate(path)}
                   className="block px-4 py-2 text-sm text-gray-600 hover:text-brand-600 dark:text-gray-400"
                 >
                   {name}
-                </a>
+                </button>
               ))}
             </div>
           </nav>

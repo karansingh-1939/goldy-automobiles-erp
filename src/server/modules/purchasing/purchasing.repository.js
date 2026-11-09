@@ -450,28 +450,39 @@ export class PurchasingRepository {
     return result.lastInsertRowid;
   }
 
-  listSupplierLedger(supplierId, { limit, offset }) {
+  listSupplierLedger(supplierId, { limit, offset, dateFrom, dateTo }) {
+    const conditions = ['supplier_id = ?'];
+    const params = [supplierId];
+    if (dateFrom) {
+      conditions.push('entry_date >= ?');
+      params.push(dateFrom);
+    }
+    if (dateTo) {
+      conditions.push('entry_date <= ?');
+      params.push(dateTo);
+    }
+    const where = conditions.join(' AND ');
     const data = this.db
       .prepare(
         `
       SELECT *
       FROM supplier_ledgers
-      WHERE supplier_id = ?
+      WHERE ${where}
       ORDER BY id DESC
       LIMIT ? OFFSET ?
     `,
       )
-      .all(supplierId, limit, offset);
+      .all(...params, limit, offset);
 
     const total = this.db
       .prepare(
         `
       SELECT COUNT(*) AS count
       FROM supplier_ledgers
-      WHERE supplier_id = ?
+      WHERE ${where}
     `,
       )
-      .get(supplierId).count;
+      .get(...params).count;
 
     return { data, total };
   }

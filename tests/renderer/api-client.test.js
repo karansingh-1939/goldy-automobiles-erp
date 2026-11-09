@@ -10,6 +10,28 @@ afterEach(() => {
   useAppStore.getState().logout();
 });
 
+it('uploads a backup as raw bytes with authenticated non-JSON content type', async () => {
+  const payload = new Blob(['SQLite format 3\0']);
+  const fetch = vi.fn(async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ status: 'success' }),
+  }));
+  vi.stubGlobal('fetch', fetch);
+  await api.postBinary('/api/v1/backups/restore/upload', payload);
+  expect(fetch).toHaveBeenCalledWith(
+    '/api/v1/backups/restore/upload',
+    expect.objectContaining({
+      method: 'POST',
+      body: payload,
+      headers: expect.objectContaining({
+        'Content-Type': 'application/octet-stream',
+        Authorization: 'Bearer old-session',
+      }),
+    }),
+  );
+});
+
 it('clears cached business data and confirmation callbacks when a session expires', async () => {
   queryClient.setQueryData(['private-report'], { profit: 100 });
   useAppStore.getState().openDialog({ title: 'Delete', onConfirm: vi.fn() });

@@ -75,6 +75,7 @@ export default function SupplierManager() {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       addNotification('Supplier profile updated.', 'success');
       setEditingSupplier(null);
+      setShowAddModal(false);
       resetForm();
     },
     onError: (err) => addNotification(err.message || 'Failed to update supplier.', 'error'),
@@ -132,13 +133,13 @@ export default function SupplierManager() {
 
     const payload = {
       name,
-      phone: phone || undefined,
-      email: email || undefined,
-      gstin: gstin || undefined,
-      address: address || undefined,
-      city: city || undefined,
-      state: state || undefined,
-      pincode: pincode || undefined,
+      phone: phone || null,
+      email: email || null,
+      gstin: gstin || null,
+      address: address || null,
+      city: city || null,
+      state: state || null,
+      pincode: pincode || null,
     };
 
     if (editingSupplier) {

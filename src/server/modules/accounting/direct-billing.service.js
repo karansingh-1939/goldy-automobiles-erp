@@ -1,6 +1,7 @@
 import { AppError } from '../../shared/errors/app-error.js';
 import { AccountingPostingEngine } from './posting-engine.service.js';
 import { createInventoryService } from '../inventory/inventory.service.js';
+import { assertCustomerCreditLimit } from './customer-credit.service.js';
 
 function roundMoney(val) {
   return Math.round(val * 100) / 100;
@@ -252,6 +253,7 @@ export class DirectBillingService {
       }
 
       const grandTotal = Math.round(subtotal + gstTotal);
+      assertCustomerCreditLimit(this.db, companyId, customerId, grandTotal);
 
       let cgst = 0;
       let sgst = 0;

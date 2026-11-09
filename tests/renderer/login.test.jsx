@@ -5,6 +5,22 @@ import Login from '../../src/renderer/modules/auth/Login.jsx';
 import { api } from '../../src/renderer/shared/api/api-client.js';
 
 describe('Workshop onboarding', () => {
+  it('shows the rotated recovery code after password reset', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({ setupCompleted: true });
+    vi.spyOn(api, 'post').mockResolvedValue({
+      success: true,
+      newRecoveryCode: 'GOLDY-ROTATED-CODE',
+    });
+    render(<Login />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Forgot password?' }));
+    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'owner' } });
+    fireEvent.change(screen.getByLabelText('Recovery code'), {
+      target: { value: 'GOLDY-OLD-CODE' },
+    });
+    fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'StrongPass1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset password' }));
+    expect(await screen.findByText('GOLDY-ROTATED-CODE')).toBeTruthy();
+  });
   it('creates the first administrator and shows the recovery code before login', async () => {
     vi.spyOn(api, 'get').mockResolvedValue({ setupCompleted: false });
     const post = vi.spyOn(api, 'post').mockResolvedValue({ recoveryCode: 'GOLDY-TEST-CODE' });

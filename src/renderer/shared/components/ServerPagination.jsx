@@ -4,6 +4,7 @@ export default function ServerPagination({ page, totalPages = 1, onChange, disab
   return (
     <nav aria-label="Record pages" className="flex items-center justify-end gap-3 text-sm">
       <button
+        type="button"
         className="rounded border px-3 py-2 disabled:opacity-50"
         disabled={disabled || page <= 1}
         onClick={() => onChange(page - 1)}
@@ -14,6 +15,7 @@ export default function ServerPagination({ page, totalPages = 1, onChange, disab
         Page {page} of {Math.max(1, totalPages)}
       </span>
       <button
+        type="button"
         className="rounded border px-3 py-2 disabled:opacity-50"
         disabled={disabled || page >= totalPages}
         onClick={() => onChange(page + 1)}

@@ -5,6 +5,7 @@ import { getBackupDirectory, isManagedBackup } from '../../database/backup-servi
 import { BackupRepository } from './backup.repository.js';
 import { AppError } from '../../shared/errors/app-error.js';
 import { verifyBackupSnapshot } from './snapshot-verification.js';
+import { acquireBackupLock } from '../../database/backup-lock.js';
 
 export class BackupService {
   constructor(db) {
@@ -57,12 +58,12 @@ export class BackupService {
         'BACKUP_PATH_INVALID',
       );
     }
-    const lockPath = `${dbPath}.backup.lock`;
     if (!allowDuringRestore && fs.existsSync(path.join(path.dirname(dbPath), 'restore.lock'))) {
       throw new AppError('A restore is already in progress.', 409, 'RESTORE_IN_PROGRESS');
     }
+    let releaseLock;
     try {
-      fs.writeFileSync(lockPath, String(process.pid), { flag: 'wx' });
+      releaseLock = acquireBackupLock(dbPath);
     } catch (error) {
       throw new AppError(
         'A backup is already in progress or its lock cannot be acquired.',
@@ -81,7 +82,7 @@ export class BackupService {
         created_by: userId || null,
       });
     } catch (dbErr) {
-      fs.unlinkSync(lockPath);
+      releaseLock();
       throw new AppError(
         `Failed to initialize backup log: ${dbErr.message}`,
         500,
@@ -140,7 +141,7 @@ export class BackupService {
 
       throw new AppError(`Database backup failed: ${err.message}`, 500, 'BACKUP_FAILED');
     } finally {
-      if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath);
+      releaseLock();
     }
   }
 

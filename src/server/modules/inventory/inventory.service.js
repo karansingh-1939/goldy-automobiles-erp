@@ -118,8 +118,16 @@ export class InventoryService {
     const page = Math.max(Number.parseInt(query.page || '1', 10) || 1, 1);
     const pageSize = Math.min(Math.max(Number.parseInt(query.pageSize || '20', 10) || 20, 1), 100);
     const search = typeof query.search === 'string' ? query.search.trim() : '';
+    const categoryId =
+      query.category_id === undefined || query.category_id === ''
+        ? null
+        : Number(query.category_id);
+    if (categoryId !== null && (!Number.isSafeInteger(categoryId) || categoryId <= 0)) {
+      throw new AppError('Category must be a positive integer.', 400, 'VALIDATION_ERROR');
+    }
     const result = this.repository.listItems({
       search,
+      categoryId,
       pageSize,
       offset: (page - 1) * pageSize,
     });

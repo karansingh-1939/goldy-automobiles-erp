@@ -19,28 +19,58 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
 });
 
 export default function SalesDashboardContainer() {
-  const { date, setDate, data, isLoading: salesLoading, error, refresh } = useSalesDashboard();
+  const {
+    date,
+    setDate,
+    data,
+    isLoading: salesLoading,
+    error: salesError,
+    refresh: refreshSales,
+  } = useSalesDashboard();
 
   // 1. Parallel fetch extra metrics using TanStack Query
-  const { data: operationsData, isLoading: opsLoading } = useQuery({
+  const {
+    data: operationsData,
+    isLoading: opsLoading,
+    error: operationsError,
+    refetch: refreshOperations,
+  } = useQuery({
     queryKey: ['dashboard-operations', date],
     queryFn: () => api.get(`/api/v1/dashboard/operations?date=${date}`),
     enabled: !!date,
     retry: false,
   });
 
-  const { data: financialData, isLoading: finLoading } = useQuery({
+  const {
+    data: financialData,
+    isLoading: finLoading,
+    error: financialError,
+    refetch: refreshFinancial,
+  } = useQuery({
     queryKey: ['dashboard-financial', date],
     queryFn: () => api.get(`/api/v1/dashboard/financial?date=${date}`),
     enabled: !!date,
     retry: false,
   });
 
-  const { data: inventoryData, isLoading: invLoading } = useQuery({
+  const {
+    data: inventoryData,
+    isLoading: invLoading,
+    error: inventoryError,
+    refetch: refreshInventory,
+  } = useQuery({
     queryKey: ['dashboard-inventory'],
     queryFn: () => api.get('/api/v1/dashboard/inventory'),
     retry: false,
   });
+
+  const error = salesError || operationsError || financialError || inventoryError;
+  const refresh = () => {
+    refreshSales();
+    refreshOperations();
+    refreshFinancial();
+    refreshInventory();
+  };
 
   // Handle Auth Expired redirection
   useEffect(() => {
@@ -116,11 +146,11 @@ export default function SalesDashboardContainer() {
 
   // Chart 1: Revenue Line Chart
   const revenueChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: [`${date.slice(0, 7)} through ${date}`],
     datasets: [
       {
         label: 'Monthly Revenue (₹)',
-        data: [180000, 240000, 190000, 280000, 310000, monthlyRevenue || 340000],
+        data: [monthlyRevenue],
         borderColor: '#0284c7',
         backgroundColor: 'rgba(2, 132, 199, 0.05)',
         tension: 0.4,
@@ -131,10 +161,10 @@ export default function SalesDashboardContainer() {
 
   // Chart 2: Job Status Doughnut
   const jobStatusChartData = {
-    labels: ['Draft / In Progress', 'Completed', 'Awaiting Delivery'],
+    labels: ['Other open cards', 'Completed', 'Open with delivery promise'],
     datasets: [
       {
-        data: [openJobCards || 4, completedJobCards || 8, pendingDeliveries || 2],
+        data: [Math.max(0, openJobCards - pendingDeliveries), completedJobCards, pendingDeliveries],
         backgroundColor: ['#f59e0b', '#10b981', '#3b82f6'],
         borderWidth: 1,
       },
@@ -142,12 +172,9 @@ export default function SalesDashboardContainer() {
   };
 
   // Chart 3: Warehouse Stock value Bar
-  const warehouseLabels = inventoryData?.warehouseSummary?.map(
-    (w) => w.warehouseCode || w.warehouseName,
-  ) || ['Main', 'Store-A', 'Store-B'];
-  const warehouseValues = inventoryData?.warehouseSummary?.map((w) => w.totalValue) || [
-    140000, 55000, 20000,
-  ];
+  const warehouseLabels =
+    inventoryData?.warehouseSummary?.map((w) => w.warehouseCode || w.warehouseName) || [];
+  const warehouseValues = inventoryData?.warehouseSummary?.map((w) => w.totalValue) || [];
   const stockValueChartData = {
     labels: warehouseLabels,
     datasets: [
@@ -180,7 +207,7 @@ export default function SalesDashboardContainer() {
     alerts.push({
       id: 'deliveries',
       severity: 'low',
-      message: `Deliveries: ${pendingDeliveries} completed job cards are waiting for final invoicing.`,
+      message: `Deliveries: ${pendingDeliveries} open job cards have a promised delivery date.`,
     });
   }
   alerts.push({
@@ -291,7 +318,11 @@ export default function SalesDashboardContainer() {
           value={inrFormatter.format(totalValuation)}
           isLoading={overallLoading}
         />
-        <KpiCard title="Awaiting Delivery" value={pendingDeliveries} isLoading={overallLoading} />
+        <KpiCard
+          title="Open with Delivery Promise"
+          value={pendingDeliveries}
+          isLoading={overallLoading}
+        />
       </div>
 
       {/* Operational Alerts & Dashboard Charts Row */}
@@ -329,10 +360,10 @@ export default function SalesDashboardContainer() {
         {/* Middle: Revenue Line chart */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm h-[320px]">
           <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-4 uppercase">
-            Monthly Revenue Trend
+            Revenue This Month
           </h4>
           <div className="h-[230px]">
-            <BaseChart type="line" data={revenueChartData} />
+            <BaseChart type="bar" data={revenueChartData} />
           </div>
         </div>
 
@@ -353,7 +384,11 @@ export default function SalesDashboardContainer() {
           Warehouse Inventory Valuations
         </h4>
         <div className="h-[250px]">
-          <BaseChart type="bar" data={stockValueChartData} />
+          {warehouseLabels.length ? (
+            <BaseChart type="bar" data={stockValueChartData} />
+          ) : (
+            <p className="text-sm text-gray-500">No warehouse inventory data.</p>
+          )}
         </div>
       </div>
 

@@ -48,7 +48,7 @@ export default function Login() {
                 recoveryCode: fields.recoveryCode,
                 newPassword: fields.password,
               });
-        setIssuedCode(result.recoveryCode || '');
+        setIssuedCode(result.recoveryCode || result.newRecoveryCode || '');
         setFields((previous) => ({ ...previous, password: '' }));
         setMode('login');
       }

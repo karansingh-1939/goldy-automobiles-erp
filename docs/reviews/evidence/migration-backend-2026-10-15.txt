@@ -1,0 +1,435 @@
+
+> goldy-automobiles-erp@0.2.0 test:server
+> node scripts/test-server.js
+
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ Accounting Posting Engine - Unit & Validation checks (895.9418ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Silent Integrations & APIs (731.3542ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Transaction Rollback & Safety (396.3812ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Invoicing and Cancellation Silent Integration (666.89ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Purchase Silent Integration (654.4033ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - LedgerResolver Caching (381.6408ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Security and Authorization gates (1191.0161ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Concurrency Retry Safety (373.6051ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Database Query Planner Index Verification (375.4787ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Financial Year Gates and Lock Boundary Conditions (368.3234ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting - Sprint 2 REST APIs, Manual Vouchers & Reports (1223.2851ms)
+✔ Accounting - Sprint 3 Direct Billing, Receipts, and Allocations Engine (707.3723ms)
+Skipping starter inventory seeding in test environment.
+✔ Sprint 9: After-Sales Subsystem E2E Integration Test (1682.3943ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ returns identify original invoice lines, and reject ambiguous legacy SKU selection (428.5347ms)
+Skipping starter inventory seeding in test environment.
+✔ credit notes reduce document balances, receipt ceilings and payment status (388.288ms)
+Skipping starter inventory seeding in test environment.
+✔ return after full payment preserves cash receipt and leaves customer credit unallocated (390.9659ms)
+Skipping starter inventory seeding in test environment.
+✔ partial return releases only excess allocations and receipt cancellation preserves the credit (391.2788ms)
+Skipping starter inventory seeding in test environment.
+✔ supplier returns require purchase ownership and immutable source valuation (389.3152ms)
+Skipping starter inventory seeding in test environment.
+✔ direct invoices enforce customer credit limit and rollback documents and stock (378.2846ms)
+Skipping starter inventory seeding in test environment.
+✔ migration preserves historical invoice and cash amounts while freeing return credit (420.4904ms)
+✔ supplier return ambiguous purchase evidence requires explicit source and retains original GST mode (385.0368ms)
+Skipping starter inventory seeding in test environment.
+✔ audit logs list enforces authentication and permissions (722.5501ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ password recovery returns the displayed code and revokes previous sessions (913.2238ms)
+✔ session revocation failure rolls back the password and recovery code change (98.6698ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ admin can login and read the current user profile (762.5431ms)
+Skipping starter inventory seeding in test environment.
+✔ login rejects invalid credentials (708.7422ms)
+Skipping starter inventory seeding in test environment.
+✔ logout revokes the active session token (700.5435ms)
+Skipping starter inventory seeding in test environment.
+✔ onboarding setup and login flows (999.6996ms)
+Skipping starter inventory seeding in test environment.
+✔ password complexity validation constraints (124.5034ms)
+Skipping starter inventory seeding in test environment.
+✔ login lockout and expiration protection (2397.4955ms)
+✔ forgot-password recovery, password validation and code rotation flow (4025.0731ms)
+✔ startup recovers a backup lock only when its process has exited (197.5879ms)
+✔ manual backup recovers an orphan lock created since startup (187.4094ms)
+✔ backup retains active, reused-PID and malformed locks (169.0265ms)
+✔ an uninspectable PID does not authorize deleting a backup lock (113.8429ms)
+✔ backup completion cannot delete a replacement owner lock (147.9228ms)
+✔ overdue interval backups wait before retrying a disk failure (0.6484ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler persistence - settings retrieval and update (429.1943ms)
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler persistence - record successful run (last_run_at) (401.3725ms)
+Skipping starter inventory seeding in test environment.
+▶ backup scheduler persistence - retention enforcement & missing file handling
+  ✔ retention limits: keeps newest N backups, deletes older, and logs purges (8.5127ms)
+  ✔ gracefully handles missing files on disk during retention (2.7847ms)
+  ✔ retention boundary conditions: retention_count = 1 (5.4571ms)
+  ✔ retention boundary conditions: no backups or large retention count (1.1513ms)
+✔ backup scheduler persistence - retention enforcement & missing file handling (432.7076ms)
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler - lifecycle controls (start, stop, restart) (392.4363ms)
+Backup execution locked: skipping scheduled backup execution
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler - concurrency protection (overlapping executions) (419.4065ms)
+Backup scheduler execution blocked by active restore.lock file
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler - restore lock file detection (473.6761ms)
+Automated backup scheduled run failed: Disk full simulated error
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler - failure handling & resilience (400.7687ms)
+Skipping starter inventory seeding in test environment.
+✔ backup scheduler - catch-up execution checks (387.6592ms)
+✔ backup scheduler - daily and weekly scheduling calculations (430.2488ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ external backups verify restore compatibility and retain local copies when disconnected (727.8439ms)
+Skipping starter inventory seeding in test environment.
+✔ external backup settings reject relative folders and verification is administrator-only (845.9923ms)
+Skipping starter inventory seeding in test environment.
+✔ backup engine - manual backup API integration and file validation (691.3485ms)
+Skipping starter inventory seeding in test environment.
+✔ backup engine - RBAC permissions protection (916.2192ms)
+Skipping starter inventory seeding in test environment.
+✔ backup engine - failure handling and log recording (428.5092ms)
+✔ backup engine - fallback method (VACUUM INTO) (430.3947ms)
+Skipping starter inventory seeding in test environment.
+✔ CRM Loyalty, Referrals, Promotions and Reminders E2E Workflow (877.1391ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ dashboard operations API - authentication and response constraints (848.6886ms)
+Skipping starter inventory seeding in test environment.
+✔ dashboard financial API - authentication, permission, and calculation constraints (1051.7584ms)
+Skipping starter inventory seeding in test environment.
+✔ dashboard sales API - authentication, permission, and calculation constraints (998.2534ms)
+✔ dashboard inventory API - authentication, permission, and calculation constraints (966.5167ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ database initialization creates required tables and seed data (472.4329ms)
+✔ migrations and seeds are idempotent (417.6001ms)
+▶ database integrity check system verification
+  ✔ verifies clean database returns healthy status (56.1237ms)
+  ✔ verifies corrupted database file returns failed status with error logs (44.5903ms)
+  ✔ blocks startup and throws DATABASE_CORRUPTION error on integrity failure (13.1727ms)
+  ✔ executes global corruption hook callback on startup validation crash (8.9037ms)
+✔ database integrity check system verification (125.4149ms)
+Migration execution failed on 002_bad.sql: no such table: non_existing_table
+Automatic daily silent backup created successfully at: C:\Users\karan\AppData\Local\Temp\goldy-tests-K8ylO6\data\test_sandbox_migrations\subtest_8\backups\goldy_erp_temp.db-9bd988d0d1c96ab9\goldy_backup_2026-10-15_14-11-35_DAILY_cadb4cd7-4b41-45fe-aa1c-444d641bb7d9.db
+▶ database migration framework verification
+  ✔ first-time migration runs all scripts and records correct metadata (26.0886ms)
+  ✔ re-run is idempotent and applies nothing (22.8685ms)
+  ✔ failed migration rolls back the transaction and stops future migrations (27.024ms)
+  ✔ checksum mismatch blocks migration and startup (27.5477ms)
+  ✔ missing applied migration file throws MIGRATION_MISSING_FILE (25.5137ms)
+  ✔ duplicate migration filenames/sequence-prefixes throw validation errors (2.1394ms)
+  ✔ pre-migration backup hook is executed prior to running migrations (7.757ms)
+  ✔ initializeDatabase blocks startup on migration failure (13.6013ms)
+✔ database migration framework verification (160.3271ms)
+▶ database path isolation environment and overrides verification
+  ✔ resolves to local file in development mode by default (1.5547ms)
+  ✔ resolves to AppData path in production mode (1.0936ms)
+  ✔ respects DATABASE_PATH override variable (1.0318ms)
+  ✔ respects APPDATA_PATH override variable (0.9367ms)
+✔ database path isolation environment and overrides verification (5.5896ms)
+▶ auto-directory structure creation check
+  ✔ creates data, backups, and logs sibling folder structure on startup (9.3105ms)
+✔ auto-directory structure creation check (11.4077ms)
+▶ database corruption recovery system verification
+  ✔ successful recovery from latest valid backup (54.7359ms)
+  ✔ recovery fails and blocks startup if backups directory is empty or missing (15.2478ms)
+  ✔ skips invalid backups and fails recovery if no valid backup exists (18.0162ms)
+  ✔ skips backup if it has valid header but fails PRAGMA integrity_check (10.807ms)
+  ✔ renames corrupted database along with WAL and SHM files (15.6005ms)
+✔ database corruption recovery system verification (122.1195ms)
+▶ database connection production safety pragma configuration validation
+  ✔ verifies WAL journal_mode is active (0.4892ms)
+  ✔ verifies synchronous mode is NORMAL (0.1608ms)
+  ✔ verifies busy_timeout is set to 10000ms (0.11ms)
+  ✔ verifies foreign key constraints are enforced (2.1065ms)
+  ✔ fails database safety initialization if pragma configuration is invalid (0.1823ms)
+✔ database connection production safety pragma configuration validation (16.5916ms)
+✔ desktop smoke accepts only a new database and marker-owned temporary AppData (39.8772ms)
+✔ desktop smoke refuses database and AppData overrides outside its workspace (16.922ms)
+✔ desktop smoke refuses a missing or mismatched ownership nonce (19.1739ms)
+Skipping starter inventory seeding in test environment.
+✔ expense summaries aggregate every matching row beyond pagination and reject invalid ranges (767.5725ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ expense APIs create, update, list with filters, and delete expenses with audit logs (760.9765ms)
+✔ expense APIs enforce authentication and validation (669.1066ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+▶ four billing sections and chassis number integration
+  ✔ vehicle chassis_number CRUD and searching (762.7996ms)
+Skipping starter inventory seeding in test environment.
+  ✔ job cards and invoices searchable by engine and chassis numbers (671.4525ms)
+  ✔ lubricants and outside jobs flow, gst, profit, and cancellation logic (677.1685ms)
+✔ four billing sections and chassis number integration (2112.6594ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ gst API exposes summary, gstr1, gstr3b, and hsn-summary with filtered report data (840.8631ms)
+Skipping starter inventory seeding in test environment.
+✔ gst API applies custom date filters and excludes cancelled invoices (734.7104ms)
+✔ gst API enforces authentication and date filter validation (739.2062ms)
+Skipping starter inventory seeding in test environment.
+✔ GST Engine & Tax Compliance Sprint 5 - End-to-End (821.5196ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ gst repository summary, GSTR datasets, and HSN summary exclude cancelled invoices (887.8758ms)
+✔ gst repository date filters limit invoice datasets (718.2946ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ gst service returns summary, GSTR-1, GSTR-3B, and HSN reports with camelCase data (827.6325ms)
+Skipping starter inventory seeding in test environment.
+✔ gst service excludes cancelled invoices and supports period presets (732.8516ms)
+✔ gst service validates report query parameters (446.7083ms)
+Skipping starter inventory seeding in test environment.
+✔ inventory category filtering applies before pagination and combines with search (444.7681ms)
+Skipping starter inventory seeding in test environment.
+✔ Advanced Inventory Control & Warehouse Operations Sprint 6 (1012.5849ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ inventory APIs create items and post stock movements (831.5878ms)
+✔ purchasing APIs create orders, post receipts to stock, and record returns (755.4142ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+▶ inventory starter seeding architecture
+  ✔ application startup does not seed inventory automatically (441.9101ms)
+Skipping starter inventory seeding in test environment.
+  ✔ first load succeeds and subsequent load returns already loaded response (444.8378ms)
+  ✔ GET /api/v1/inventory/seed-status and POST /api/v1/inventory/seed-starter via API (789.7055ms)
+✔ inventory starter seeding architecture (1677.6369ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ job card creation stores customer, vehicle, odometer, complaint, mechanic, and draft status (799.8068ms)
+Skipping starter inventory seeding in test environment.
+✔ job card completion deducts inventory, creates invoice, and stores profit data (749.2902ms)
+Skipping starter inventory seeding in test environment.
+✔ invoice cancellation restores stock, reverses profit, and writes audit log (773.5534ms)
+✔ job card finalization rolls back stock deduction when a later step fails (754.4322ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ Job Card Simplified Workflow - Customer name used for suggestions only, no automatic merge by name (772.6379ms)
+Skipping starter inventory seeding in test environment.
+✔ Job Card Simplified Workflow - Automatic matching by Reg and Phone and duplicate prevention (751.3948ms)
+✔ Job Card Simplified Workflow - Autocomplete sorting and details lookups (700.3901ms)
+✔ browser and server business dates preserve local month and day across UTC boundaries (0.4745ms)
+✔ GST and profit month presets use the local calendar (1.3591ms)
+✔ today workshop counts interpret stored UTC timestamps on the local calendar (2.3086ms)
+2026-10-15T08:41:48.506Z INFO STARTUP Logger test initialized
+2026-10-15T08:41:48.509Z INFO MIGRATION Migration applied successfully | Context: {"migrationId":8}
+2026-10-15T08:41:48.534Z WARN SYSTEM This warning should be logged
+2026-10-15T08:41:48.534Z ERROR SYSTEM This error should be logged
+2026-10-15T08:41:48.573Z INFO SYSTEM First message
+2026-10-15T08:41:48.574Z INFO SYSTEM Second message
+2026-10-15T08:41:48.574Z INFO SYSTEM Third message
+2026-10-15T08:41:48.601Z INFO BACKUP This log should fallback safely without throwing
+Logger append write failed: Disk space full or read-only filesystem
+2026-10-15T08:41:48.604Z DEBUG SYSTEM debug msg
+2026-10-15T08:41:48.605Z INFO SYSTEM info msg
+2026-10-15T08:41:48.605Z WARN SYSTEM warn msg
+2026-10-15T08:41:48.605Z ERROR SYSTEM error msg
+2026-10-15T08:41:48.635Z INFO SYSTEM info msg
+2026-10-15T08:41:48.635Z WARN SYSTEM warn msg
+2026-10-15T08:41:48.635Z ERROR SYSTEM error msg
+2026-10-15T08:41:48.673Z WARN SYSTEM warn msg
+2026-10-15T08:41:48.673Z ERROR SYSTEM error msg
+2026-10-15T08:41:48.705Z ERROR SYSTEM error msg
+✔ logger utility - 1. Log Directory Creation (1.7796ms)
+✔ logger utility - 2. Log File Creation and Naming (2.2746ms)
+✔ logger utility - 3. Formatting (25.2358ms)
+✔ logger utility - 4. Log Levels (39.1866ms)
+✔ logger utility - 5. Multiple Sequential Writes & Ordering (28.126ms)
+✔ logger utility - 6. Failure Safety (1.4868ms)
+✔ logger utility - 7. Singleton Behavior (1.2502ms)
+✔ logger utility - 8. AppData Integration (0.1186ms)
+✔ logger utility - 9. Configurable Level Filtering Behavior (118.4209ms)
+✔ logger utility - 10. Default Level Behavior (1.1193ms)
+✔ logger utility - 11. Invalid Level Fallback (0.9253ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ masters CRUD supports customers, vehicles, suppliers, warehouses, and inventory categories (822.4011ms)
+✔ masters validation and authorization errors are enforced (726.7378ms)
+Skipping starter inventory seeding in test environment.
+✔ mechanic timers prevent overlap and billing while running; reminders use the vehicle owner (828.8427ms)
+Skipping starter inventory seeding in test environment.
+✔ financial statements exclude future and cancelled vouchers while preserving empty ledgers (500.5053ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ counter sale costs match movements and cancellation restores every consumed batch (512.946ms)
+✔ workshop interstate tax is posted as IGST and paid invoice cancellation is blocked (437.0362ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ maintenance routes reject non-admin even when granted backup permission (813.4288ms)
+Skipping starter inventory seeding in test environment.
+✔ JSON import and heuristic demo purge cannot alter production (455.3718ms)
+Automatic daily silent backup created successfully at: C:\Users\karan\AppData\Local\Temp\goldy-backup-isolation-ob8j5V\backups\goldy.sqlite-714069d56c16c61f\goldy_backup_2026-10-15_14-11-52_DAILY_e3f84e6f-1002-42d5-bc82-9ac8c2d1c9da.db
+Skipping starter inventory seeding in test environment.
+✔ business JSON export excludes credentials and database control tables (422.8655ms)
+✔ startup backups and daily backup detection isolate database identities (39.2466ms)
+Skipping starter inventory seeding in test environment.
+✔ retention never deletes a file outside the managed backup directory (473.902ms)
+Skipping starter inventory seeding in test environment.
+✔ restore includes committed source WAL rows and accepts a missing audit actor (715.1161ms)
+Skipping starter inventory seeding in test environment.
+✔ restore rejects non-ERP SQLite before changing production (433.8484ms)
+Skipping starter inventory seeding in test environment.
+✔ restore rejects a demo snapshot and an incomplete ERP schema without changing production (555.6877ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ restore rolls back when the success audit write fails (676.5618ms)
+✔ demo initialize, clear and reset preserve production and leave a valid demo database (1451.3874ms)
+✔ a failed integrity scan invokes the recovery hook once after closing the connection (5.6943ms)
+✔ automatic recovery uses only the active identity and includes backup WAL frames (92.4095ms)
+✔ startup refuses to create a blank database after an interrupted restore (16.6024ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ untouched mixed-cost purchase cancellation tolerates WAC rounding and reverses its voucher (452.4295ms)
+Skipping starter inventory seeding in test environment.
+✔ purchase cancellation still rejects consumed-value conflicts and rolls back journals (415.9585ms)
+Skipping starter inventory seeding in test environment.
+✔ purchase bill and supplier payment retain voucher links and cancellation reverses them (430.5012ms)
+Skipping starter inventory seeding in test environment.
+✔ manual receipt allocation cannot resurrect a cancelled invoice (474.083ms)
+Skipping starter inventory seeding in test environment.
+✔ manual allocation rolls back earlier lines when a later target is cancelled (441.1444ms)
+Skipping starter inventory seeding in test environment.
+✔ duplicate customer return lines cannot refund more than the invoice quantity (406.0186ms)
+Skipping starter inventory seeding in test environment.
+✔ customer return refunds discounted value and restores weighted-average valuation (407.744ms)
+Skipping starter inventory seeding in test environment.
+✔ customer return reverses output GST and uses original invoice cost (436.8052ms)
+Skipping starter inventory seeding in test environment.
+✔ damaged customer returns never become available selling stock (463.3336ms)
+✔ purchase return reverses inventory, supplier payable and input GST journals (413.9231ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ expense edits repost journals atomically and deletion removes both financial views (484.5786ms)
+Skipping starter inventory seeding in test environment.
+✔ profit combines workshop and direct sales and active journal expenses without duplicating legacy rows (493.2724ms)
+Skipping starter inventory seeding in test environment.
+✔ expense-only months include active journal expenses once and exclude cancelled postings (408.2253ms)
+Skipping starter inventory seeding in test environment.
+✔ direct profit uses exact persisted line cost instead of rounding unit costs again (414.8441ms)
+Skipping starter inventory seeding in test environment.
+✔ completed discounted returns reverse operational profit on return date and reconcile journals (410.6578ms)
+✔ roundoff revenue belongs to operational gross and net profit (414.094ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ registration migration stops on existing collisions and preserves both vehicle histories (448.2748ms)
+Skipping starter inventory seeding in test environment.
+✔ vehicle master rejects canonical collisions and ignores client normalized identity (722.9269ms)
+✔ rejected job card rolls back intake customers vehicles and ownership (413.877ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ profit summary integrates expenses, calculates net profit, and excludes cancelled invoices (843.9829ms)
+Skipping starter inventory seeding in test environment.
+✔ monthly profit report combines invoice profit and expenses by month (776.511ms)
+Skipping starter inventory seeding in test environment.
+✔ profit breakdown APIs group active invoice profit by customer, vehicle, item, and mechanic (825.8365ms)
+✔ profit reports enforce authentication and date filter validation (726.1721ms)
+Skipping starter inventory seeding in test environment.
+✔ Accounting Sprint 4 - Purchasing & Supplier Accounting End-to-End (810.2813ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ database restore system - validations and missing file handling (451.4187ms)
+Skipping starter inventory seeding in test environment.
+✔ database restore system - corrupted backup file detection (464.091ms)
+Skipping starter inventory seeding in test environment.
+✔ database restore system - concurrent restore protection (447.5849ms)
+Skipping starter inventory seeding in test environment.
+✔ database restore system - successful restore and audit log creation (646.8697ms)
+✔ database restore system - failed verification & rollback execution (670.6251ms)
+Skipping starter inventory seeding in test environment.
+✔ Sales Orders, Quotations & Customer Order Management Sprint 7 (801.4088ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ inclusive quotation preserves its price through revision, conversion, shipment and invoice (466.9745ms)
+✔ sales API searches customer/order names and reports reachable pages (712.0372ms)
+✔ tax-basis migration recovers historical inclusive pricing without rewriting totals (2.3424ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ service history API - authentication and authorization constraints (772.4464ms)
+Skipping starter inventory seeding in test environment.
+✔ service history API - entity existence checks (676.1416ms)
+✔ service history API - empty history and populated service records (743.668ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ retired audit and Tally pages preserve authenticated links into the React application (779.604ms)
+✔ React application serves its compiled shell and assets (488.2699ms)
+Skipping starter inventory seeding in test environment.
+✔ authenticated root requests keep the React shell (763.0523ms)
+Skipping starter inventory seeding in test environment.
+✔ Physical Stock Verification workflow checks (807.3531ms)
+Skipping starter inventory seeding in test environment.
+STRESS TEST SETUP completed. Loaded 4,000+ vouchers in 2697ms.
+BENCHMARK: Trial Balance generated in 10ms.
+BENCHMARK: Profit & Loss generated in 2ms.
+BENCHMARK: Balance Sheet generated in 8ms.
+✔ Accounting - Large Scale Stress & Reconciliation Audits (3414.6277ms)
+Skipping starter inventory seeding in test environment.
+✔ supplier ledger date filters paginate matching entries without recalculating historical balances (513.0909ms)
+Skipping starter inventory seeding in test environment.
+JC_RESPONSE: {"data":{"id":1,"job_card_number":"JC-1792053728299-4059","customer_id":1,"vehicle_id":1,"status":"DRAFT","complaint":"Routine servicing","diagnosis":null,"odometer_reading":12000,"estimated_amount":0,"opened_at":"2026-10-15 08:42:08","closed_at":null,"assigned_to":null,"created_by":1,"created_at":"2026-10-15 08:42:08","updated_at":"2026-10-15 08:42:08","technician_id":null,"fuel_level":null,"promised_delivery_at":null,"toolkit_present":0,"spare_wheel_present":0,"jack_present":0,"stereo_present":0,"battery_brand":null,"customer_name":"Tally Customer Ltd","customer_phone":"9777777777","registration_number":"MH-12-AB-1234","engine_number":"ENGINE12345","chassis_number":"CHASSIS12345","assigned_mechanic_name":null,"previous_visits_count":0,"parts":[],"labour":[],"invoice":null}}
+ADD_PART_RESPONSE: {"data":{"id":1,"job_card_id":1,"item_type":"PART","inventory_item_id":1,"batch_id":1,"description":"Oil Filter S8","quantity":1,"selling_price":2500,"purchase_cost_snapshot":1000,"gst_rate":18,"gst_amount":450,"line_total":2950,"sku":"PART-TALLY-EXP","item_name":"Oil Filter S8","category":null,"warehouse_id":4}}
+✔ tally export endpoint generates XML and enforces permissions (832.3923ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ validation: customer field validations (820.9105ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: vehicle field validations (745.1089ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: warehouse code validations (764.7173ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: inventory item cost and SKU validation (443.967ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: inventory item auto SKU and defaults validation (417.5313ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: procurement validations (407.4666ms)
+Skipping starter inventory seeding in test environment.
+✔ validation: job card odometer and sync validations (399.3519ms)
+✔ validation: expense validations (0.4934ms)
+✔ validation: backup settings validations (407.1048ms)
+✔ startup backups include committed WAL data and never overwrite a previous snapshot (32.7813ms)
+Skipping starter inventory seeding in test environment.
+✔ estimate decisions retain history, gate billing and enforce the approved total (879.8972ms)
+Skipping starter inventory seeding in test environment.
+Skipping starter inventory seeding in test environment.
+✔ receivable ageing reconciles current credits and exposes unaged opening balances (448.3587ms)
+✔ daily cash counts exclude cancelled and future vouchers and retain immutable count snapshots (423.8895ms)
+Skipping starter inventory seeding in test environment.
+▶ Workshop Core Workflow integration tests
+  ✔ Test A: New Customer + New Vehicle (7.6973ms)
+  ✔ Test B: Existing Customer + New Vehicle (5.0143ms)
+  ✔ Test C: Existing Customer + Existing Vehicle (3.635ms)
+  ✔ Test D: New Customer + Existing Vehicle (No Ownership Transfer) (3.4189ms)
+  ✔ Test E: Existing Customer + Existing Vehicle Owned by Different Customer (6.9231ms)
+  ✔ Test F: Explicit Ownership Transfer (3.2109ms)
+  ✔ Test G: Registration Normalization (7.9376ms)
+  ✔ Test H: Phone Normalization equivalent Indian formats (5.0392ms)
+✔ Workshop Core Workflow integration tests (828.0005ms)
+ℹ tests 228
+ℹ suites 0
+ℹ pass 228
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61072.6296

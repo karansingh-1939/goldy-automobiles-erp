@@ -4,6 +4,10 @@
 
 An offline-first Windows desktop ERP for a single-laptop automobile repair workshop. It connects vehicle intake, job cards, spare-parts inventory, purchasing, billing and workshop accounts in one local application.
 
+![Workshop dashboard with disposable synthetic data](docs/images/dashboard.png)
+
+[View a confirmed sales order](docs/images/sales-orders.png). These are real Electron screenshots from the reproducible smoke workflow below. No customer records are shown; the dashboard correctly shows zero revenue before any synthetic invoice is posted.
+
 ## Why this exists
 
 A workshop needs to know which vehicle is being repaired, which parts were used, what the customer owes and whether a job made money—even when the internet is unavailable. SQLite stores the workshop data locally; Electron owns the Express API lifecycle and opens the React interface after database initialization succeeds.
@@ -18,7 +22,9 @@ A workshop needs to know which vehicle is being repaired, which parts were used,
 | Database  | SQLite, transactional migrations and backups                  | `src/server/database` |
 | Tests     | Node test runner, Vitest, Testing Library                     | `tests`               |
 
-Business modules cover authentication and permissions, customers, vehicles, job cards, inventory and warehouses, purchasing, invoices, payments, expenses, GST reporting, profit reports, Tally XML export, returns, warranties and service reminders. Some workshop tools still use maintained static pages; the React migration is ongoing.
+Business modules cover authentication and permissions, customers, vehicles, job cards, inventory and warehouses, purchasing, invoices, payments, expenses, GST reporting, profit reports, Tally XML export, returns, warranties and service reminders. Workshop workflows now share the React application shell; a dedicated printable job-card document remains separate.
+
+The [workflow ownership map](docs/ui-workflow-ownership.md) identifies each canonical screen. Old application-page URLs redirect to React, retaining record selectors and authentication. See the [React migration verification](docs/reviews/react-migration-2026-10-15.md).
 
 ## Run locally
 
@@ -36,6 +42,17 @@ npm run check       # formatting, lint, production build, backend and renderer t
 npm run build:win   # Windows NSIS installer under release/
 ```
 
+For a reproducible demonstration using disposable records:
+
+```powershell
+npm run build:fe
+npm run smoke:desktop -- --screenshots
+npm run pack
+npm run smoke:packaged
+```
+
+The desktop check runs the compiled interface in a hidden Electron window, exercises administrator recovery/login and sales-order confirmation against the real API, and removes its temporary database afterward. Screenshots are saved under `docs/images/` when requested. It never opens the workshop database.
+
 The backend tests run under Electron's embedded Node runtime so SQLite uses the same native runtime as the desktop application. Test databases and AppData are isolated in temporary folders.
 
 ## Engineering decisions
@@ -51,7 +68,9 @@ See [architecture](docs/architecture.md), [administrator guide](docs/admin-guide
 
 ## Status and verification
 
-The 0.2.0 workshop milestone passes 202 backend tests and 35 renderer tests, formatting, lint and production compilation. GitHub's Windows quality checks also pass. Installer packaging, all 5,034 packaged-file integrity checks and seven packaged renderer/API smoke checks pass with synthetic data. See the [publication verification record](docs/reviews/publication-verification-2026-10-11.md). This is a release candidate. Actual installer use on a clean laptop, a full visual workflow review, a workshop trial and a real TallyPrime test-company import remain release gates. The installer is unsigned.
+Latest recheck: **228 backend tests + 73 interface tests**, real desktop receipt/stock assertions and a rebuilt Windows package. See the [issue-by-issue evidence and remaining acceptance gates](docs/reviews/recheck-2026-10-15.md).
+
+The [audit fixes and current verification](docs/reviews/audit-fixes-2026-10-15.md) cover recovery, sales pricing, returns, payment allocations, backup failure handling and growing-data UI regressions. The earlier 0.2.0 milestone passed 202 backend tests and 35 renderer tests; its historical packaging evidence is in the [publication verification record](docs/reviews/publication-verification-2026-10-11.md). This remains a release candidate: clean-laptop installation/upgrade, a workshop acceptance trial and a real TallyPrime test-company import are release gates. The installer is unsigned.
 
 The repository contains application source, migrations, synthetic test fixtures, dependency lockfiles and engineering documentation. Customer records, tax-invoice scans, workshop photos, live databases, backups, credentials and generated installers are excluded, including from published history.
 
@@ -69,7 +88,7 @@ See the [workshop operating guide](docs/workshop-improvements.md) for these work
 
 1. Run a workshop trial with synthetic data, then verify installation on a clean Windows laptop.
 2. Test Tally XML with a real TallyPrime test company and resolve compatibility findings.
-3. Migrate the remaining billing, warehouse, service-history and stock-verification tools to React.
+3. Run operator acceptance checks on the unified billing, warehouse, service-history and stock-verification screens.
 4. Add installer signing and a tested upgrade/recovery procedure.
 5. Use actual workshop feedback to choose the next feature and commit it with tests and release notes.
 

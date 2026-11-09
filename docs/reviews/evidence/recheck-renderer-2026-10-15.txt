@@ -1,0 +1,17 @@
+
+> goldy-automobiles-erp@0.2.0 test:renderer
+> vitest run --maxWorkers=2
+
+
+ RUN  v5.0.3 C:/Goldy_Automobiles
+
+
+ Test Files  22 passed (22)
+      Tests  73 passed (73)
+   Start at  15:39:52
+   Duration  28.70s (environment 69%, tests 11%, setup 11%, import 6%, transform 2%)
+
+Environment  jsdom was created 22 times · 36.71s total, 69% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

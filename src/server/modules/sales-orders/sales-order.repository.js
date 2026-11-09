@@ -7,6 +7,50 @@ export class SalesOrderRepository {
     return this.db.transaction(cb)();
   }
 
+  generateDocNumber(prefix) {
+    const year = new Date().getFullYear();
+    const fullPrefix = `${prefix}-${year}-`;
+
+    let last;
+    if (prefix === 'QT') {
+      last = this.db
+        .prepare(
+          'SELECT quotation_number AS num FROM quotations WHERE quotation_number LIKE ? ORDER BY id DESC LIMIT 1',
+        )
+        .get(`${fullPrefix}%`);
+    } else if (prefix === 'SO') {
+      last = this.db
+        .prepare(
+          'SELECT order_number AS num FROM sales_orders WHERE order_number LIKE ? ORDER BY id DESC LIMIT 1',
+        )
+        .get(`${fullPrefix}%`);
+    } else {
+      last = this.db
+        .prepare(
+          'SELECT shipment_number AS num FROM sales_shipments WHERE shipment_number LIKE ? ORDER BY id DESC LIMIT 1',
+        )
+        .get(`${fullPrefix}%`);
+    }
+
+    let seq = 1;
+    if (last && last.num) {
+      const match = last.num.match(/(\d+)$/);
+      if (match) {
+        seq = parseInt(match[1], 10) + 1;
+      }
+    }
+    return `${fullPrefix}${String(seq).padStart(6, '0')}`;
+  }
+
+  findCustomer(id) {
+    return this.db.prepare('SELECT id FROM customers WHERE id = ?').get(id);
+  }
+  findPricedItem(id) {
+    return this.db
+      .prepare('SELECT id, selling_price, gst_rate FROM inventory_items WHERE id = ?')
+      .get(id);
+  }
+
   // --- QUOTATIONS ---
 
   createQuotation(quotation, items) {
@@ -17,11 +61,11 @@ export class SalesOrderRepository {
         INSERT INTO quotations (
           quotation_number, revision_number, company_id, customer_id, 
           quotation_date, valid_until, status, subtotal, discount_amount, 
-          gst_total, grand_total, terms_conditions, created_by
+          gst_total, grand_total, terms_conditions, created_by, tax_type
         ) VALUES (
           @quotation_number, @revision_number, @company_id, @customer_id,
           @quotation_date, @valid_until, @status, @subtotal, @discount_amount,
-          @gst_total, @grand_total, @terms_conditions, @created_by
+          @gst_total, @grand_total, @terms_conditions, @created_by, @tax_type
         )
       `,
         )
@@ -117,11 +161,11 @@ export class SalesOrderRepository {
         INSERT INTO sales_orders (
           order_number, company_id, customer_id, quotation_id, 
           order_date, status, customer_reference, subtotal, 
-          discount_amount, gst_total, grand_total, terms_conditions, created_by
+          discount_amount, gst_total, grand_total, terms_conditions, created_by, tax_type
         ) VALUES (
           @order_number, @company_id, @customer_id, @quotation_id,
           @order_date, @status, @customer_reference, @subtotal,
-          @discount_amount, @gst_total, @grand_total, @terms_conditions, @created_by
+          @discount_amount, @gst_total, @grand_total, @terms_conditions, @created_by, @tax_type
         )
       `,
         )
@@ -168,7 +212,7 @@ export class SalesOrderRepository {
     return { ...order, items };
   }
 
-  listSalesOrders({ status, customerId, limit = 50, offset = 0 }) {
+  listSalesOrders({ status, customerId, search, limit = 50, offset = 0, count = false }) {
     let sql = `
       SELECT o.*, c.name AS customer_name 
       FROM sales_orders o
@@ -184,6 +228,16 @@ export class SalesOrderRepository {
     if (customerId) {
       sql += ' AND o.customer_id = ?';
       params.push(Number(customerId));
+    }
+
+    if (search) {
+      sql += ' AND (o.order_number LIKE ? OR c.name LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (count) {
+      sql = sql.replace('SELECT o.*, c.name AS customer_name', 'SELECT COUNT(*) AS total');
+      return this.db.prepare(sql).get(...params).total;
     }
 
     sql += ' ORDER BY o.order_number DESC LIMIT ? OFFSET ?';
@@ -211,6 +265,131 @@ export class SalesOrderRepository {
   }
 
   // --- SHIPMENTS ---
+
+  availableBatches(itemId, warehouseId) {
+    return this.db
+      .prepare(
+        'SELECT id, quantity FROM inventory_batches WHERE item_id = ? AND warehouse_id = ? AND quantity > 0 ORDER BY id ASC',
+      )
+      .all(itemId, warehouseId);
+  }
+
+  activeItemReservations(itemId, warehouseId, orderId) {
+    return this.db
+      .prepare(
+        "SELECT * FROM inventory_reservations WHERE item_id = ? AND warehouse_id = ? AND reference_table = 'sales_orders' AND reference_id = ? AND status = 'ACTIVE' ORDER BY id ASC",
+      )
+      .all(itemId, warehouseId, orderId);
+  }
+
+  oldestBatch(itemId, warehouseId) {
+    return this.db
+      .prepare(
+        'SELECT id FROM inventory_batches WHERE item_id = ? AND warehouse_id = ? ORDER BY id ASC LIMIT 1',
+      )
+      .get(itemId, warehouseId);
+  }
+
+  activeOrderReservations(orderId) {
+    return this.db
+      .prepare(
+        "SELECT id FROM inventory_reservations WHERE reference_table = 'sales_orders' AND reference_id = ? AND status = 'ACTIVE'",
+      )
+      .all(orderId);
+  }
+
+  findShipment(id) {
+    const shipment = this.db.prepare('SELECT * FROM sales_shipments WHERE id = ?').get(id);
+    if (!shipment) return null;
+    shipment.items = this.db
+      .prepare('SELECT * FROM sales_shipment_items WHERE sales_shipment_id = ?')
+      .all(id);
+    return shipment;
+  }
+
+  findCustomerState(id) {
+    return this.db.prepare('SELECT name, state FROM customers WHERE id = ?').get(id);
+  }
+
+  findCompanyState(id) {
+    return this.db.prepare('SELECT state FROM companies WHERE id = ?').get(id);
+  }
+
+  findInvoiceForShipment(id) {
+    return this.db.prepare('SELECT id FROM direct_invoices WHERE sales_shipment_id = ?').get(id);
+  }
+
+  nextDirectInvoiceNumber(year) {
+    const prefix = `DIR-${year}-`;
+    const last = this.db
+      .prepare(
+        'SELECT invoice_number FROM direct_invoices WHERE invoice_number LIKE ? ORDER BY id DESC LIMIT 1',
+      )
+      .get(`${prefix}%`);
+    const sequence = last?.invoice_number.match(/(\d+)$/);
+    return `${prefix}${String(sequence ? Number(sequence[1]) + 1 : 1).padStart(6, '0')}`;
+  }
+
+  createShipmentInvoice(order, shipment, number, userId) {
+    return this.db
+      .prepare(
+        `INSERT INTO direct_invoices (
+      invoice_number, company_id, customer_id, invoice_date, subtotal, gst_total, grand_total, status, narration, created_by, cgst_total, sgst_total, igst_total, sales_order_id, sales_shipment_id
+    ) VALUES (?, ?, ?, ?, 0, 0, 0, 'UNPAID', ?, ?, 0, 0, 0, ?, ?)`,
+      )
+      .run(
+        number,
+        order.company_id,
+        order.customer_id,
+        shipment.shipment_date,
+        `Invoice for Shipment ${shipment.shipment_number}`,
+        userId,
+        order.id,
+        shipment.id,
+      ).lastInsertRowid;
+  }
+
+  updateShipmentInvoiceTotals(id, subtotal, gst, total, cgst, sgst, igst) {
+    this.db
+      .prepare(
+        'UPDATE direct_invoices SET subtotal = ?, gst_total = ?, grand_total = ?, cgst_total = ?, sgst_total = ?, igst_total = ? WHERE id = ?',
+      )
+      .run(subtotal, gst, total, cgst, sgst, igst, id);
+  }
+
+  insertShipmentInvoiceItems(invoiceId, items) {
+    const insert = this.db.prepare(`INSERT INTO direct_invoice_items (
+      direct_invoice_id, item_id, description, quantity, unit_price, gst_rate, gst_amount, line_total, cost_price, warehouse_id, batch_id, sales_order_item_id, sales_shipment_item_id, line_cost
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const item of items)
+      insert.run(
+        invoiceId,
+        item.itemId,
+        item.description,
+        item.quantity,
+        item.unitPrice,
+        item.gstRate,
+        item.gstAmount,
+        item.lineTotal,
+        item.costPrice,
+        item.warehouseId,
+        item.batchId,
+        item.sales_order_item_id,
+        item.sales_shipment_item_id,
+        Math.round(item.quantity * item.costPrice * 100) / 100,
+      );
+  }
+
+  linkShipmentInvoiceVoucher(invoiceId, voucherId, costVoucher = false) {
+    const column = costVoucher ? 'cogs_voucher_id' : 'voucher_id';
+    this.db
+      .prepare(`UPDATE direct_invoices SET ${column} = ? WHERE id = ?`)
+      .run(voucherId, invoiceId);
+  }
+
+  findDirectInvoice(id) {
+    return this.db.prepare('SELECT * FROM direct_invoices WHERE id = ?').get(id);
+  }
 
   createShipment(shipment, items) {
     return this.transaction(() => {

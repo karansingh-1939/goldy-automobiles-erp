@@ -1,0 +1,24 @@
+
+> goldy-automobiles-erp@0.2.0 build:fe
+> vite build
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 1623 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/renderer/index.html                             0.78 kB │ gzip:  0.39 kB
+dist/renderer/assets/main-BxErnTXK.css              51.54 kB │ gzip:  8.97 kB
+dist/renderer/assets/rolldown-runtime-CbXtAM7H.js    0.58 kB │ gzip:  0.36 kB
+dist/renderer/assets/vendor-tanstack-CZ5kIxGK.js    85.47 kB │ gzip: 23.04 kB
+dist/renderer/assets/vendor-core-Dd1Yu6Ro.js       192.15 kB │ gzip: 64.23 kB
+dist/renderer/assets/vendor-charts-UvFdTJ6B.js     202.20 kB │ gzip: 69.28 kB
+dist/renderer/assets/main-IM1QgfAL.js              318.68 kB │ gzip: 60.85 kB
+
+✓ built in 13.20s
+[PLUGIN_TIMINGS] JavaScript callbacks ran for 1.9s of this 13.2s build (15%).
+The slowest callbacks, timed inside each callback (the wait before a callback starts is excluded, the time it awaits is included):
+  - plugin vite:css transform (12%, 1.6s, 1 call)
+Additional callback time came from callbacks under 1s.
+See https://rolldown.rs/reference/InputOptions.checks#bundlertimings for more details.
+

@@ -4,14 +4,18 @@ import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
 import { Settings, Database, RefreshCw, Play } from 'lucide-react';
 import BackupSchedule from './BackupSchedule.jsx';
+import BackupUpload from './BackupUpload.jsx';
 
 export default function SettingsPortal() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
+  const user = useAppStore((state) => state.user);
+  const isAdmin = ['admin', 'administrator'].includes((user?.role?.name || '').toLowerCase());
   const [externalDirectory, setExternalDirectory] = useState(null);
-  const { data: backupSettings } = useQuery({
+  const { data: backupSettings, error: settingsError } = useQuery({
     queryKey: ['backup-settings'],
     queryFn: () => api.get('/api/v1/backups/settings'),
+    enabled: isAdmin,
   });
   const settings = backupSettings?.data || {};
   const saveDestination = useMutation({
@@ -47,9 +51,14 @@ export default function SettingsPortal() {
   const address = company.address || '';
 
   // Fetch Backups List
-  const { data: backupsResponse, isLoading: loadingBackups } = useQuery({
+  const {
+    data: backupsResponse,
+    isLoading: loadingBackups,
+    error: backupsError,
+  } = useQuery({
     queryKey: ['backups-history'],
     queryFn: () => api.get('/api/v1/backups'),
+    enabled: isAdmin,
   });
 
   const backups = backupsResponse?.data || [];
@@ -88,6 +97,12 @@ export default function SettingsPortal() {
     },
   });
 
+  if (!isAdmin)
+    return (
+      <p role="alert" className="p-6">
+        Administrator access is required to manage backups and restore workshop data.
+      </p>
+    );
   return (
     <div className="p-6 space-y-6 max-h-[90vh] overflow-y-auto">
       <div>
@@ -185,6 +200,11 @@ export default function SettingsPortal() {
             <Database className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             <h3 className="font-bold text-gray-950 dark:text-white">Database Backup & Recovery</h3>
           </div>
+          {settingsError && (
+            <p role="alert" className="text-red-600">
+              {settingsError.message}
+            </p>
+          )}
 
           <div className="flex gap-3">
             <button
@@ -252,6 +272,7 @@ export default function SettingsPortal() {
           </form>
 
           <BackupSchedule />
+          <BackupUpload />
           {/* Backups List */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
@@ -262,6 +283,10 @@ export default function SettingsPortal() {
                 <div className="p-4 text-center text-xs text-gray-400">
                   Loading backup history...
                 </div>
+              ) : backupsError ? (
+                <p role="alert" className="p-3 text-red-600">
+                  {backupsError.message}
+                </p>
               ) : backups.length === 0 ? (
                 <div className="p-4 text-center text-xs text-gray-400">
                   No backup records found.

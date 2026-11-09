@@ -347,11 +347,11 @@ export class ReconciliationService {
         r.return_number,
         item.sku,
         SUM(ri.quantity) AS total_returned,
-        ii.quantity AS original_quantity
+        (SELECT SUM(ii.quantity) FROM invoice_items ii
+          WHERE ii.invoice_id=r.invoice_id AND ii.inventory_item_id=ri.item_id) AS original_quantity
       FROM customer_return_items ri
       JOIN customer_returns r ON ri.customer_return_id = r.id
       JOIN inventory_items item ON ri.item_id = item.id
-      JOIN invoice_items ii ON r.invoice_id = ii.invoice_id AND ri.item_id = ii.inventory_item_id
       WHERE r.company_id = ? AND r.status <> 'CANCELLED'
       GROUP BY r.invoice_id, ri.item_id
     `,

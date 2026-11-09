@@ -2,14 +2,22 @@ import { localDate } from '../../../../public/local-date.js';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
+import { invalidateInventory } from '../../shared/api/inventory-cache.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
+import RemoteSelect from '../../shared/components/RemoteSelect.jsx';
+import { usePermissions } from '../../shared/hooks/use-permissions.js';
+import ServerPagination from '../../shared/components/ServerPagination.jsx';
 import { Search, Plus, ShoppingBag, X, CheckCircle } from 'lucide-react';
 
 export default function SalesOrderManager() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
+  const { hasPermission } = usePermissions();
+  const canWrite = hasPermission('sales_orders.write');
+  const canConfirm = hasPermission('sales_orders.confirm');
 
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -17,6 +25,7 @@ export default function SalesOrderManager() {
   const [customerId, setCustomerId] = useState('');
   const [orderDate, setOrderDate] = useState(() => localDate());
   const [itemId, setItemId] = useState('');
+  const [warehouseId, setWarehouseId] = useState('');
   const [qty, setQty] = useState('1');
   const [price, setPrice] = useState('');
 
@@ -26,24 +35,12 @@ export default function SalesOrderManager() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['sales-orders', search],
-    queryFn: () => api.get(`/api/v1/sales-orders?search=${encodeURIComponent(search)}`),
+    queryKey: ['sales-orders', search, page],
+    queryFn: () =>
+      api.get(`/api/v1/sales-orders?search=${encodeURIComponent(search)}&page=${page}&pageSize=20`),
   });
 
   const orders = ordersResponse?.data || [];
-
-  // Fetch customers and inventory for form dropdowns
-  const { data: customersResponse } = useQuery({
-    queryKey: ['customers-list'],
-    queryFn: () => api.get('/api/v1/customers'),
-  });
-  const { data: itemsResponse } = useQuery({
-    queryKey: ['inventory-items-list'],
-    queryFn: () => api.get('/api/v1/inventory/items'),
-  });
-
-  const customers = customersResponse?.data || [];
-  const items = itemsResponse?.data || [];
 
   // Create Sales Order Mutation
   const createMutation = useMutation({
@@ -55,6 +52,7 @@ export default function SalesOrderManager() {
       // Reset Form
       setCustomerId('');
       setItemId('');
+      setWarehouseId('');
       setQty('1');
       setPrice('');
     },
@@ -69,6 +67,7 @@ export default function SalesOrderManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
       addNotification('Sales order confirmed and customer reserve allocated.', 'success');
+      invalidateInventory(queryClient);
     },
     onError: (err) => {
       addNotification(err.message || 'Failed to confirm order.', 'error');
@@ -77,8 +76,9 @@ export default function SalesOrderManager() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!customerId || !itemId || !qty || !price) {
-      addNotification('Customer, Item, Quantity, and Price are required.', 'error');
+    if (!canWrite) return;
+    if (!customerId || !itemId || !warehouseId || !qty || price === '') {
+      addNotification('Customer, Item, Warehouse, Quantity, and Price are required.', 'error');
       return;
     }
 
@@ -88,6 +88,7 @@ export default function SalesOrderManager() {
       items: [
         {
           itemId: Number(itemId),
+          warehouseId: Number(warehouseId),
           quantity: Number(qty),
           unitPrice: Number(price),
         },
@@ -112,6 +113,8 @@ export default function SalesOrderManager() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
+          disabled={!canWrite}
+          title={!canWrite ? 'Sales order write permission required.' : undefined}
           className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
@@ -127,7 +130,11 @@ export default function SalesOrderManager() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+                setSelectedOrderId(null);
+              }}
               placeholder="Search by order number or customer name..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
             />
@@ -192,6 +199,15 @@ export default function SalesOrderManager() {
               </table>
             )}
           </div>
+          <ServerPagination
+            page={page}
+            totalPages={ordersResponse?.pagination?.totalPages || 1}
+            onChange={(next) => {
+              setPage(next);
+              setSelectedOrderId(null);
+            }}
+            disabled={isLoading}
+          />
         </div>
 
         {/* Right Side Detail Pane */}
@@ -226,7 +242,8 @@ export default function SalesOrderManager() {
               {selectedOrder.status === 'DRAFT' && (
                 <button
                   onClick={() => confirmMutation.mutate(selectedOrder.id)}
-                  disabled={confirmMutation.isPending}
+                  disabled={!canConfirm || confirmMutation.isPending}
+                  title={!canConfirm ? 'Sales order confirmation permission required.' : undefined}
                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
                 >
                   <CheckCircle className="h-4 w-4" />
@@ -264,20 +281,15 @@ export default function SalesOrderManager() {
                   >
                     Select Customer *
                   </label>
-                  <select
+                  <RemoteSelect
                     id="modal-order-customer"
-                    required
+                    endpoint="/api/v1/customers"
+                    queryKey="customers"
                     value={customerId}
-                    onChange={(e) => setCustomerId(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-                  >
-                    <option value="">Choose client...</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCustomerId}
+                    searchLabel="Search customers"
+                    optionLabel={(c) => c.name}
+                  />
                 </div>
                 <div>
                   <label
@@ -302,21 +314,35 @@ export default function SalesOrderManager() {
                   >
                     Select Stock Item *
                   </label>
-                  <select
+                  <RemoteSelect
                     id="modal-order-item"
-                    required
+                    endpoint="/api/v1/inventory/items"
+                    queryKey="inventory-items"
                     value={itemId}
-                    onChange={(e) => setItemId(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
+                    onChange={(next, record) => {
+                      setItemId(next);
+                      setPrice(record?.selling_price ?? '');
+                    }}
+                    searchLabel="Search stock items"
+                    optionLabel={(i) => `${i.sku} - ${i.item_name} (Price: ${i.selling_price})`}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label
+                    htmlFor="modal-order-warehouse"
+                    className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
                   >
-                    <option value="">Select SKU...</option>
-                    {items.map((i) => (
-                      <option
-                        key={i.id}
-                        value={i.id}
-                      >{`${i.sku} - ${i.item_name} (Price: ₹${i.selling_price})`}</option>
-                    ))}
-                  </select>
+                    Warehouse *
+                  </label>
+                  <RemoteSelect
+                    id="modal-order-warehouse"
+                    endpoint="/api/v1/warehouses"
+                    queryKey="warehouses"
+                    value={warehouseId}
+                    onChange={setWarehouseId}
+                    searchLabel="Search warehouses"
+                    optionLabel={(w) => w.name}
+                  />
                 </div>
                 <div>
                   <label
@@ -328,6 +354,8 @@ export default function SalesOrderManager() {
                   <input
                     id="modal-order-qty"
                     type="number"
+                    min="0.001"
+                    step="any"
                     required
                     value={qty}
                     onChange={(e) => setQty(e.target.value)}
@@ -344,6 +372,8 @@ export default function SalesOrderManager() {
                   <input
                     id="modal-order-price"
                     type="number"
+                    min="0"
+                    step="0.01"
                     required
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
@@ -363,7 +393,7 @@ export default function SalesOrderManager() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending}
+                  disabled={!canWrite || createMutation.isPending}
                   className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   Create Order

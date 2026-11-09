@@ -4,8 +4,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SettingsPortal from '../../src/renderer/modules/settings/SettingsPortal.jsx';
 import { api } from '../../src/renderer/shared/api/api-client.js';
+import { useAppStore } from '../../src/renderer/shared/store/use-app-store.js';
 
 it('saves an external destination and verifies a selected successful snapshot', async () => {
+  useAppStore.getState().setToken('test-session', { role: { name: 'Admin' } });
   vi.spyOn(api, 'get').mockImplementation(async (url) => {
     if (url === '/api/v1/backups')
       return { data: [{ id: 3, filename: 'snapshot.sqlite', status: 'SUCCESS', file_size: 1024 }] };

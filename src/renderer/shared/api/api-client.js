@@ -85,6 +85,13 @@ export const api = {
   get: (path, options) => request(path, { method: 'GET', ...options }),
   post: (path, body, options) =>
     request(path, { method: 'POST', body: JSON.stringify(body), ...options }),
+  postBinary: (path, body, options) =>
+    request(path, {
+      method: 'POST',
+      body,
+      ...options,
+      headers: { 'Content-Type': 'application/octet-stream', ...options?.headers },
+    }),
   put: (path, body, options) =>
     request(path, { method: 'PUT', body: JSON.stringify(body), ...options }),
   patch: (path, body, options) =>

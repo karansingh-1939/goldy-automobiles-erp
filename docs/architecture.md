@@ -10,6 +10,8 @@ The backend binds to loopback only. The renderer has no Node integration and use
 
 Feature folders own their HTTP routes, controllers, services and repositories. Controllers translate HTTP requests/responses; services validate domain rules and orchestrate transactions; repositories own persistent queries. Keep stock movements and accounting postings within the owning service transaction.
 
+The sales module separates quotation/revision rules, order reservation/fulfillment and shipment invoicing into focused services. They share stored tax basis and line pricing; `SalesOrderRepository` owns their queries. Customer credit policy is shared across billing paths. These boundaries are enforced by lifecycle regressions. Older modules still containing SQL in services are migration debt, not an alternative convention.
+
 `src/server/app.js` composes middleware, feature routers and web assets. `src/server/server.js` exports `startServer()` for desktop startup and can also run as the standalone API entry point. Configuration belongs in `config/env.js`.
 
 SQLite connection and migration infrastructure lives under `database/`. Add a new migration for schema changes; never rename or reformat an applied migration. Migrations and seeds intentionally retain their numbered filenames.
@@ -18,7 +20,9 @@ SQLite connection and migration infrastructure lives under `database/`. Add a ne
 
 Feature screens live under `renderer/modules/`. Reusable UI controls, query configuration, HTTP transport and app state live under `renderer/shared/`. TanStack Query manages server data; Zustand manages authentication, theme, notifications and confirmation dialogs. Send all React JSON requests through the shared API client so authentication and errors behave consistently.
 
-The SPA uses hash routing, which works with the desktop's local HTTP server. Existing static tools remain under `public/` until equivalent workflows have been implemented and verified in React. They are maintained source, not stale build output.
+The SPA uses hash routing, which works with the desktop's local HTTP server. Workshop screens use the React application shell. Old static application-page URLs redirect to canonical routes, preserving selected invoice/vehicle/master query parameters. Only the dedicated printable job-card document and shared local-date helper remain under `public/`.
+
+See [workflow ownership](ui-workflow-ownership.md) for the current routes. Searchable master-data selection belongs to `RemoteSelect`; asynchronous intake identity belongs to `use-intake-lookup`. Inventory catalog, stock operations, physical counts, reports and fixed assets have separate components. Job intake, charge sections, invoice printing and service history also have focused components.
 
 ## Quality checks
 

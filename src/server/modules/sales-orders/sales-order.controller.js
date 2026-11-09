@@ -98,14 +98,26 @@ export class SalesOrderController {
 
   listSalesOrders = (req, res, next) => {
     try {
-      const { status, customerId, limit, offset } = req.query;
+      const { status, customerId, search } = req.query;
+      const pageSize = Math.min(
+        Math.max(Number.parseInt(req.query.pageSize || req.query.limit || '50', 10) || 50, 1),
+        100,
+      );
+      const page = Math.max(Number.parseInt(req.query.page || '1', 10) || 1, 1);
+      const offset = req.query.page
+        ? (page - 1) * pageSize
+        : Math.max(Number.parseInt(req.query.offset || '0', 10) || 0, 0);
+      const filters = { status, customerId, search };
       const list = this.service.repository.listSalesOrders({
-        status,
-        customerId,
-        limit: limit ? Number(limit) : 50,
-        offset: offset ? Number(offset) : 0,
+        ...filters,
+        limit: pageSize,
+        offset,
       });
-      res.status(200).json({ data: list });
+      const total = this.service.repository.listSalesOrders({ ...filters, count: true });
+      res.status(200).json({
+        data: list,
+        pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+      });
     } catch (error) {
       next(error);
     }

@@ -34,7 +34,7 @@ src/renderer/
 
 To comply with sandboxing rules:
 
-- Components **never** use direct `fetch` calls. Instead, import `api` or `apiClient` from `@/shared/api/apiClient.js`.
+- Components **never** use direct `fetch` calls. Instead, import `api` or `apiClient` from `@/shared/api/api-client.js`.
 - The apiClient wraps request states, injects `Bearer` authorization session keys, sets query cancellation handlers via `AbortSignal`, and automatically schedules exponential backoff retries for GET requests.
 - Sessions expiring with HTTP 401 trigger automatic store logout redirects.
 
@@ -53,10 +53,10 @@ Standard table grids must use the unified `<DataTable />` component from `@/shar
 
 ## 4. Role-Based Access Control (RBAC)
 
-Permission checks must use the custom hook `usePermissions` from `@/shared/hooks/usePermissions.js`:
+Permission checks must use the custom hook `usePermissions` from `@/shared/hooks/use-permissions.js`:
 
 ```javascript
-import { usePermissions } from '../../shared/hooks/usePermissions.js';
+import { usePermissions } from '../../shared/hooks/use-permissions.js';
 
 const { hasPermission, role } = usePermissions();
 const canWrite = hasPermission('customers.write');

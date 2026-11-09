@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTestContext } from './helpers.js';
 import { ReconciliationService } from '../../src/server/modules/accounting/reconciliation.service.js';
+import { PurchasingService } from '../../src/server/modules/purchasing/purchasing.service.js';
 
 async function login(context) {
   const result = await context.request('/api/v1/auth/login', {
@@ -68,15 +69,29 @@ test('Sprint 9: After-Sales Subsystem E2E Integration Test', async () => {
       )
       .run().lastInsertRowid;
 
-    // Seed batch
-    const batchId = db
-      .prepare(
-        `
-      INSERT INTO inventory_batches (item_id, warehouse_id, batch_number, purchase_cost, selling_price, quantity)
-      VALUES (?, ?, 'BATCH-S9-A', 4000.00, 6000.00, 10)
-    `,
-      )
-      .run(itemId, warehouseId).lastInsertRowid;
+    // Record purchase provenance so supplier returns reverse the original cost and tax.
+    db.prepare('UPDATE inventory_items SET current_quantity=0, average_cost=0 WHERE id=?').run(
+      itemId,
+    );
+    const receipt = new PurchasingService(db).createReceipt(
+      {
+        supplier_id: supplierId,
+        receipt_number: 'S9-RECEIPT',
+        items: [
+          {
+            item_id: itemId,
+            warehouse_id: warehouseId,
+            batch_number: 'BATCH-S9-A',
+            quantity: 10,
+            purchase_cost: 4000,
+            selling_price: 6000,
+            gst_rate: 18,
+          },
+        ],
+      },
+      1,
+    );
+    const batchId = receipt.items[0].batch_id;
 
     // Create a job card
     const jcRes = await context.request('/api/v1/job-cards', {

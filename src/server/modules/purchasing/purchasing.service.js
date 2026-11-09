@@ -629,9 +629,27 @@ export class PurchasingService {
     }
 
     const parsed = parseListQuery(query);
+    const dates = {};
+    for (const key of ['dateFrom', 'dateTo']) {
+      if (!query[key]) continue;
+      const value = String(query[key]);
+      const date = new Date(`${value}T00:00:00.000Z`);
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+        Number.isNaN(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== value
+      ) {
+        throw new AppError('Ledger date must be a valid YYYY-MM-DD date.', 400, 'VALIDATION_ERROR');
+      }
+      dates[key] = value;
+    }
+    if (dates.dateFrom && dates.dateTo && dates.dateFrom > dates.dateTo) {
+      throw new AppError('Date range is invalid.', 400, 'VALIDATION_ERROR');
+    }
     const result = this.repository.listSupplierLedger(supplierId, {
       limit: parsed.pageSize,
       offset: parsed.offset,
+      ...dates,
     });
 
     return this.withPagination(result, parsed);

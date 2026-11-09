@@ -1,5 +1,18 @@
 # Release Notes - GOLDY AUTOMOBILE ERP
 
+## Unreleased — audit fixes, 15 October 2026
+
+The specialist inventory, warehouse, physical-count, asset, purchasing, invoice, service-history, supplier-ledger and staff workflows now use React. Dedicated GST details and raw backup upload restoration are included. Old application URLs redirect with record selectors preserved; duplicate application pages are removed. See [unified UI verification](reviews/react-migration-2026-10-15.md).
+
+- Recovery displays the replacement code and invalidates old sessions. Backup locks recover only proven exited owners, and failed scheduled backups wait before retrying.
+- Sales orders include a warehouse; searching and paging work. Tax-inclusive quotes keep their agreed basis through revision, conversion and invoicing.
+- Customer returns retain original invoice-line identity. Completed credits reduce document dues; excess receipt allocations return to unallocated credit. Supplier returns require matching purchase provenance and original tax snapshots.
+- Direct, job and order billing share the customer credit-limit rule. Clearing optional master fields persists; remote selectors search/page beyond the first twenty records. Purchasing distinguishes failed loads from empty registers.
+- Intake ignores stale lookup responses. Dashboard charts no longer invent revenue or jobs when actual values are zero.
+- Audit and Tally use the React interface with compatible old links. Added disposable Electron workflow checks and documented specialist UI ownership.
+
+Upgrade/data limitations and current validation are recorded in [audit fixes](reviews/audit-fixes-2026-10-15.md).
+
 ## 0.2.0 workshop milestone ? 11 October 2026
 
 - Expenses, technician maintenance and job assignment, audit history, and backup scheduling now have React screens in the main application shell. Other maintained static workshop pages remain accessible during migration.

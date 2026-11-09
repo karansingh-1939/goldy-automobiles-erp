@@ -94,9 +94,10 @@ export class AuthRepository {
   }
 
   resetPassword(userId, passwordHash, recoveryCodeHash) {
-    this.db
-      .prepare(
-        `
+    this.db.transaction(() => {
+      this.db
+        .prepare(
+          `
       UPDATE users
       SET password_hash = ?,
           recovery_code_hash = ?,
@@ -105,8 +106,15 @@ export class AuthRepository {
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
-      )
-      .run(passwordHash, recoveryCodeHash, userId);
+        )
+        .run(passwordHash, recoveryCodeHash, userId);
+      this.db
+        .prepare(
+          `UPDATE user_sessions SET revoked_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND revoked_at IS NULL`,
+        )
+        .run(userId);
+    })();
   }
 
   findUserByUsername(username) {

@@ -7,6 +7,7 @@ import { DbSafetyService } from './db-safety-service.js';
 import { IntegrityCheckService, HealthState } from './integrity-check-service.js';
 import { AppError } from '../shared/errors/app-error.js';
 import { CorruptionRecoveryService } from './corruption-recovery-service.js';
+import { recoverOrphanBackupLock } from './backup-lock.js';
 
 let activeDatabase = null;
 
@@ -38,6 +39,7 @@ export function createDatabase(filePath = env.dbFile, { allowRestoreLock = false
     );
   }
   ensureRequiredDirectories(resolvedPath);
+  recoverOrphanBackupLock(resolvedPath);
 
   const db = new Database(resolvedPath);
   try {

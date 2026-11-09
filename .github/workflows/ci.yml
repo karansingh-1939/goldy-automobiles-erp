@@ -32,3 +32,9 @@ jobs:
         run: npm run check
       - name: Audit dependencies
         run: npm audit --audit-level=high
+      - name: Smoke test desktop workflows with isolated synthetic data
+        run: npm run smoke:desktop
+      - name: Package the Windows application
+        run: npm run pack
+      - name: Smoke test the packaged Windows application
+        run: npm run smoke:packaged

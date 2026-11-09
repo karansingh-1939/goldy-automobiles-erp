@@ -254,6 +254,8 @@ export class AuthService {
 
     return {
       success: true,
+      recoveryCode: newRecoveryCode,
+      // Retain the existing static recovery page contract during migration.
       newRecoveryCode,
     };
   }

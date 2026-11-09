@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
+import GstDetailReports from './GstDetailReports.jsx';
 
 import { Calendar, Download, Printer, FileSpreadsheet, BookOpen, AlertCircle } from 'lucide-react';
 
@@ -310,6 +311,7 @@ export default function ReportsManager() {
       {/* TAB CONTAINER 1: Compliance & GSTR-1 */}
       {activeTab === 'tax' && (
         <div className="space-y-6 print-container">
+          <GstDetailReports dateFrom={startDate} dateTo={endDate} />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
               <p className="text-xs font-semibold text-gray-500 uppercase">Taxable Turn-over</p>

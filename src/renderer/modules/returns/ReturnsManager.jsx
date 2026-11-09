@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
+import { invalidateInventory } from '../../shared/api/inventory-cache.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
 import { Search, Plus, Undo2, X } from 'lucide-react';
 
@@ -58,7 +59,7 @@ export default function ReturnsManager() {
   const items = (invoiceResponse?.data?.items || []).filter(
     (item) => item.inventory_item_id && item.batch_id,
   );
-  const selectedItem = items.find((item) => String(item.inventory_item_id) === itemId);
+  const selectedItem = items.find((item) => String(item.id) === itemId);
   const formError = jobsError || jobError || invoiceError;
 
   // Create Return Mutation
@@ -83,8 +84,9 @@ export default function ReturnsManager() {
     mutationFn: (id) => api.post(`/api/v1/returns/customer/${id}/approve`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-returns'] });
+      invalidateInventory(queryClient);
       addNotification(
-        'Customer return approved. Credit Note posted and stock restored.',
+        'Return approved. Invoice credit recorded; excess receipt allocations are available as customer credit. Good parts were restored.',
         'success',
       );
     },
@@ -98,6 +100,7 @@ export default function ReturnsManager() {
     mutationFn: (id) => api.post(`/api/v1/returns/supplier/${id}/approve`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-returns'] });
+      invalidateInventory(queryClient);
       addNotification(
         'Supplier return approved. Debit Note posted and stock decremented.',
         'success',
@@ -119,7 +122,8 @@ export default function ReturnsManager() {
       invoiceId: Number(invoiceId),
       items: [
         {
-          itemId: Number(itemId),
+          invoiceItemId: Number(itemId),
+          itemId: selectedItem.inventory_item_id,
           quantity: Number(qty),
           batchId: selectedItem.batch_id,
           condition,
@@ -372,11 +376,11 @@ export default function ReturnsManager() {
                     onChange={(e) => setItemId(e.target.value)}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
                   >
-                    <option value="">Select SKU...</option>
+                    <option value="">Select invoice line...</option>
                     {items.map((i) => (
                       <option
                         key={i.id || i.inventory_item_id}
-                        value={i.inventory_item_id}
+                        value={i.id}
                       >{`${i.description} (sold: ${i.quantity})`}</option>
                     ))}
                   </select>

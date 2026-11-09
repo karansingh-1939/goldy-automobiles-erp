@@ -5,10 +5,13 @@ import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import DataTable from '../../shared/components/DataTable.jsx';
 import ServerPagination from '../../shared/components/ServerPagination.jsx';
 
+import TechnicianHistory from './TechnicianHistory.jsx';
+
 const empty = { full_name: '', phone_number: '', specialization: '', notes: '' };
 export default function TechnicianManager() {
   const { hasPermission } = usePermissions();
   const client = useQueryClient();
+  const [historyTechnician, setHistoryTechnician] = useState(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
@@ -38,6 +41,10 @@ export default function TechnicianManager() {
       client.invalidateQueries({ queryKey: ['technicians'] });
       client.invalidateQueries({ queryKey: ['timer-technicians'] });
       client.invalidateQueries({ queryKey: ['job-cards'] });
+      client.invalidateQueries({ queryKey: ['workshop-queue'] });
+      client.invalidateQueries({ queryKey: ['technician-history'] });
+      if (variables.active !== undefined && selected?.id === variables.id)
+        setSelected({ ...selected, is_active: variables.active });
       if (!variables.assign) {
         setSelected(null);
         setForm(empty);
@@ -61,6 +68,13 @@ export default function TechnicianManager() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
+          <button
+            type="button"
+            className="rounded border px-2 py-1"
+            onClick={() => setHistoryTechnician(row.original)}
+          >
+            View history
+          </button>
           {hasPermission('job_cards.write') && (
             <>
               <button
@@ -206,6 +220,13 @@ export default function TechnicianManager() {
           </button>
           {queue.error && <p role="alert">{queue.error.message}</p>}
         </form>
+      )}
+      {historyTechnician && (
+        <TechnicianHistory
+          key={historyTechnician.id}
+          technician={historyTechnician}
+          onClose={() => setHistoryTechnician(null)}
+        />
       )}
       <label className="block max-w-sm text-sm">
         Find mechanic

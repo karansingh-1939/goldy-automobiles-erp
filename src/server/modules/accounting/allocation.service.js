@@ -4,6 +4,9 @@ function roundMoney(val) {
   return Math.round(val * 100) / 100;
 }
 
+const invoiceCredits = `(SELECT COALESCE(SUM(total_refund_amount), 0) FROM customer_returns
+  WHERE invoice_id = invoices.id AND status = 'COMPLETED')`;
+
 /**
  * Service to manage invoice/bill matching and payment allocations polymorphically.
  * Supports both CUSTOMER and SUPPLIER modes.
@@ -50,9 +53,10 @@ export class AllocationService {
           invoice_date AS date,
           grand_total AS grandTotal,
           amount_paid AS amountPaid,
-          ROUND(grand_total - amount_paid, 2) AS outstandingAmount
+          ROUND(MAX(0, grand_total - ${invoiceCredits}) - amount_paid, 2) AS outstandingAmount
         FROM invoices
-        WHERE customer_id = ? AND status = 'FINALIZED' AND payment_status IN ('UNPAID', 'PARTIAL')
+        WHERE customer_id = ? AND status = 'FINALIZED'
+          AND ROUND(grand_total - ${invoiceCredits} - amount_paid, 2) > 0
 
         UNION ALL
 
@@ -215,6 +219,10 @@ export class AllocationService {
         );
       }
 
+      if (alloc.documentType === 'job_card_invoice') {
+        doc.grand_total = this.invoiceNetTotal(alloc.documentId);
+      }
+
       if (
         doc.status === 'CANCELLED' ||
         (alloc.documentType === 'job_card_invoice' && doc.status !== 'FINALIZED')
@@ -319,11 +327,14 @@ export class AllocationService {
       }
 
       if (doc) {
+        if (alloc.document_type === 'job_card_invoice')
+          doc.grand_total = this.invoiceNetTotal(alloc.document_id);
         const newPaid = roundMoney(Math.max(0, doc.amount_paid - alloc.allocated_amount));
         const newStatus = newPaid === 0 ? 'UNPAID' : 'PARTIALLY_PAID';
 
         if (alloc.document_type === 'job_card_invoice') {
-          const newPaymentStatus = newPaid === 0 ? 'UNPAID' : 'PARTIAL';
+          const newPaymentStatus =
+            newPaid >= doc.grand_total ? 'PAID' : newPaid === 0 ? 'UNPAID' : 'PARTIAL';
           this.db
             .prepare(
               'UPDATE invoices SET amount_paid = ?, payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
@@ -347,5 +358,47 @@ export class AllocationService {
 
     // Delete allocation details
     this.db.prepare(allocationDelete).run(paymentId);
+  }
+
+  invoiceNetTotal(invoiceId) {
+    const row = this.db
+      .prepare(`SELECT MAX(0, grand_total - ${invoiceCredits}) AS total FROM invoices WHERE id = ?`)
+      .get(invoiceId);
+    if (!row) throw new AppError('Invoice not found.', 404, 'INVOICE_NOT_FOUND');
+    return roundMoney(row.total);
+  }
+
+  reconcileInvoiceCredits(invoiceId) {
+    const invoice = this.db.prepare('SELECT amount_paid FROM invoices WHERE id = ?').get(invoiceId);
+    const netTotal = this.invoiceNetTotal(invoiceId);
+    let excess = roundMoney(Math.max(0, invoice.amount_paid - netTotal));
+    const allocations = this.db
+      .prepare(
+        "SELECT * FROM receipt_allocations WHERE document_type='job_card_invoice' AND document_id=? ORDER BY id DESC",
+      )
+      .all(invoiceId);
+    for (const allocation of allocations) {
+      if (excess <= 0) break;
+      const released = roundMoney(Math.min(excess, allocation.allocated_amount));
+      const retained = roundMoney(allocation.allocated_amount - released);
+      if (retained > 0)
+        this.db
+          .prepare('UPDATE receipt_allocations SET allocated_amount=? WHERE id=?')
+          .run(retained, allocation.id);
+      else this.db.prepare('DELETE FROM receipt_allocations WHERE id=?').run(allocation.id);
+      this.db
+        .prepare(
+          'UPDATE customer_receipts SET unallocated_amount=ROUND(unallocated_amount+?,2) WHERE id=?',
+        )
+        .run(released, allocation.customer_receipt_id);
+      excess = roundMoney(excess - released);
+    }
+    const paid = roundMoney(Math.min(invoice.amount_paid, netTotal) + excess);
+    const status = paid >= netTotal ? 'PAID' : paid > 0 ? 'PARTIAL' : 'UNPAID';
+    this.db
+      .prepare(
+        'UPDATE invoices SET amount_paid=?, payment_status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+      )
+      .run(paid, status, invoiceId);
   }
 }

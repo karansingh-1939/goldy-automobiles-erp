@@ -1,0 +1,9 @@
+
+ RUN  v5.0.3 C:/Goldy_Automobiles
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  15:38:55
+   Duration  2.63s (environment 61%, tests 16%, setup 10%, transform 7%, import 7%)
+

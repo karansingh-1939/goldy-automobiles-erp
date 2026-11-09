@@ -107,6 +107,31 @@ export function createApp({ db: rawDb = getDatabase(), backupScheduler } = {}) {
     return next();
   });
 
+  const retiredPages = {
+    '/audit-logs.html': '/audit-logs',
+    '/tally-export.html': '/reports',
+    '/dashboard.html': '/',
+    '/job-cards.html': '/job-cards',
+    '/invoices.html': '/invoices',
+    '/inventory.html': '/inventory',
+    '/masters.html': '/masters',
+    '/stock-verification.html': '/stock-verification',
+    '/assets.html': '/assets',
+    '/purchasing.html': '/purchasing',
+    '/supplier-ledger.html': '/supplier-ledger',
+    '/service-history.html': '/service-history',
+    '/expenses.html': '/expenses',
+    '/technicians.html': '/technicians',
+    '/gst-reports.html': '/reports',
+    '/settings.html': '/settings',
+  };
+  app.get(Object.keys(retiredPages), (req, res) => {
+    const params = new URLSearchParams();
+    for (const key of ['id', 'vehicleId', 'resource'])
+      if (typeof req.query[key] === 'string') params.set(key, req.query[key]);
+    const query = params.size ? `?${params}` : '';
+    res.redirect(`/index.html#${retiredPages[req.path]}${query}`);
+  });
   app.use(express.static(publicDir));
 
   app.get('/api/v1/health', (req, res) => {

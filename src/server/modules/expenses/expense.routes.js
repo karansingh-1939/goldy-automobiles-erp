@@ -13,6 +13,7 @@ export function createExpenseRouter(db) {
   router.use(requireAuth);
 
   router.get('/', requirePermission('expenses.read'), controller.list);
+  router.get('/summary', requirePermission('expenses.read'), controller.summary);
   router.get('/:id', requirePermission('expenses.read'), controller.get);
   router.post('/', requirePermission('expenses.write'), controller.create);
   router.patch('/:id', requirePermission('expenses.write'), controller.update);

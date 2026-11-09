@@ -1,6 +1,10 @@
+import { assertCustomerCreditLimit } from '../accounting/customer-credit.service.js';
 import { localDate } from '../../shared/utils/local-date.js';
 import { AppError } from '../../shared/errors/app-error.js';
 import { SalesOrderRepository } from './sales-order.repository.js';
+import { QuotationService } from './quotation.service.js';
+import { ShipmentInvoiceService } from './shipment-invoice.service.js';
+import { calculateLinePricing } from './line-pricing.js';
 import { createInventoryService } from '../inventory/inventory.service.js';
 import { AccountingPostingEngine } from '../accounting/posting-engine.service.js';
 
@@ -12,265 +16,17 @@ export class SalesOrderService {
   constructor(db) {
     this.db = db;
     this.repository = new SalesOrderRepository(db);
+    this.quotations = new QuotationService(this.repository);
     this.inventoryService = createInventoryService(db);
     this.postingEngine = new AccountingPostingEngine(db);
+    this.shipmentInvoices = new ShipmentInvoiceService(this.repository, this.postingEngine);
   }
-
-  // Helper: Pricing Calculations
-  calculateLinePricing(qty, price, discountVal, gstRate, taxType) {
-    const quantity = Number(qty || 0);
-    const unitPrice = Number(price || 0);
-    const discount = Number(discountVal || 0);
-    const rate = Number(gstRate || 0);
-
-    let lineSubtotal = 0;
-    let lineGst = 0;
-    let lineTotal = 0;
-
-    if (taxType === 'INCLUSIVE') {
-      const rawLineTotal = quantity * unitPrice;
-      const discountedLineTotal = Math.max(0, rawLineTotal - discount);
-
-      lineSubtotal = discountedLineTotal / (1 + rate / 100);
-      lineGst = discountedLineTotal - lineSubtotal;
-      lineTotal = discountedLineTotal;
-    } else {
-      const rawLineSubtotal = quantity * unitPrice;
-      const discountedLineSubtotal = Math.max(0, rawLineSubtotal - discount);
-
-      lineSubtotal = discountedLineSubtotal;
-      lineGst = discountedLineSubtotal * (rate / 100);
-      lineTotal = discountedLineSubtotal + lineGst;
-    }
-
-    return {
-      subtotal: roundMoney(lineSubtotal),
-      gst: roundMoney(lineGst),
-      total: roundMoney(lineTotal),
-    };
-  }
-
-  generateDocNumber(prefix) {
-    const year = new Date().getFullYear();
-    const fullPrefix = `${prefix}-${year}-`;
-
-    let last;
-    if (prefix === 'QT') {
-      last = this.db
-        .prepare(
-          'SELECT quotation_number AS num FROM quotations WHERE quotation_number LIKE ? ORDER BY id DESC LIMIT 1',
-        )
-        .get(`${fullPrefix}%`);
-    } else if (prefix === 'SO') {
-      last = this.db
-        .prepare(
-          'SELECT order_number AS num FROM sales_orders WHERE order_number LIKE ? ORDER BY id DESC LIMIT 1',
-        )
-        .get(`${fullPrefix}%`);
-    } else {
-      last = this.db
-        .prepare(
-          'SELECT shipment_number AS num FROM sales_shipments WHERE shipment_number LIKE ? ORDER BY id DESC LIMIT 1',
-        )
-        .get(`${fullPrefix}%`);
-    }
-
-    let seq = 1;
-    if (last && last.num) {
-      const match = last.num.match(/(\d+)$/);
-      if (match) {
-        seq = parseInt(match[1], 10) + 1;
-      }
-    }
-    return `${fullPrefix}${String(seq).padStart(6, '0')}`;
-  }
-
-  // --- QUOTATIONS ---
 
   createQuotation(payload, userId) {
-    const {
-      companyId = 1,
-      customerId,
-      quotationDate,
-      validUntil,
-      items,
-      termsConditions,
-      status = 'DRAFT',
-      taxType = 'EXCLUSIVE',
-    } = payload;
-
-    if (
-      !customerId ||
-      !quotationDate ||
-      !validUntil ||
-      !items ||
-      !Array.isArray(items) ||
-      items.length === 0
-    ) {
-      throw new AppError('Customer, dates, and items are required.', 400, 'VALIDATION_ERROR');
-    }
-
-    const customer = this.db.prepare('SELECT id FROM customers WHERE id = ?').get(customerId);
-    if (!customer) {
-      throw new AppError('Customer not found.', 404, 'CUSTOMER_NOT_FOUND');
-    }
-
-    const quotationNumber = this.generateDocNumber('QT');
-
-    return this.repository.transaction(() => {
-      let subtotal = 0;
-      let gstTotal = 0;
-      let discountAmount = 0;
-      const processedItems = [];
-
-      for (const item of items) {
-        const itemDetails = this.db
-          .prepare('SELECT id, selling_price, gst_rate FROM inventory_items WHERE id = ?')
-          .get(item.itemId);
-        if (!itemDetails) {
-          throw new AppError(`Item ID ${item.itemId} not found.`, 404, 'INVENTORY_ITEM_NOT_FOUND');
-        }
-
-        const qty = Number(item.quantity);
-        const unitPrice =
-          item.unitPrice !== undefined ? Number(item.unitPrice) : Number(itemDetails.selling_price);
-        const itemDiscount = Number(item.discountAmount || 0);
-        const gstRate =
-          item.gstRate !== undefined ? Number(item.gstRate) : Number(itemDetails.gst_rate);
-
-        const pricing = this.calculateLinePricing(qty, unitPrice, itemDiscount, gstRate, taxType);
-
-        subtotal += pricing.subtotal;
-        gstTotal += pricing.gst;
-        discountAmount += itemDiscount;
-
-        processedItems.push({
-          item_id: item.itemId,
-          description: item.description || null,
-          quantity: qty,
-          unit_price: unitPrice,
-          discount_amount: itemDiscount,
-          gst_rate: gstRate,
-          gst_amount: pricing.gst,
-          line_total: pricing.total,
-        });
-      }
-
-      const grandTotal = Math.round(subtotal + gstTotal);
-
-      const quotation = {
-        quotation_number: quotationNumber,
-        revision_number: 0,
-        company_id: companyId,
-        customer_id: customerId,
-        quotation_date: quotationDate,
-        valid_until: validUntil,
-        status,
-        subtotal: roundMoney(subtotal),
-        discount_amount: roundMoney(discountAmount),
-        gst_total: roundMoney(gstTotal),
-        grand_total: grandTotal,
-        terms_conditions: termsConditions || null,
-        created_by: userId,
-      };
-
-      const quotationId = this.repository.createQuotation(quotation, processedItems);
-      return this.repository.getQuotationById(quotationId);
-    });
+    return this.quotations.createQuotation(payload, userId);
   }
-
-  reviseQuotation(quotationId, payload, userId) {
-    const existing = this.repository.getQuotationById(quotationId);
-    if (!existing) {
-      throw new AppError('Quotation not found.', 404, 'QUOTATION_NOT_FOUND');
-    }
-
-    const {
-      quotationDate = existing.quotation_date,
-      validUntil = existing.valid_until,
-      items = existing.items,
-      termsConditions = existing.terms_conditions,
-      status = 'DRAFT',
-      taxType = 'EXCLUSIVE',
-    } = payload;
-
-    return this.repository.transaction(() => {
-      let subtotal = 0;
-      let gstTotal = 0;
-      let discountAmount = 0;
-      const processedItems = [];
-
-      for (const item of items) {
-        const itemDetails = this.db
-          .prepare('SELECT id, selling_price, gst_rate FROM inventory_items WHERE id = ?')
-          .get(item.itemId || item.item_id);
-        if (!itemDetails) {
-          throw new AppError(
-            `Item ID ${item.itemId || item.item_id} not found.`,
-            404,
-            'INVENTORY_ITEM_NOT_FOUND',
-          );
-        }
-
-        const qty = Number(item.quantity);
-        const unitPrice =
-          item.unitPrice !== undefined
-            ? Number(item.unitPrice)
-            : item.unit_price !== undefined
-              ? Number(item.unit_price)
-              : Number(itemDetails.selling_price);
-        const itemDiscount = Number(item.discountAmount || item.discount_amount || 0);
-        const gstRate =
-          item.gstRate !== undefined
-            ? Number(item.gstRate)
-            : item.gst_rate !== undefined
-              ? Number(item.gst_rate)
-              : Number(itemDetails.gst_rate);
-
-        const pricing = this.calculateLinePricing(qty, unitPrice, itemDiscount, gstRate, taxType);
-
-        subtotal += pricing.subtotal;
-        gstTotal += pricing.gst;
-        discountAmount += itemDiscount;
-
-        processedItems.push({
-          item_id: itemDetails.id,
-          description: item.description || null,
-          quantity: qty,
-          unit_price: unitPrice,
-          discount_amount: itemDiscount,
-          gst_rate: gstRate,
-          gst_amount: pricing.gst,
-          line_total: pricing.total,
-        });
-      }
-
-      const grandTotal = Math.round(subtotal + gstTotal);
-
-      // Create new revision record, keeping quotation_number the same
-      const revision = {
-        quotation_number: existing.quotation_number,
-        revision_number: existing.revision_number + 1,
-        company_id: existing.company_id,
-        customer_id: existing.customer_id,
-        quotation_date: quotationDate,
-        valid_until: validUntil,
-        status,
-        subtotal: roundMoney(subtotal),
-        discount_amount: roundMoney(discountAmount),
-        gst_total: roundMoney(gstTotal),
-        grand_total: grandTotal,
-        terms_conditions: termsConditions || null,
-        created_by: userId,
-      };
-
-      const newId = this.repository.createQuotation(revision, processedItems);
-
-      // Update status of old revision to REJECTED (revised out)
-      this.repository.updateQuotationStatus(existing.id, 'REJECTED');
-
-      return this.repository.getQuotationById(newId);
-    });
+  reviseQuotation(id, payload, userId) {
+    return this.quotations.reviseQuotation(id, payload, userId);
   }
 
   // --- SALES ORDERS ---
@@ -292,12 +48,12 @@ export class SalesOrderService {
       throw new AppError('Customer, date, and items are required.', 400, 'VALIDATION_ERROR');
     }
 
-    const customer = this.db.prepare('SELECT id FROM customers WHERE id = ?').get(customerId);
+    const customer = this.repository.findCustomer(customerId);
     if (!customer) {
       throw new AppError('Customer not found.', 404, 'CUSTOMER_NOT_FOUND');
     }
 
-    const orderNumber = this.generateDocNumber('SO');
+    const orderNumber = this.repository.generateDocNumber('SO');
 
     return this.repository.transaction(() => {
       let subtotal = 0;
@@ -306,9 +62,7 @@ export class SalesOrderService {
       const processedItems = [];
 
       for (const item of items) {
-        const itemDetails = this.db
-          .prepare('SELECT id, selling_price, gst_rate FROM inventory_items WHERE id = ?')
-          .get(item.itemId);
+        const itemDetails = this.repository.findPricedItem(item.itemId);
         if (!itemDetails) {
           throw new AppError(`Item ID ${item.itemId} not found.`, 404, 'INVENTORY_ITEM_NOT_FOUND');
         }
@@ -320,7 +74,7 @@ export class SalesOrderService {
         const gstRate =
           item.gstRate !== undefined ? Number(item.gstRate) : Number(itemDetails.gst_rate);
 
-        const pricing = this.calculateLinePricing(qty, unitPrice, itemDiscount, gstRate, taxType);
+        const pricing = calculateLinePricing(qty, unitPrice, itemDiscount, gstRate, taxType);
 
         subtotal += pricing.subtotal;
         gstTotal += pricing.gst;
@@ -355,6 +109,7 @@ export class SalesOrderService {
         grand_total: grandTotal,
         terms_conditions: termsConditions || null,
         created_by: userId,
+        tax_type: taxType,
       };
 
       const orderId = this.repository.createSalesOrder(order, processedItems);
@@ -377,6 +132,7 @@ export class SalesOrderService {
         customerReference: payload.customerReference || null,
         termsConditions: quotation.terms_conditions,
         status: 'DRAFT',
+        taxType: quotation.tax_type,
         items: quotation.items.map((item) => ({
           itemId: item.item_id,
           quantity: item.quantity,
@@ -394,46 +150,7 @@ export class SalesOrderService {
   }
 
   assertCreditLimit(companyId, customerId, grandTotal) {
-    const customer = this.db
-      .prepare('SELECT name, ledger_id, credit_limit FROM customers WHERE id = ?')
-      .get(customerId);
-    if (!customer || customer.credit_limit === null || customer.credit_limit === undefined) {
-      return;
-    }
-
-    let outstanding = 0;
-    if (customer.ledger_id) {
-      const balanceRow = this.db
-        .prepare(
-          `
-        SELECT 
-          l.opening_balance,
-          COALESCE(SUM(CASE WHEN je.entry_type = 'DEBIT' THEN je.amount ELSE 0 END), 0) AS total_debit,
-          COALESCE(SUM(CASE WHEN je.entry_type = 'CREDIT' THEN je.amount ELSE 0 END), 0) AS total_credit
-        FROM ledgers l
-        LEFT JOIN journal_entries je ON je.ledger_id = l.id
-        LEFT JOIN vouchers v ON je.voucher_id = v.id AND v.company_id = ? AND v.status <> 'CANCELLED'
-        WHERE l.id = ?
-        GROUP BY l.id
-      `,
-        )
-        .get(companyId, customer.ledger_id);
-
-      if (balanceRow) {
-        outstanding =
-          Number(balanceRow.opening_balance) +
-          Number(balanceRow.total_debit) -
-          Number(balanceRow.total_credit);
-      }
-    }
-
-    if (outstanding + grandTotal > customer.credit_limit) {
-      throw new AppError(
-        `Action would exceed customer credit limit of ${customer.credit_limit}. Current outstanding: ${Math.round(outstanding * 100) / 100}`,
-        400,
-        'CREDIT_LIMIT_EXCEEDED',
-      );
-    }
+    assertCustomerCreditLimit(this.db, companyId, customerId, grandTotal);
   }
 
   confirmSalesOrder(orderId, userId) {
@@ -462,15 +179,7 @@ export class SalesOrderService {
         }
 
         // Perform FIFO Batch Reservation
-        const batches = this.db
-          .prepare(
-            `
-          SELECT id, quantity FROM inventory_batches
-          WHERE item_id = ? AND warehouse_id = ? AND quantity > 0
-          ORDER BY id ASC
-        `,
-          )
-          .all(item.item_id, item.warehouse_id);
+        const batches = this.repository.availableBatches(item.item_id, item.warehouse_id);
 
         let remaining = item.quantity;
         let reserved = 0;
@@ -538,7 +247,7 @@ export class SalesOrderService {
       );
     }
 
-    const shipmentNumber = this.generateDocNumber('SH');
+    const shipmentNumber = this.repository.generateDocNumber('SH');
 
     return this.repository.transaction(() => {
       const shipmentItemsToSave = [];
@@ -568,15 +277,11 @@ export class SalesOrderService {
         }
 
         // Fetch active reservations for this sales order item and consume them in order
-        const reservations = this.db
-          .prepare(
-            `
-          SELECT * FROM inventory_reservations
-          WHERE item_id = ? AND warehouse_id = ? AND reference_table = 'sales_orders' AND reference_id = ? AND status = 'ACTIVE'
-          ORDER BY id ASC
-        `,
-          )
-          .all(orderItem.item_id, orderItem.warehouse_id, order.id);
+        const reservations = this.repository.activeItemReservations(
+          orderItem.item_id,
+          orderItem.warehouse_id,
+          order.id,
+        );
 
         let remainingToShip = shipQty;
         for (const res of reservations) {
@@ -610,13 +315,10 @@ export class SalesOrderService {
 
         if (remainingToShip > 0) {
           // If for some reason reservations don't cover it (should not happen), fallback to oldest batch
-          const oldestBatch = this.db
-            .prepare(
-              `
-            SELECT id FROM inventory_batches WHERE item_id = ? AND warehouse_id = ? ORDER BY id ASC LIMIT 1
-          `,
-            )
-            .get(orderItem.item_id, orderItem.warehouse_id);
+          const oldestBatch = this.repository.oldestBatch(
+            orderItem.item_id,
+            orderItem.warehouse_id,
+          );
 
           if (!oldestBatch) {
             throw new AppError(
@@ -681,286 +383,12 @@ export class SalesOrderService {
       this.repository.updateSalesOrderStatus(order.id, nextStatus);
 
       // Return shipment detail along with items
-      const savedShipment = this.db
-        .prepare('SELECT * FROM sales_shipments WHERE id = ?')
-        .get(shipmentId);
-      savedShipment.items = this.db
-        .prepare('SELECT * FROM sales_shipment_items WHERE sales_shipment_id = ?')
-        .all(shipmentId);
-      return savedShipment;
+      return this.repository.findShipment(shipmentId);
     });
   }
 
   createInvoiceForShipment(shipmentId, userId) {
-    const shipment = this.db.prepare('SELECT * FROM sales_shipments WHERE id = ?').get(shipmentId);
-    if (!shipment) {
-      throw new AppError('Shipment not found.', 404, 'SHIPMENT_NOT_FOUND');
-    }
-
-    const order = this.repository.getSalesOrderById(shipment.sales_order_id);
-    const shipmentItems = this.db
-      .prepare('SELECT * FROM sales_shipment_items WHERE sales_shipment_id = ?')
-      .all(shipmentId);
-
-    // Verify company & customer state for GST resolution
-    const customer = this.db
-      .prepare('SELECT name, state FROM customers WHERE id = ?')
-      .get(order.customer_id);
-    const company = this.db
-      .prepare('SELECT state FROM companies WHERE id = ?')
-      .get(order.company_id);
-    const companyState = company ? company.state || 'Haryana' : 'Haryana';
-    const customerState = customer ? customer.state || companyState : companyState;
-    const isInterstate = customerState.trim().toLowerCase() !== companyState.trim().toLowerCase();
-
-    const customerLedgerId = this.postingEngine.getOrCreateCustomerLedger(
-      order.company_id,
-      order.customer_id,
-      customer.name,
-    );
-
-    return this.repository.transaction(() => {
-      const existing = this.db
-        .prepare('SELECT id FROM direct_invoices WHERE sales_shipment_id = ?')
-        .get(shipmentId);
-      if (existing || shipment.status === 'CANCELLED') {
-        throw new AppError(
-          'Shipment is already invoiced or cancelled.',
-          409,
-          'SHIPMENT_ALREADY_INVOICED',
-        );
-      }
-
-      // 1. Generate sequential invoice number (DIR- prefix reused for direct billing)
-      const year = new Date().getFullYear();
-      const prefix = `DIR-${year}-`;
-      const last = this.db
-        .prepare(
-          'SELECT invoice_number FROM direct_invoices WHERE invoice_number LIKE ? ORDER BY id DESC LIMIT 1',
-        )
-        .get(`${prefix}%`);
-      let seq = 1;
-      if (last && last.invoice_number) {
-        const match = last.invoice_number.match(/(\d+)$/);
-        if (match) {
-          seq = parseInt(match[1], 10) + 1;
-        }
-      }
-      const invoiceNumber = `${prefix}${String(seq).padStart(6, '0')}`;
-
-      // Insert direct invoice header
-      const dummyInfo = this.db
-        .prepare(
-          `
-        INSERT INTO direct_invoices (
-          invoice_number, company_id, customer_id, invoice_date, subtotal, gst_total, grand_total, status, narration, created_by, cgst_total, sgst_total, igst_total, sales_order_id, sales_shipment_id
-        ) VALUES (?, ?, ?, ?, 0, 0, 0, 'UNPAID', ?, ?, 0, 0, 0, ?, ?)
-      `,
-        )
-        .run(
-          invoiceNumber,
-          order.company_id,
-          order.customer_id,
-          shipment.shipment_date,
-          `Invoice for Shipment ${shipment.shipment_number}`,
-          userId,
-          order.id,
-          shipment.id,
-        );
-
-      const invoiceId = dummyInfo.lastInsertRowid;
-
-      let subtotal = 0;
-      let gstTotal = 0;
-      let totalPartsCost = 0;
-      let totalPartsRevenue = 0;
-
-      const processedItems = [];
-
-      for (const shItem of shipmentItems) {
-        const orderItem = order.items.find((oi) => oi.id === shItem.sales_order_item_id);
-        const qty = shItem.quantity;
-        const price = orderItem.unit_price;
-        const discountVal = (orderItem.discount_amount / orderItem.quantity) * qty;
-        const gstRate = orderItem.gst_rate;
-
-        // Calculate pricing
-        const pricing = this.calculateLinePricing(qty, price, discountVal, gstRate, 'EXCLUSIVE');
-
-        subtotal += pricing.subtotal;
-        gstTotal += pricing.gst;
-        totalPartsCost += roundMoney(qty * shItem.cost_price);
-        totalPartsRevenue += pricing.subtotal;
-
-        processedItems.push({
-          itemId: shItem.item_id,
-          description: orderItem.description || 'Spare Part',
-          quantity: qty,
-          unitPrice: price,
-          gstRate,
-          gstAmount: pricing.gst,
-          lineTotal: pricing.total,
-          costPrice: shItem.cost_price,
-          warehouseId: shItem.warehouse_id,
-          batchId: shItem.batch_id,
-          sales_order_item_id: orderItem.id,
-          sales_shipment_item_id: shItem.id,
-        });
-      }
-
-      const grandTotal = Math.round(subtotal + gstTotal);
-
-      let cgst = 0;
-      let sgst = 0;
-      let igst = 0;
-
-      if (isInterstate) {
-        igst = roundMoney(gstTotal);
-      } else {
-        cgst = roundMoney(gstTotal / 2);
-        sgst = roundMoney(gstTotal - cgst);
-      }
-
-      // Update invoice header with actual values
-      this.db
-        .prepare(
-          `
-        UPDATE direct_invoices 
-        SET subtotal = ?, gst_total = ?, grand_total = ?, cgst_total = ?, sgst_total = ?, igst_total = ?
-        WHERE id = ?
-      `,
-        )
-        .run(roundMoney(subtotal), roundMoney(gstTotal), grandTotal, cgst, sgst, igst, invoiceId);
-
-      // Save invoice items
-      const insertItem = this.db.prepare(`
-        INSERT INTO direct_invoice_items (
-          direct_invoice_id, item_id, description, quantity, unit_price, gst_rate, gst_amount, line_total, cost_price, warehouse_id, batch_id, sales_order_item_id, sales_shipment_item_id, line_cost
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      for (const item of processedItems) {
-        insertItem.run(
-          invoiceId,
-          item.itemId,
-          item.description,
-          item.quantity,
-          item.unitPrice,
-          item.gstRate,
-          item.gstAmount,
-          item.lineTotal,
-          item.costPrice,
-          item.warehouseId,
-          item.batchId,
-          item.sales_order_item_id,
-          item.sales_shipment_item_id,
-          roundMoney(item.quantity * item.costPrice),
-        );
-      }
-
-      // Compile accounting entries
-      const salesEntries = [];
-      salesEntries.push({ ledgerId: customerLedgerId, type: 'DEBIT', amount: grandTotal });
-
-      if (totalPartsRevenue > 0) {
-        salesEntries.push({
-          ledgerId: this.postingEngine.ledgerResolver.getLedgerId(order.company_id, 'parts_sales'),
-          type: 'CREDIT',
-          amount: totalPartsRevenue,
-        });
-      }
-
-      if (igst > 0) {
-        salesEntries.push({
-          ledgerId: this.postingEngine.ledgerResolver.getLedgerId(order.company_id, 'igst_output'),
-          type: 'CREDIT',
-          amount: igst,
-        });
-      }
-      if (cgst > 0) {
-        salesEntries.push({
-          ledgerId: this.postingEngine.ledgerResolver.getLedgerId(order.company_id, 'cgst_output'),
-          type: 'CREDIT',
-          amount: cgst,
-        });
-      }
-      if (sgst > 0) {
-        salesEntries.push({
-          ledgerId: this.postingEngine.ledgerResolver.getLedgerId(order.company_id, 'sgst_output'),
-          type: 'CREDIT',
-          amount: sgst,
-        });
-      }
-
-      // Add roundoff entry if applicable to keep journal balanced
-      const roundoff = roundMoney(grandTotal - (subtotal + gstTotal));
-      if (Math.abs(roundoff) >= 0.01) {
-        const roundOffLedgerId = this.postingEngine.ledgerResolver.getLedgerId(
-          order.company_id,
-          'round_off',
-        );
-        if (roundoff > 0) {
-          salesEntries.push({ ledgerId: roundOffLedgerId, type: 'CREDIT', amount: roundoff });
-        } else {
-          salesEntries.push({
-            ledgerId: roundOffLedgerId,
-            type: 'DEBIT',
-            amount: Math.abs(roundoff),
-          });
-        }
-      }
-
-      // Post Sales Voucher
-      const salesVoucher = this.postingEngine.post({
-        companyId: order.company_id,
-        voucherType: 'Sales',
-        voucherDate: shipment.shipment_date,
-        referenceTable: 'direct_invoices',
-        referenceId: invoiceId,
-        narration: `Invoice for shipment ${shipment.shipment_number}`,
-        created_by: userId,
-        entries: salesEntries,
-      });
-
-      this.db
-        .prepare('UPDATE direct_invoices SET voucher_id = ? WHERE id = ?')
-        .run(salesVoucher.voucherId, invoiceId);
-
-      // Post COGS Voucher
-      if (totalPartsCost > 0) {
-        const cogsEntries = [
-          {
-            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(order.company_id, 'cogs'),
-            type: 'DEBIT',
-            amount: totalPartsCost,
-          },
-          {
-            ledgerId: this.postingEngine.ledgerResolver.getLedgerId(
-              order.company_id,
-              'inventory_stock',
-            ),
-            type: 'CREDIT',
-            amount: totalPartsCost,
-          },
-        ];
-
-        const cogsVoucher = this.postingEngine.post({
-          companyId: order.company_id,
-          voucherType: 'Journal',
-          voucherDate: shipment.shipment_date,
-          referenceTable: 'direct_invoices',
-          referenceId: invoiceId,
-          narration: `COGS entry for shipment ${shipment.shipment_number}`,
-          created_by: userId,
-          entries: cogsEntries,
-        });
-        this.db
-          .prepare('UPDATE direct_invoices SET cogs_voucher_id = ? WHERE id = ?')
-          .run(cogsVoucher.voucherId, invoiceId);
-      }
-
-      return this.db.prepare('SELECT * FROM direct_invoices WHERE id = ?').get(invoiceId);
-    });
+    return this.shipmentInvoices.createInvoiceForShipment(shipmentId, userId);
   }
 
   // --- CANCEL SALES ORDER ---
@@ -980,14 +408,7 @@ export class SalesOrderService {
 
     return this.repository.transaction(() => {
       // Find all active reservations and cancel them
-      const reservations = this.db
-        .prepare(
-          `
-        SELECT id FROM inventory_reservations
-        WHERE reference_table = 'sales_orders' AND reference_id = ? AND status = 'ACTIVE'
-      `,
-        )
-        .all(order.id);
+      const reservations = this.repository.activeOrderReservations(order.id);
 
       for (const res of reservations) {
         this.inventoryService.cancelReservation(res.id, userId);

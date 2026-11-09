@@ -1,3 +1,4 @@
+import { assertCustomerCreditLimit } from '../accounting/customer-credit.service.js';
 import { localDate } from '../../shared/utils/local-date.js';
 import { AppError } from '../../shared/errors/app-error.js';
 import { AuditRepository } from '../audit/audit.repository.js';
@@ -894,46 +895,7 @@ export class JobCardService {
   }
 
   assertCreditLimit(companyId, customerId, grandTotal) {
-    const customer = this.repository.db
-      .prepare('SELECT name, ledger_id, credit_limit FROM customers WHERE id = ?')
-      .get(customerId);
-    if (!customer || customer.credit_limit === null || customer.credit_limit === undefined) {
-      return;
-    }
-
-    let outstanding = 0;
-    if (customer.ledger_id) {
-      const balanceRow = this.repository.db
-        .prepare(
-          `
-        SELECT 
-          l.opening_balance,
-          COALESCE(SUM(CASE WHEN je.entry_type = 'DEBIT' THEN je.amount ELSE 0 END), 0) AS total_debit,
-          COALESCE(SUM(CASE WHEN je.entry_type = 'CREDIT' THEN je.amount ELSE 0 END), 0) AS total_credit
-        FROM ledgers l
-        LEFT JOIN journal_entries je ON je.ledger_id = l.id
-        LEFT JOIN vouchers v ON je.voucher_id = v.id AND v.company_id = ? AND v.status <> 'CANCELLED'
-        WHERE l.id = ?
-        GROUP BY l.id
-      `,
-        )
-        .get(companyId, customer.ledger_id);
-
-      if (balanceRow) {
-        outstanding =
-          Number(balanceRow.opening_balance) +
-          Number(balanceRow.total_debit) -
-          Number(balanceRow.total_credit);
-      }
-    }
-
-    if (outstanding + grandTotal > customer.credit_limit) {
-      throw new AppError(
-        `Action would exceed customer credit limit of ${customer.credit_limit}. Current outstanding: ${Math.round(outstanding * 100) / 100}`,
-        400,
-        'CREDIT_LIMIT_EXCEEDED',
-      );
-    }
+    assertCustomerCreditLimit(this.db, companyId, customerId, grandTotal);
   }
 
   getInvoice(id) {

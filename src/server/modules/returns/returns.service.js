@@ -3,6 +3,7 @@ import { AppError } from '../../shared/errors/app-error.js';
 import { ReturnsRepository } from './returns.repository.js';
 import { InventoryService } from '../inventory/inventory.service.js';
 import { AccountingPostingEngine } from '../accounting/posting-engine.service.js';
+import { AllocationService } from '../accounting/allocation.service.js';
 
 function code(prefix) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -40,25 +41,29 @@ export class ReturnsService {
       const seenItems = new Set();
 
       for (const item of items) {
-        if (seenItems.has(Number(item.itemId))) {
-          throw new AppError('Duplicate return items are not allowed.', 400, 'VALIDATION_ERROR');
-        }
-        seenItems.add(Number(item.itemId));
-        const invItem = this.repository.findInvoiceItem(invoiceId, item.itemId);
-        if (!invItem) {
+        const invItem = this.repository.findInvoiceItem(invoiceId, item.itemId, item.invoiceItemId);
+        if (
+          !invItem ||
+          !invItem.inventory_item_id ||
+          (item.itemId && Number(item.itemId) !== Number(invItem.inventory_item_id))
+        ) {
           throw new AppError(
-            `Item ${item.itemId} was not purchased on invoice ${invoiceId}.`,
+            'Selected invoice line does not match this invoice part.',
             400,
             'VALIDATION_ERROR',
           );
         }
+        if (seenItems.has(invItem.id)) {
+          throw new AppError('Duplicate return items are not allowed.', 400, 'VALIDATION_ERROR');
+        }
+        seenItems.add(invItem.id);
 
         const quantity = Number(item.quantity);
         if (!Number.isFinite(quantity) || quantity <= 0) {
           throw new AppError('Return quantity must be greater than zero.', 400, 'VALIDATION_ERROR');
         }
 
-        const alreadyReturned = this.repository.getAlreadyReturnedQuantity(invoiceId, item.itemId);
+        const alreadyReturned = this.repository.getAlreadyReturnedQuantity(invoiceId, invItem);
         const remaining = Number(invItem.quantity) - alreadyReturned;
         if (quantity > remaining) {
           throw new AppError(
@@ -71,7 +76,7 @@ export class ReturnsService {
         const batch = this.inventoryService.repository.findBatchById(invItem.batch_id);
         if (
           !batch ||
-          Number(batch.item_id) !== Number(item.itemId) ||
+          Number(batch.item_id) !== Number(invItem.inventory_item_id) ||
           (item.batchId && Number(item.batchId) !== Number(batch.id)) ||
           (item.warehouseId && Number(item.warehouseId) !== Number(batch.warehouse_id))
         ) {
@@ -90,7 +95,8 @@ export class ReturnsService {
         totalRefundAmount += lineTotal;
 
         processedItems.push({
-          item_id: item.itemId,
+          invoice_item_id: invItem.id,
+          item_id: invItem.inventory_item_id,
           warehouse_id: batch.warehouse_id,
           batch_id: batch.id,
           quantity,
@@ -160,7 +166,18 @@ export class ReturnsService {
           .prepare('SELECT batch_number, purchase_cost FROM inventory_batches WHERE id = ?')
           .get(item.batch_id);
         const batchNum = batch ? batch.batch_number : `B-${Date.now()}`;
-        const invItem = this.repository.findInvoiceItem(ret.invoice_id, item.item_id);
+        const invItem = this.repository.findInvoiceItem(
+          ret.invoice_id,
+          item.item_id,
+          item.invoice_item_id,
+          item.batch_id,
+        );
+        if (!invItem)
+          throw new AppError(
+            'Original invoice line is missing. Reconcile this return before approval.',
+            409,
+            'RETURN_LINE_MISSING',
+          );
         const unitCost = Number(invItem.purchase_cost_snapshot);
 
         if (item.condition === 'GOOD') {
@@ -260,7 +277,12 @@ export class ReturnsService {
       );
 
       for (const item of ret.items) {
-        const invItem = this.repository.findInvoiceItem(ret.invoice_id, item.item_id);
+        const invItem = this.repository.findInvoiceItem(
+          ret.invoice_id,
+          item.item_id,
+          item.invoice_item_id,
+          item.batch_id,
+        );
         const unitCost = Number(invItem.purchase_cost_snapshot);
         const totalCost = Math.round(unitCost * item.quantity * 100) / 100;
 
@@ -305,10 +327,12 @@ export class ReturnsService {
         }
       }
 
-      return this.repository.updateCustomerReturn(ret.id, {
+      const completed = this.repository.updateCustomerReturn(ret.id, {
         status: 'COMPLETED',
         credit_note_id: voucher.voucherId,
       });
+      new AllocationService(this.db).reconcileInvoiceCredits(ret.invoice_id);
+      return completed;
     });
   }
 
@@ -343,6 +367,7 @@ export class ReturnsService {
     return this.repository.transaction(() => {
       let totalRefundAmount = 0;
       const processedItems = [];
+      const seenSources = new Set();
 
       for (const item of items) {
         const quantity = Number(item.quantity);
@@ -362,6 +387,30 @@ export class ReturnsService {
           );
         }
 
+        if (batch.supplier_id && Number(batch.supplier_id) !== Number(supplierId)) {
+          throw new AppError(
+            'Return supplier must match the batch supplier.',
+            400,
+            'RETURN_SUPPLIER_MISMATCH',
+          );
+        }
+        const source = this.repository.supplierReturnSource(batch.id, supplierId, purchaseId, item);
+        const sourceKey = `${source.source_table}:${source.id}`;
+        if (seenSources.has(sourceKey))
+          throw new AppError(
+            'Duplicate supplier return purchase lines are not allowed.',
+            400,
+            'VALIDATION_ERROR',
+          );
+        seenSources.add(sourceKey);
+        const alreadyReturned = this.repository.supplierReturnedQuantity(source);
+        if (quantity > source.quantity - alreadyReturned)
+          throw new AppError(
+            'Return quantity exceeds the remaining original purchase quantity.',
+            400,
+            'VALIDATION_ERROR',
+          );
+
         if (Number(batch.quantity) < quantity) {
           throw new AppError(
             `Insufficient stock in batch ${batch.batch_number} to execute return. Available: ${batch.quantity}.`,
@@ -370,16 +419,16 @@ export class ReturnsService {
           );
         }
 
-        const unitCost = Number(batch.purchase_cost);
-        const itemObj = this.db
-          .prepare('SELECT gst_rate FROM inventory_items WHERE id = ?')
-          .get(item.itemId);
-        const gstRate = itemObj ? Number(itemObj.gst_rate) : 18;
+        const unitCost = Number(source.purchase_cost);
+        const gstRate = Number(source.gst_rate);
 
         // Calculate tax input reversal
-        const taxable = unitCost * quantity;
-        const gstAmount = Math.round(((taxable * gstRate) / 100) * 100) / 100;
-        const lineTotal = taxable + gstAmount;
+        const taxable = Math.round(unitCost * quantity * 100) / 100;
+        const gstAmount =
+          Math.round(((source.gst_amount * quantity) / source.quantity) * 100) / 100;
+        const cgstAmount = source.interstate ? 0 : Math.round((gstAmount / 2) * 100) / 100;
+        const sgstAmount = source.interstate ? 0 : Math.round((gstAmount - cgstAmount) * 100) / 100;
+        const lineTotal = Math.round((taxable + gstAmount) * 100) / 100;
 
         totalRefundAmount += lineTotal;
 
@@ -392,6 +441,11 @@ export class ReturnsService {
           gst_rate: gstRate,
           gst_amount: gstAmount,
           line_total: lineTotal,
+          source_table: source.source_table,
+          source_item_id: source.id,
+          cgst_amount: cgstAmount,
+          sgst_amount: sgstAmount,
+          igst_amount: source.interstate ? gstAmount : 0,
         });
       }
 
@@ -434,6 +488,56 @@ export class ReturnsService {
 
       const companyId = ret.company_id || 1;
 
+      for (const item of ret.items) {
+        const source = this.repository.supplierReturnSource(
+          item.batch_id,
+          ret.supplier_id,
+          ret.purchase_id,
+          item,
+        );
+        if (
+          item.quantity >
+          source.quantity - this.repository.supplierReturnedQuantity(source, ret.id)
+        ) {
+          throw new AppError(
+            'Return quantity exceeds the remaining original purchase quantity.',
+            400,
+            'VALIDATION_ERROR',
+          );
+        }
+        const expectedGst =
+          Math.round(((source.gst_amount * item.quantity) / source.quantity) * 100) / 100;
+        if (
+          Math.abs(item.unit_cost - source.purchase_cost) > 0.005 ||
+          Math.abs(item.gst_amount - expectedGst) > 0.005
+        ) {
+          throw new AppError(
+            'Return draft valuation does not match the original purchase. Cancel and recreate this draft.',
+            409,
+            'RETURN_VALUATION_MISMATCH',
+          );
+        }
+        if (item.cgst_amount === null || item.sgst_amount === null || item.igst_amount === null) {
+          item.igst_amount = source.interstate ? item.gst_amount : 0;
+          item.cgst_amount = source.interstate ? 0 : Math.round((item.gst_amount / 2) * 100) / 100;
+          item.sgst_amount = source.interstate
+            ? 0
+            : Math.round((item.gst_amount - item.cgst_amount) * 100) / 100;
+          this.db
+            .prepare(
+              'UPDATE supplier_return_items SET source_table=?,source_item_id=?,cgst_amount=?,sgst_amount=?,igst_amount=? WHERE id=?',
+            )
+            .run(
+              source.source_table,
+              source.id,
+              item.cgst_amount,
+              item.sgst_amount,
+              item.igst_amount,
+              item.id,
+            );
+        }
+      }
+
       let inventoryValue = 0;
       // 1. Process Stock Outflows
       for (const item of ret.items) {
@@ -465,25 +569,12 @@ export class ReturnsService {
       let totalSgst = 0;
       let totalIgst = 0;
 
-      // Check if state is interstate or local to allocate GST input tax reversal
-      const company = this.db.prepare('SELECT state FROM companies WHERE id = ?').get(companyId);
-      const supplier = this.db
-        .prepare('SELECT state FROM suppliers WHERE id = ?')
-        .get(ret.supplier_id);
-      const isInterstate =
-        company?.state &&
-        supplier?.state &&
-        String(company.state).trim().toLowerCase() !== String(supplier.state).trim().toLowerCase();
-
       for (const item of ret.items) {
         const taxable = item.unit_cost * item.quantity;
         totalTaxable += taxable;
-        if (isInterstate) {
-          totalIgst += item.gst_amount;
-        } else {
-          totalCgst += item.gst_amount / 2;
-          totalSgst += item.gst_amount / 2;
-        }
+        totalIgst += item.igst_amount;
+        totalCgst += item.cgst_amount;
+        totalSgst += item.sgst_amount;
       }
 
       const entries = [

@@ -1,0 +1,24 @@
+Financial edge-case audit, 2026-10-14
+Runtime: Electron embedded Node v24.21.0 using scripts/run-electron-node.js.
+Isolation: createTestContext() creates and migrates a temporary SQLite database; no production database accessed. Synthetic customer, vehicle, suppliers, warehouse, item and batches inserted in that temporary database. Direct service methods invoked because localhost fetch is blocked by execution sandbox (EACCES). No application code changed. Temporary probe .audit-finance-probe.mjs removed after execution.
+
+Probe output:
+INVOICE 1 944
+RETURN SECOND BATCH ERROR Return batch must match the invoice batch.
+APPROVED REFUND 236
+OUTSTANDING AFTER CREDIT [{"documentId":1,"documentType":"job_card_invoice","grandTotal":944,"amountPaid":0,"outstandingAmount":944}]
+RETURN REMAINING SECOND ERROR Cannot return 1 of item 1. Already returned: 1, remaining: 0.
+WRONG SUPPLIER COMPLETE COMPLETED Supplier B 118
+WRONG SUPPLIER JOURNAL [{"amount":118,"entry_type":"DEBIT","name":"Supplier: Supplier B"},{"amount":100,"entry_type":"CREDIT","name":"Inventory Stock"},{"amount":9,"entry_type":"CREDIT","name":"CGST Input Tax Credit"},{"amount":9,"entry_type":"CREDIT","name":"SGST Input Tax Credit"}]
+JOB CREDIT BLOCKED Action would exceed customer credit limit of 0. Current outstanding: 708
+DIRECT CREDIT ZERO {"invoiceId":1,"invoiceNumber":"DIR-2026-000001","grandTotal":100,"voucherId":6,"cogsVoucherId":null}
+
+Reproduction setup:
+Inventory SKU PROBE: purchase cost and average cost Rs100, selling price Rs200, stock20, GST18%.
+Batch1: supplier A, stock10, unit purchase cost100; batch2: supplier A, stock10, unit purchase cost100.
+One job card contains SKU PROBE from batch1 quantity1 at Rs200 and batch2 quantity2 at Rs300; finalize generates Rs944 invoice.
+1. Attempt return batch2 quantity1: rejected with batch mismatch.
+2. Return batch1 quantity1 and approve: Rs236 credit note. OutstandingReceivables still returns Rs944, despite customer ledger balance of Rs708.
+3. Attempt remaining batch2 quantity1: rejected because alreadyReturned=1 and remaining=0, although two units of batch2 were sold.
+4. Create supplier return of batch1 under supplier B and approve: succeeds and debits supplier B Rs118, although batch is supplier A's.
+5. Set customer credit_limit=0: job-card credit assertion rejects another Rs100; direct billing creates new UNPAID Rs100 labour invoice successfully.

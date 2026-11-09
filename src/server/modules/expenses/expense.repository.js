@@ -77,6 +77,32 @@ export class ExpenseRepository {
       .get(id);
   }
 
+  summary(filters, today) {
+    const { clause, params } = whereClause(filters);
+    const byCategory = this.db
+      .prepare(
+        `SELECT category, ROUND(SUM(amount),2) AS amount FROM expenses ${clause} GROUP BY category ORDER BY category`,
+      )
+      .all(params);
+    const totals = this.db
+      .prepare(
+        `SELECT
+      ROUND(COALESCE(SUM(CASE WHEN expense_date = @today THEN amount ELSE 0 END),0),2) AS todayTotal,
+      ROUND(COALESCE(SUM(CASE WHEN expense_date >= @monthStart AND expense_date <= @today THEN amount ELSE 0 END),0),2) AS monthTotal
+      FROM expenses ${filters.category ? 'WHERE category = @category' : ''}`,
+      )
+      .get({
+        today,
+        monthStart: `${today.slice(0, 7)}-01`,
+        ...(filters.category ? { category: filters.category } : {}),
+      });
+    return {
+      ...totals,
+      total: Math.round(byCategory.reduce((sum, row) => sum + row.amount, 0) * 100) / 100,
+      byCategory,
+    };
+  }
+
   create(data) {
     const result = this.db
       .prepare(

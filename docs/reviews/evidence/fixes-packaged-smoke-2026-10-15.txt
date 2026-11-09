@@ -1,0 +1,8 @@
+
+> goldy-automobiles-erp@0.2.0 smoke:packaged
+> node scripts/desktop-smoke.js --packaged
+
+SMOKE PASS: administrator setup, recovery and login
+SMOKE PASS: synthetic customer and stock fixtures
+SMOKE PASS: sales draft, confirmation and stock reservation
+SMOKE PASS: renderer runtime checks

@@ -10,10 +10,17 @@ export default function AuditLogManager() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
+  const [filters, setFilters] = useState({ action: '', entityType: '', dateFrom: '', dateTo: '' });
+  function changeFilter(key, value) {
+    setFilters((previous) => ({ ...previous, [key]: value }));
+    setPage(1);
+  }
   const list = useQuery({
-    queryKey: ['audit-logs', page, search],
+    queryKey: ['audit-logs', page, search, filters],
     queryFn: () =>
-      api.get(`/api/v1/audit-logs?page=${page}&pageSize=20&search=${encodeURIComponent(search)}`),
+      api.get(
+        `/api/v1/audit-logs?${new URLSearchParams({ page, pageSize: 20, search, ...filters })}`,
+      ),
     enabled: hasPermission('audit.read'),
   });
   const columns = [
@@ -56,6 +63,36 @@ export default function AuditLogManager() {
           placeholder="Staff, action or module"
         />
       </label>
+      <div className="grid gap-3 sm:grid-cols-4">
+        <label className="text-sm">
+          Audit action
+          <select
+            className="block w-full rounded border p-2 dark:bg-gray-800"
+            value={filters.action}
+            onChange={(event) => changeFilter('action', event.target.value)}
+          >
+            <option value="">All actions</option>
+            {['CREATE', 'UPDATE', 'DELETE'].map((action) => (
+              <option key={action}>{action}</option>
+            ))}
+          </select>
+        </label>
+        {[
+          ['entityType', 'Audit module', 'text'],
+          ['dateFrom', 'Audit from date', 'date'],
+          ['dateTo', 'Audit to date', 'date'],
+        ].map(([key, label, type]) => (
+          <label key={key} className="text-sm">
+            {label}
+            <input
+              type={type}
+              className="block w-full rounded border p-2 dark:bg-gray-800"
+              value={filters[key]}
+              onChange={(event) => changeFilter(key, event.target.value)}
+            />
+          </label>
+        ))}
+      </div>
       <DataTable
         columns={columns}
         data={list.data?.data || []}

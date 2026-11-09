@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './shared/api/query-client.js';
 import { useAppStore } from './shared/store/use-app-store.js';
@@ -26,6 +26,18 @@ import WorkshopFinance from './modules/accounting/WorkshopFinance.jsx';
 import ExpenseManager from './modules/expenses/ExpenseManager.jsx';
 import TechnicianManager from './modules/workshop/TechnicianManager.jsx';
 import AuditLogManager from './modules/audit/AuditLogManager.jsx';
+import MasterManager from './modules/masters/MasterManager.jsx';
+import StockVerificationManager from './modules/inventory/StockVerificationManager.jsx';
+import FixedAssetManager from './modules/inventory/FixedAssetManager.jsx';
+import InvoiceManager from './modules/billing/InvoiceManager.jsx';
+import ServiceHistory from './modules/vehicles/ServiceHistory.jsx';
+import SupplierLedger from './modules/suppliers/SupplierLedger.jsx';
+
+function ReferenceMasters() {
+  const [params] = useSearchParams();
+  const resource = params.get('resource') || 'warehouses';
+  return <MasterManager key={resource} resource={resource} />;
+}
 
 export default function App() {
   const token = useAppStore((state) => state.token);
@@ -56,6 +68,13 @@ export default function App() {
               <Route path="/expenses" element={<ExpenseManager />} />
               <Route path="/technicians" element={<TechnicianManager />} />
               <Route path="/audit-logs" element={<AuditLogManager />} />
+              <Route path="/masters" element={<ReferenceMasters />} />
+              <Route path="/warehouses" element={<MasterManager resource="warehouses" />} />
+              <Route path="/stock-verification" element={<StockVerificationManager />} />
+              <Route path="/assets" element={<FixedAssetManager />} />
+              <Route path="/invoices" element={<InvoiceManager />} />
+              <Route path="/service-history" element={<ServiceHistory />} />
+              <Route path="/supplier-ledger" element={<SupplierLedger />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           ) : (

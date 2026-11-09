@@ -19,6 +19,14 @@ export class ExpenseController {
     }
   };
 
+  summary = (req, res, next) => {
+    try {
+      res.json(this.expenseService.summary(req.query));
+    } catch (error) {
+      next(error);
+    }
+  };
+
   create = (req, res, next) => {
     try {
       const expense = this.expenseService.create(req.body || {}, req.user?.id);

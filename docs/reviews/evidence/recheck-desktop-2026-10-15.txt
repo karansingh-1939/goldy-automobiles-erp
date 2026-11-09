@@ -1,0 +1,24 @@
+
+> goldy-automobiles-erp@0.2.0 demo:screenshots
+> node scripts/desktop-smoke.js --screenshots
+
+SMOKE PASS: administrator setup, recovery and login
+SMOKE PASS: synthetic customer and stock fixtures
+SMOKE PASS: sales draft, confirmation and stock reservation
+SMOKE PASS: synthetic dashboard and sales screenshots
+SMOKE PASS: receipt posted with stock twelve, subtotal two hundred and tax thirty six
+SMOKE PASS: cached dashboard refreshed automatically after receipt
+SMOKE PASS: migrated /inventory
+SMOKE PASS: migrated /stock-verification
+SMOKE PASS: migrated /assets
+SMOKE PASS: migrated /masters
+SMOKE PASS: migrated /purchasing
+SMOKE PASS: migrated /invoices
+SMOKE PASS: migrated /supplier-ledger
+SMOKE PASS: migrated /service-history
+SMOKE PASS: migrated /expenses
+SMOKE PASS: migrated /technicians
+SMOKE PASS: migrated /settings
+SMOKE PASS: migrated /reports
+SMOKE PASS: migrated workshop routes and API contracts
+SMOKE PASS: renderer runtime checks

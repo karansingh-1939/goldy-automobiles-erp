@@ -76,6 +76,7 @@ export default function CustomerManager() {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       addNotification('Customer profile updated.', 'success');
       setEditingCustomer(null);
+      setShowAddModal(false);
       resetForm();
     },
     onError: (err) => addNotification(err.message || 'Failed to update customer.', 'error'),
@@ -112,7 +113,7 @@ export default function CustomerManager() {
     setCity(customer.city || '');
     setState(customer.state || '');
     setPincode(customer.pincode || '');
-    setCreditLimit(customer.credit_limit || '');
+    setCreditLimit(customer.credit_limit ?? '');
     setShowAddModal(true);
   };
 
@@ -135,14 +136,14 @@ export default function CustomerManager() {
 
     const payload = {
       name,
-      phone: phone || undefined,
-      email: email || undefined,
-      gstin: gstin || undefined,
-      address: address || undefined,
-      city: city || undefined,
-      state: state || undefined,
-      pincode: pincode || undefined,
-      credit_limit: creditLimit ? Number(creditLimit) : undefined,
+      phone: phone || null,
+      email: email || null,
+      gstin: gstin || null,
+      address: address || null,
+      city: city || null,
+      state: state || null,
+      pincode: pincode || null,
+      credit_limit: creditLimit !== '' ? Number(creditLimit) : null,
     };
 
     if (editingCustomer) {

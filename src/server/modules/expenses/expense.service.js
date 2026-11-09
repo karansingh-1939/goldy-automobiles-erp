@@ -3,6 +3,7 @@ import { AuditRepository } from '../audit/audit.repository.js';
 import { ExpenseRepository } from './expense.repository.js';
 import { parseExpenseListQuery, validateExpensePayload } from './expense.validator.js';
 import { AccountingPostingEngine } from '../accounting/posting-engine.service.js';
+import { localDate } from '../../shared/utils/local-date.js';
 
 function normalizeDatabaseError(error, action = null) {
   if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
@@ -54,6 +55,10 @@ export class ExpenseService {
     }
 
     return expense;
+  }
+
+  summary(query = {}) {
+    return { data: this.repository.summary(parseExpenseListQuery(query), localDate()) };
   }
 
   create(payload, userId) {

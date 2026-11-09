@@ -3,6 +3,8 @@ import { env } from '../server/config/env.js';
 import { getLogger } from '../server/shared/utils/logger.js';
 
 if (app.isPackaged) process.env.NODE_ENV = 'production';
+const smoke = process.env.GOLDY_SMOKE === '1' ? await import('./smoke-check.js') : null;
+if (smoke) smoke.assertSmokeIsolation(env);
 app.setPath('userData', env.appDataPath);
 
 let mainWindow;
@@ -14,8 +16,15 @@ async function createWindow() {
     width: 1280,
     height: 800,
     title: 'GOLDY AUTOMOBILE ERP',
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
+    show: !smoke,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      backgroundThrottling: !smoke,
+    },
   });
+  const smokeErrors = smoke ? smoke.observeSmokeErrors(mainWindow) : null;
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     const target = new URL(url);
     if (target.origin !== backend.url || target.pathname !== '/print-job-card.html')
@@ -35,10 +44,12 @@ async function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+  if (smoke) await smoke.runDesktopSmoke(mainWindow, backend, smokeErrors);
 }
 
 if (!app.requestSingleInstanceLock()) {
-  app.quit();
+  if (smoke) app.exit(1);
+  else app.quit();
 } else {
   app.on('second-instance', () => {
     if (mainWindow?.isMinimized()) mainWindow.restore();
@@ -50,7 +61,20 @@ if (!app.requestSingleInstanceLock()) {
       const { startServer } = await import('../server/server.js');
       backend = await startServer();
       await createWindow();
+      if (smoke) {
+        await backend.close();
+        backend = null;
+        app.exit(0);
+      }
     } catch (error) {
+      if (smoke) {
+        console.log('SMOKE FAIL: desktop workflow');
+        console.error(error.message);
+        await backend?.close();
+        backend = null;
+        app.exit(1);
+        return;
+      }
       getLogger().error('STARTUP', 'Application startup failed', error);
       dialog.showErrorBox('GOLDY AUTOMOBILE could not start', error.message);
       app.quit();

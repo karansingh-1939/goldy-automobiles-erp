@@ -10,6 +10,7 @@ const returnedLinesCte = `returned_lines AS (
   JOIN invoice_items ON invoice_items.id = (
     SELECT original.id FROM invoice_items original
     WHERE original.invoice_id = invoices.id
+      AND (customer_return_items.invoice_item_id IS NULL OR original.id = customer_return_items.invoice_item_id)
       AND original.inventory_item_id = customer_return_items.item_id
       AND original.batch_id = customer_return_items.batch_id
     ORDER BY original.id LIMIT 1

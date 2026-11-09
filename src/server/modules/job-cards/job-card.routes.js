@@ -178,7 +178,10 @@ export function createJobCardRouter(db) {
         .get(vehicle.id);
       const outstandingBalance = db
         .prepare(
-          "SELECT COALESCE(SUM(grand_total - amount_paid), 0) AS balance FROM invoices WHERE vehicle_id = ? AND status = 'FINALIZED'",
+          `SELECT COALESCE(SUM(MAX(0, grand_total - amount_paid - COALESCE((
+            SELECT SUM(total_refund_amount) FROM customer_returns
+            WHERE invoice_id=invoices.id AND status='COMPLETED'),0))),0) AS balance
+            FROM invoices WHERE vehicle_id = ? AND status = 'FINALIZED'`,
         )
         .get(vehicle.id).balance;
 

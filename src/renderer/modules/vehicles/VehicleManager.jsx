@@ -4,6 +4,7 @@ import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
 import { validateRequired, validateVehicleReg } from '../../shared/utils/validation.js';
 import { usePermissions } from '../../shared/hooks/use-permissions.js';
+import RemoteSelect from '../../shared/components/RemoteSelect.jsx';
 import DataTable from '../../shared/components/DataTable.jsx';
 import { Search, Plus, Car, X, Edit2, Trash2 } from 'lucide-react';
 
@@ -55,13 +56,6 @@ export default function VehicleManager() {
   const vehicles = response?.data || [];
   const pagination = response?.pagination || { totalPages: 1, currentPage: 1 };
 
-  // Fetch Customers (for select owner list)
-  const { data: customersResponse } = useQuery({
-    queryKey: ['customers-list'],
-    queryFn: () => api.get('/api/v1/customers'),
-  });
-  const customers = customersResponse?.data || [];
-
   // Mutations
   const createMutation = useMutation({
     mutationFn: (payload) => api.post('/api/v1/vehicles', payload),
@@ -80,6 +74,7 @@ export default function VehicleManager() {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       addNotification('Vehicle details updated.', 'success');
       setEditingVehicle(null);
+      setShowAddModal(false);
       resetForm();
     },
     onError: (err) => addNotification(err.message || 'Failed to update vehicle.', 'error'),
@@ -120,7 +115,7 @@ export default function VehicleManager() {
     setVin(vehicle.vin || '');
     setEngineNumber(vehicle.engine_number || '');
     setChassisNumber(vehicle.chassis_number || '');
-    setOdometer(vehicle.odometer_reading || '');
+    setOdometer(vehicle.odometer_reading ?? '');
     setShowAddModal(true);
   };
 
@@ -148,13 +143,13 @@ export default function VehicleManager() {
       registration_number: regNumber.replace(/[-\s]/g, '').toUpperCase(),
       make,
       model,
-      variant: variant || undefined,
+      variant: variant || null,
       fuel_type: fuelType,
-      year: year ? Number(year) : undefined,
-      vin: vin || undefined,
-      engine_number: engineNumber || undefined,
-      chassis_number: chassisNumber || undefined,
-      odometer_reading: odometer ? Number(odometer) : undefined,
+      year: year !== '' ? Number(year) : null,
+      vin: vin || null,
+      engine_number: engineNumber || null,
+      chassis_number: chassisNumber || null,
+      odometer_reading: odometer !== '' ? Number(odometer) : null,
     };
 
     if (editingVehicle) {
@@ -343,21 +338,16 @@ export default function VehicleManager() {
                   >
                     Owner Account *
                   </label>
-                  <select
+                  <RemoteSelect
                     id="vehicle-owner-select"
-                    required
+                    endpoint="/api/v1/customers"
+                    queryKey="customers"
                     value={customerId}
-                    onChange={(e) => setCustomerId(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-                  >
-                    <option value="">Select owner profile...</option>
-                    {customers.map((c) => (
-                      <option
-                        key={c.id}
-                        value={c.id}
-                      >{`${c.name} (${c.phone || 'No Phone'})`}</option>
-                    ))}
-                  </select>
+                    onChange={setCustomerId}
+                    searchLabel="Search owners"
+                    placeholder="Select owner profile..."
+                    optionLabel={(c) => `${c.name} (${c.phone || 'No Phone'})`}
+                  />
                 </div>
                 <div>
                   <label

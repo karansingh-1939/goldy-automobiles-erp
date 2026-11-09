@@ -1,0 +1,4 @@
+
+> goldy-automobiles-erp@0.2.0 lint
+> eslint src tests scripts public *.js --max-warnings 0
+
