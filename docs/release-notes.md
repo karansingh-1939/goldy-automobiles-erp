@@ -1,5 +1,16 @@
 # Release Notes - GOLDY AUTOMOBILE ERP
 
+## Unreleased — Tally replacement phase 2, 11 November 2026
+
+- Home screen backup health (failed, older than 2 days, USB copy problems) with "Back up now"; copy-to-USB prompt when closing.
+- Money In / Money Out screen: cash and bank balances, own bank accounts, plain money-in/out choices, customer and supplier payments, starting balances from previous books.
+- Staff & Salary: monthly salary, advances, salary payment with advance recovery, posted to accounts.
+- Payment mode when billing job cards (pay later, cash, UPI, card) and on expenses (cash, UPI, card, bank).
+- GSTR-1 export files for the CA (B2B, B2C, credit notes, HSN, documents issued).
+- Simpler stock list, optional batch numbers, pre-selected godown, quick phone approvals.
+- Fix: supplier payments and purchase bills for suppliers without a ledger.
+- Verification: 248 backend tests, 79 renderer tests, desktop smoke. Details: [phase 2 report](reviews/phase2-progress-2026-11-11.md).
+
 ## Unreleased — production cleanup, 10 November 2026
 
 - Removed dead code: an unused dashboard KPI component, duplicate dashboard API wrappers and unused validation helpers.
