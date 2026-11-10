@@ -10,6 +10,11 @@ function text(value, label, max = 1000) {
   return value.trim();
 }
 
+function optionalText(value, label, max = 1000) {
+  if (value === undefined || value === null || String(value).trim() === '') return '';
+  return text(String(value), label, max);
+}
+
 export class WorkshopService {
   constructor(db) {
     this.repository = new WorkshopRepository(db);
@@ -122,9 +127,16 @@ export class WorkshopService {
         id,
         {
           status: payload.status,
-          contactName: text(payload.contactName, 'Customer contact', 120),
+          // A quick "yes" on the phone should not need typing; record sensible defaults.
+          contactName: optionalText(payload.contactName, 'Customer contact', 120) || 'Customer',
           method: payload.method,
-          notes: text(payload.notes, 'Decision notes'),
+          notes:
+            optionalText(payload.notes, 'Decision notes') ||
+            `${payload.status === 'APPROVED' ? 'Approved' : 'Rejected'} by ${
+              { PHONE: 'phone', IN_PERSON: 'customer in person', MESSAGE: 'message' }[
+                payload.method
+              ]
+            }`,
         },
         actor,
       );

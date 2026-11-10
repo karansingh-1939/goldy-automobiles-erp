@@ -46,11 +46,11 @@ it('records two receipt batches with explicit costs, tax and warehouse rather th
     target: { value: 'INV-5' },
   });
   fireEvent.click(screen.getByText('Add receipt line'));
-  await screen.findAllByRole('option', { name: 'Main (MAIN)' });
+  // With a single godown the picker is hidden and that godown is used automatically.
+  await waitFor(() => expect(screen.queryByLabelText('Warehouse 1')).toBeNull());
   for (const line of [1, 2]) {
     fireEvent.change(screen.getByLabelText(`Inventory item ${line}`), { target: { value: '3' } });
-    fireEvent.change(screen.getByLabelText(`Warehouse ${line}`), { target: { value: '2' } });
-    fireEvent.change(screen.getByLabelText(`Batch number ${line}`), {
+    fireEvent.change(screen.getByLabelText(`Batch number (optional) ${line}`), {
       target: { value: `B-${line}` },
     });
     fireEvent.change(screen.getByLabelText(`Selling price ${line}`), { target: { value: '165' } });

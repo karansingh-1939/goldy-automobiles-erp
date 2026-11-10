@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { invalidateInventory } from '../../shared/api/inventory-cache.js';
 import RemoteSelect from '../../shared/components/RemoteSelect.jsx';
@@ -26,6 +26,18 @@ export default function PurchaseReceiptForm({ onSaved, onCancel }) {
   });
   const [supplier, setSupplier] = useState(null);
   const [lines, setLines] = useState([emptyLine()]);
+  // Pre-select the main godown so the owner rarely has to choose one.
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'purchase-default'],
+    queryFn: () => api.get('/api/v1/warehouses?page=1&pageSize=50'),
+  });
+  const warehouseRows = Array.isArray(warehouses.data?.data) ? warehouses.data.data : [];
+  const defaultWarehouse =
+    warehouseRows.find((row) => Number(row.is_default) === 1) ||
+    warehouseRows.find((row) => row.code === 'MAIN') ||
+    warehouseRows[0];
+  const singleWarehouse = warehouseRows.length === 1;
+  const warehouseFor = (line) => line.warehouse_id || defaultWarehouse?.id || '';
   const update = (index, values) =>
     setLines((rows) => rows.map((row, i) => (i === index ? { ...row, ...values } : row)));
   const save = useMutation({
@@ -36,7 +48,7 @@ export default function PurchaseReceiptForm({ onSaved, onCancel }) {
         items: lines.map((line) => ({
           ...line,
           item_id: Number(line.item_id),
-          warehouse_id: Number(line.warehouse_id),
+          warehouse_id: Number(warehouseFor(line)),
           quantity: Number(line.quantity),
           purchase_cost: Number(line.purchase_cost),
           selling_price: Number(line.selling_price),
@@ -130,20 +142,22 @@ export default function PurchaseReceiptForm({ onSaved, onCancel }) {
                 }
               />
             </div>
-            <div>
-              <label htmlFor={`receipt-warehouse-${index}`}>Warehouse {index + 1}</label>
-              <RemoteSelect
-                id={`receipt-warehouse-${index}`}
-                endpoint="/api/v1/warehouses"
-                queryKey="warehouses"
-                searchLabel={`Find warehouse ${index + 1}`}
-                value={line.warehouse_id}
-                optionLabel={(row) => `${row.name} (${row.code})`}
-                onChange={(value) => update(index, { warehouse_id: value })}
-              />
-            </div>
+            {!singleWarehouse && (
+              <div>
+                <label htmlFor={`receipt-warehouse-${index}`}>Warehouse {index + 1}</label>
+                <RemoteSelect
+                  id={`receipt-warehouse-${index}`}
+                  endpoint="/api/v1/warehouses"
+                  queryKey="warehouses"
+                  searchLabel={`Find warehouse ${index + 1}`}
+                  value={warehouseFor(line)}
+                  optionLabel={(row) => `${row.name} (${row.code})`}
+                  onChange={(value) => update(index, { warehouse_id: value })}
+                />
+              </div>
+            )}
             {Object.entries({
-              batch_number: 'Batch number',
+              batch_number: 'Batch number (optional)',
               quantity: 'Quantity',
               purchase_cost: 'Purchase cost',
               selling_price: 'Selling price',
@@ -156,7 +170,8 @@ export default function PurchaseReceiptForm({ onSaved, onCancel }) {
                 <input
                   className={input}
                   type={key.endsWith('_date') ? 'date' : key === 'batch_number' ? 'text' : 'number'}
-                  required={!key.endsWith('_date')}
+                  required={!key.endsWith('_date') && key !== 'batch_number'}
+                  placeholder={key === 'batch_number' ? 'Bill number is used if blank' : undefined}
                   min={key === 'quantity' ? '0.001' : '0'}
                   max={key === 'gst_rate' ? '100' : undefined}
                   step="any"

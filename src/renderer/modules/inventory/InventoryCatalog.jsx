@@ -58,7 +58,7 @@ export default function InventoryCatalog() {
             'sku',
             'item_name',
             'category_name',
-            'purchase_cost',
+            'average_cost',
             'selling_price',
             'current_quantity',
             'reorder_level',

@@ -192,12 +192,22 @@ export class PurchasingService {
       );
     }
 
-    const items = this.validateItems(payload.items, { requireBatch: true });
+    const receiptNumber = payload.receipt_number || code('GRN');
+    // Spare parts rarely carry real batch numbers; when left blank, the
+    // supplier bill number identifies the lot so the owner can skip the field.
+    const withBatches = Array.isArray(payload.items)
+      ? payload.items.map((item) =>
+          item && !item.batch_id && !String(item.batch_number ?? '').trim()
+            ? { ...item, batch_number: String(receiptNumber).trim() }
+            : item,
+        )
+      : payload.items;
+    const items = this.validateItems(withBatches, { requireBatch: true });
 
     try {
       return this.repository.transaction(() => {
         const receiptId = this.repository.createPurchaseReceipt({
-          receipt_number: payload.receipt_number || code('GRN'),
+          receipt_number: receiptNumber,
           purchase_order_id: purchaseOrder?.id || null,
           supplier_id: supplier.id,
           receipt_date: payload.receipt_date || localDate(),

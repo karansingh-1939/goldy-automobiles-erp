@@ -71,7 +71,18 @@ test('estimate decisions retain history, gate billing and enforce the approved t
       amount: 100,
       scope: 'Final revised labour',
     });
-    await call(`/api/v1/workshop/estimates/${allowed.body.data.id}/decision`, decision);
+    // A quick phone approval needs no typed contact name or notes.
+    const quick = await call(`/api/v1/workshop/estimates/${allowed.body.data.id}/decision`, {
+      status: 'APPROVED',
+      method: 'PHONE',
+    });
+    assert.equal(quick.response.status, 200, JSON.stringify(quick.body));
+    assert.deepEqual(
+      context.db
+        .prepare('SELECT contact_name, decision_notes FROM estimate_approvals WHERE id = ?')
+        .get(allowed.body.data.id),
+      { contact_name: 'Customer', decision_notes: 'Approved by phone' },
+    );
     const invalidDate = await call(
       `/api/v1/workshop/jobs/${id}/delivery`,
       { promisedAt: '2026-02-30T12:00' },

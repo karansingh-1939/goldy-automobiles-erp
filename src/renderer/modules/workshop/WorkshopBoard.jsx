@@ -122,8 +122,8 @@ function EstimateEditor({ job, refresh }) {
               Customer contact
               <input
                 className={input}
-                required
                 maxLength={120}
+                placeholder="Optional"
                 value={contactName}
                 onChange={(event) => setContactName(event.target.value)}
               />
@@ -145,8 +145,8 @@ function EstimateEditor({ job, refresh }) {
             Decision notes
             <textarea
               className={input}
-              required
               maxLength={1000}
+              placeholder="Optional, e.g. customer agreed on the phone"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
             />

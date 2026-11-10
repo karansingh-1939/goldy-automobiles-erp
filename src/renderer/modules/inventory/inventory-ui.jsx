@@ -56,11 +56,37 @@ export function Notice({ error, message }) {
     </p>
   ) : null;
 }
+const COLUMN_LABELS = {
+  sku: 'Code',
+  item_name: 'Item',
+  category_name: 'Category',
+  average_cost: 'Average cost',
+  purchase_cost: 'Last purchase cost',
+  selling_price: 'Selling price',
+  current_quantity: 'In stock',
+  reorder_level: 'Reorder at',
+  is_active: 'Active',
+  warehouse_name: 'Godown',
+};
+const MONEY_FIELD = /(cost|price|amount|total|value|valuation)$/;
+const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
+
+// Plain headings and values for a non-technical owner: Yes/No instead of 1/0,
+// rupees for money.
+export function formatCell(field, value) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (/^is_/.test(field)) return Number(value) ? 'Yes' : 'No';
+  if (MONEY_FIELD.test(field) && Number.isFinite(Number(value)))
+    return rupees.format(Number(value));
+  return String(value);
+}
 export function columnsFor(fields) {
   return fields.map((field) => ({
     accessorKey: field,
-    header: field.replaceAll('_', ' '),
-    cell: (info) => String(info.getValue() ?? '—'),
+    header:
+      COLUMN_LABELS[field] ||
+      field.replaceAll('_', ' ').replace(/^./, (letter) => letter.toUpperCase()),
+    cell: (info) => formatCell(field, info.getValue()),
   }));
 }
 export function useInventoryMutation(endpoint, onSuccess) {
