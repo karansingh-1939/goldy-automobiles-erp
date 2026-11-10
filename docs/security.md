@@ -65,8 +65,18 @@ If the administrator password is forgotten, it can be reset using the **Forgot P
 
 ---
 
-## 5. General Security Recommendations
+## 5. Local Network Exposure
+
+The API listens on `127.0.0.1` only, so other computers on the workshop network or the internet cannot reach it. API requests require a bearer token held by the desktop window, and no cross-origin (CORS) access is granted, so websites opened in a browser on the same laptop cannot read or change workshop data.
+
+Requests whose `Host` header is not `127.0.0.1`, `localhost` or `[::1]` are refused with HTTP 403. This blocks DNS-rebinding attacks, where a malicious website points its own domain at `127.0.0.1` to reach the local login, setup and recovery endpoints.
+
+---
+
+## 6. General Security Recommendations
 
 1. **Save Your Recovery Code Safely**: Keep your recovery code printed or stored in an offline password manager. If you lose both your password and your recovery code, the database cannot be recovered without developer intervention.
 2. **Delete Recovery Files**: Ensure that `data/setup/recovery-code.txt` is deleted. The software does this automatically on first login, but double-checking is recommended.
 3. **No Network Dependency**: Since the application is offline-first, all security controls (bcrypt hashing, lockout tracking, recovery verification) run completely locally on your machine.
+4. **Keep the Laptop Account Protected**: The database, backups and logs live in the Windows user's AppData folder. Use a Windows password, keep Windows updated, and copy backups to a USB drive kept in a safe place.
+5. **Keep the Source Repository Private**: The repository contains the business name, address and phone numbers used on printed bills. Keep it private on GitHub; it is not needed for the laptop to run the application.

@@ -5,7 +5,9 @@
 - Removed dead code: an unused dashboard KPI component, duplicate dashboard API wrappers and unused validation helpers.
 - Removed superseded 3 October analysis/restructure reviews and orphaned evidence files that referenced artefacts no longer in the repository.
 - Dropped the unused `autoprefixer` dependency (Tailwind 4 handles prefixing) and applied non-breaking dependency security updates, so the high-severity audit gate passes. Six moderate findings remain in electron-builder's build-time `minimatch` chain and need a breaking upgrade.
-- Verification: formatting, lint, 228 backend tests, 72 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
+- Security: the local API now refuses requests addressed to non-loopback host names, blocking DNS-rebinding access from websites open on the same laptop.
+- Privacy: starter-catalog suppliers no longer receive invented phone numbers, emails, addresses or GSTINs in the live database, and a test fixture's realistic phone number was replaced with a fictional one.
+- Verification: formatting, lint, 229 backend tests, 72 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
 
 ## Unreleased — audit fixes, 15 October 2026
 

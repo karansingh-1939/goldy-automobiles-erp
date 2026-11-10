@@ -159,7 +159,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
         headers,
         body: JSON.stringify({
           customer_name: 'Ramesh Singh',
-          phone: '9416030677',
+          phone: '9000056789',
           registration_number: 'HR 26 AB 1234',
           odometer_reading: 46000,
           complaint: 'Engine oil replacement',
@@ -170,7 +170,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
       const jc = res.body.data;
 
       // Verify Ramesh Singh customer was created
-      const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9416030677'").get();
+      const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9000056789'").get();
       assert.ok(ramesh);
 
       // Verify Job Card is linked to Ramesh Singh
@@ -191,7 +191,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
         const swift = db
           .prepare("SELECT * FROM vehicles WHERE registration_number = 'HR 26 AB 1234'")
           .get();
-        const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9416030677'").get();
+        const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9000056789'").get();
         assert.ok(swift);
         assert.ok(ramesh);
         const originalOwnerId = swift.customer_id; // Amit Kumar
@@ -202,7 +202,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
           body: JSON.stringify({
             customer_id: ramesh.id,
             customer_name: 'Ramesh Singh',
-            phone: '9416030677',
+            phone: '9000056789',
             registration_number: 'HR26AB1234',
             odometer_reading: 46500,
             complaint: 'Wheel balancing',
@@ -229,7 +229,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
       const swift = db
         .prepare("SELECT * FROM vehicles WHERE registration_number = 'HR 26 AB 1234'")
         .get();
-      const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9416030677'").get();
+      const ramesh = db.prepare("SELECT id FROM customers WHERE phone = '9000056789'").get();
       assert.ok(swift);
       assert.ok(ramesh);
 
@@ -239,7 +239,7 @@ test('Workshop Core Workflow integration tests', async (t) => {
         body: JSON.stringify({
           customer_id: ramesh.id,
           customer_name: 'Ramesh Singh',
-          phone: '9416030677',
+          phone: '9000056789',
           registration_number: 'HR26AB1234',
           odometer_reading: 47000,
           complaint: 'Brake pads check',
@@ -305,19 +305,19 @@ test('Workshop Core Workflow integration tests', async (t) => {
     // Test H: Phone Normalization
     // -------------------------------------------------------------
     await t.test('Test H: Phone Normalization equivalent Indian formats', async () => {
-      const lookup1 = await context.request('/api/v1/customers/lookup?phone=%2B91%2094160-30677', {
+      const lookup1 = await context.request('/api/v1/customers/lookup?phone=%2B91%2090000-56789', {
         headers,
-      }); // +91 94160-30677
-      const lookup2 = await context.request('/api/v1/customers/lookup?phone=09416030677', {
+      }); // +91 90000-56789
+      const lookup2 = await context.request('/api/v1/customers/lookup?phone=09000056789', {
         headers,
-      }); // 09416030677
-      const lookup3 = await context.request('/api/v1/customers/lookup?phone=919416030677', {
+      }); // 09000056789
+      const lookup3 = await context.request('/api/v1/customers/lookup?phone=919000056789', {
         headers,
-      }); // 919416030677
+      }); // 919000056789
 
       assert.equal(lookup1.response.status, 200);
       assert.ok(lookup1.body.data);
-      assert.equal(lookup1.body.data.phone, '9416030677');
+      assert.equal(lookup1.body.data.phone, '9000056789');
 
       assert.equal(lookup2.response.status, 200);
       assert.ok(lookup2.body.data);

@@ -26,6 +26,7 @@ import { createWarrantyRouter } from './modules/warranties/warranty.routes.js';
 import { createCrmRouter } from './modules/crm/crm.routes.js';
 import { createWorkshopRouter } from './modules/workshop/workshop.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/error-handler.js';
+import { localHostGuard } from './shared/middleware/local-host-guard.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../../dist/renderer');
@@ -54,6 +55,7 @@ export function createApp({ db: rawDb = getDatabase(), backupScheduler } = {}) {
   const app = express();
 
   app.disable('x-powered-by');
+  app.use(localHostGuard());
 
   app.use(
     helmet({

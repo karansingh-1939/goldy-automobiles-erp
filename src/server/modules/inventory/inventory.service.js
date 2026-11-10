@@ -1653,25 +1653,16 @@ export class InventoryService {
         warehouse = { id: whId };
       }
 
-      // 5. Ensure we have suppliers: Garg Traders and Hari Om Traders
+      // 5. Ensure we have suppliers: Garg Traders and Hari Om Traders.
+      // Contact details and GSTINs are left empty so no invented phone numbers,
+      // emails or tax IDs enter the live workshop database or GST reports; the
+      // workshop fills in real details from the suppliers screen.
       const insertSupplier = this.db.prepare(`
         INSERT OR IGNORE INTO suppliers (name, phone, email, address, gstin, is_active)
-        VALUES (?, ?, ?, ?, ?, 1)
+        VALUES (?, NULL, NULL, NULL, NULL, 1)
       `);
-      insertSupplier.run(
-        'Garg Traders',
-        '9810012345',
-        'sales@gargtraders.com',
-        '102 Automotive Market, Kashmere Gate, Delhi',
-        '07AAAAA1111A1Z1',
-      );
-      insertSupplier.run(
-        'Hari Om Traders',
-        '9812054321',
-        'hariomtraders@gmail.com',
-        'Sector 16, Automobile Zone, Noida, UP',
-        '09BBBBB2222B2Z2',
-      );
+      insertSupplier.run('Garg Traders');
+      insertSupplier.run('Hari Om Traders');
 
       const supplierGarg = this.db
         .prepare("SELECT id FROM suppliers WHERE name = 'Garg Traders'")
