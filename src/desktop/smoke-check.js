@@ -266,7 +266,7 @@ export async function runDesktopSmoke(window, backend, failures) {
   }
   for (const [label, value] of [
     ['Supplier invoice number', 'SMOKE-RECEIPT'],
-    ['Batch number 1', 'SMOKE-RECEIVED'],
+    ['Batch number (optional) 1', 'SMOKE-RECEIVED'],
     ['Quantity 1', '2'],
     ['Purchase cost 1', '100'],
     ['Selling price 1', '150'],

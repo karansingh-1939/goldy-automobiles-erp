@@ -1,4 +1,5 @@
 import { localDate } from '../../../../public/local-date.js';
+import Gstr1Downloads from './Gstr1Downloads.jsx';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
@@ -195,6 +196,8 @@ export default function ReportsManager() {
           }
         }
       `}</style>
+
+      <Gstr1Downloads />
 
       {/* Header section */}
       <div className="flex items-center justify-between no-print">
