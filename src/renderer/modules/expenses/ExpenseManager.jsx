@@ -6,7 +6,11 @@ import { useAppStore } from '../../shared/store/use-app-store.js';
 import DataTable from '../../shared/components/DataTable.jsx';
 import ServerPagination from '../../shared/components/ServerPagination.jsx';
 import { localDate } from '../../../../public/local-date.js';
-import { decodeExpenseDescription, encodeExpenseDescription } from './expense-description.js';
+import {
+  decodeExpenseDescription,
+  encodeExpenseDescription,
+  paymentModeFromText,
+} from './expense-description.js';
 
 const categories = [
   'Rent',
@@ -22,9 +26,11 @@ const empty = () => ({
   category: 'Miscellaneous',
   amount: '',
   description: '',
-  paymentMethod: 'Cash',
+  payment_mode: 'CASH',
+  payment_account_id: '',
   notes: '',
 });
+const PAID_BY = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', BANK: 'Bank transfer' };
 export default function ExpenseManager() {
   const { hasPermission } = usePermissions();
   const client = useQueryClient();
@@ -33,6 +39,13 @@ export default function ExpenseManager() {
   const [dates, setDates] = useState({ dateFrom: '', dateTo: '' });
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState(empty);
+  const moneyAccounts = useQuery({
+    queryKey: ['money-accounts'],
+    queryFn: () => api.get('/api/v1/accounting/money-accounts'),
+  });
+  const banks = (Array.isArray(moneyAccounts.data?.data) ? moneyAccounts.data.data : []).filter(
+    (account) => account.kind === 'BANK',
+  );
   const invalidDates = dates.dateFrom && dates.dateTo && dates.dateFrom > dates.dateTo;
   const params = new URLSearchParams({ category, ...dates });
   const enabled = hasPermission('expenses.read') && !invalidDates;
@@ -53,6 +66,9 @@ export default function ExpenseManager() {
         category: form.category,
         amount: Number(form.amount),
         description: encodeExpenseDescription(form),
+        payment_mode: form.payment_mode,
+        payment_account_id:
+          form.payment_mode === 'CASH' ? null : Number(form.payment_account_id) || null,
       };
       return remove
         ? api.del(`/api/v1/expenses/${id}`)
@@ -82,7 +98,9 @@ export default function ExpenseManager() {
     {
       id: 'payment',
       header: 'Payment metadata',
-      cell: ({ row }) => decodeExpenseDescription(row.original.description).paymentMethod,
+      cell: ({ row }) =>
+        PAID_BY[row.original.payment_mode] ||
+        decodeExpenseDescription(row.original.description).paymentMethod,
     },
     {
       id: 'notes',
@@ -106,6 +124,12 @@ export default function ExpenseManager() {
                   category: row.original.category,
                   amount: row.original.amount,
                   ...decodeExpenseDescription(row.original.description),
+                  payment_mode:
+                    row.original.payment_mode ||
+                    paymentModeFromText(
+                      decodeExpenseDescription(row.original.description).paymentMethod,
+                    ),
+                  payment_account_id: row.original.payment_account_id || '',
                 });
               }}
             >
@@ -201,16 +225,39 @@ export default function ExpenseManager() {
               />
             </label>
             <label>
-              Payment method (record only)
-              <input
+              Paid by
+              <select
                 className={input}
-                value={form.paymentMethod}
-                maxLength={80}
-                required
-                pattern="[^\]]*"
-                onChange={(event) => change('paymentMethod', event.target.value)}
-              />
+                value={form.payment_mode}
+                onChange={(event) => change('payment_mode', event.target.value)}
+              >
+                {Object.entries(PAID_BY).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </label>
+            {form.payment_mode !== 'CASH' && (
+              <label>
+                From bank account
+                <select
+                  className={input}
+                  value={form.payment_account_id}
+                  onChange={(event) => change('payment_account_id', event.target.value)}
+                >
+                  <option value="">
+                    {banks.length === 1 ? banks[0].name : 'Choose bank account'}
+                  </option>
+                  {banks.length > 1 &&
+                    banks.map((bank) => (
+                      <option key={bank.id} value={bank.id}>
+                        {bank.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
             <label>
               Expense notes
               <input

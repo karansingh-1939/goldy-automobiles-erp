@@ -246,3 +246,42 @@ it('reports failed job-card finalization so staff can correct the problem', asyn
     ).toBe(true),
   );
 });
+
+it('records a cash payment chosen while billing a job card', async () => {
+  const card = { id: 1, job_card_number: 'JC-PAY', status: 'DRAFT', parts: [], labour: [] };
+  vi.spyOn(api, 'get').mockImplementation(async (url) => ({
+    data: url.endsWith('/job-cards/1')
+      ? card
+      : url.includes('/job-cards?')
+        ? [card]
+        : url.includes('/money-accounts')
+          ? [{ id: 1, name: 'Cash in Hand', kind: 'CASH', balance: 0 }]
+          : [],
+    pagination: { totalPages: 1 },
+  }));
+  const post = vi.spyOn(api, 'post').mockImplementation(async (url) =>
+    url.endsWith('/finalize')
+      ? {
+          data: {
+            invoice: {
+              customer_id: 9,
+              invoice_date: '2026-11-11',
+              grand_total: 590,
+              invoice_number: 'INV/26-27/0001',
+            },
+          },
+        }
+      : { data: {} },
+  );
+  show(JobCardManager);
+  fireEvent.click(await screen.findByText('JC-PAY'));
+  fireEvent.click(await screen.findByText('Post & Finalize Invoice'));
+  fireEvent.change(await screen.findByLabelText('Payment'), { target: { value: 'CASH' } });
+  fireEvent.click(screen.getByText('Confirm & post invoice'));
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledWith(
+      '/api/v1/accounting/receipts',
+      expect.objectContaining({ customerId: 9, amount: 590, paymentMode: 'CASH' }),
+    ),
+  );
+});

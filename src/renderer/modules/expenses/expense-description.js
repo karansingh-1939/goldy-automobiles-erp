@@ -11,6 +11,16 @@ export function decodeExpenseDescription(raw = '') {
   };
 }
 
-export function encodeExpenseDescription({ description, paymentMethod, notes }) {
-  return `${description.trim()}${paymentMethod !== 'Cash' || notes.trim() ? ` [Payment: ${paymentMethod}]` : ''}${notes.trim() ? ` [Notes: ${notes.trim()}]` : ''}`.trim();
+// Payment is now stored in its own field; only notes stay in the description.
+export function encodeExpenseDescription({ description, notes = '' }) {
+  return `${description.trim()}${notes.trim() ? ` [Notes: ${notes.trim()}]` : ''}`.trim();
+}
+
+// Maps the free-text payment method of older records to a payment mode.
+export function paymentModeFromText(text = '') {
+  const value = String(text).toUpperCase();
+  if (value.includes('UPI')) return 'UPI';
+  if (value.includes('CARD')) return 'CARD';
+  if (/BANK|NEFT|RTGS|IMPS|TRANSFER|CHEQUE/.test(value)) return 'BANK';
+  return 'CASH';
 }

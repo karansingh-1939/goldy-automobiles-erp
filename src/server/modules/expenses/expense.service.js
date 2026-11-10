@@ -69,6 +69,8 @@ export class ExpenseService {
         const expense = this.repository.create({
           ...data,
           description: data.description ?? null,
+          payment_mode: data.payment_mode ?? 'CASH',
+          payment_account_id: data.payment_account_id ?? null,
           created_by: userId || null,
         });
 
@@ -100,7 +102,7 @@ export class ExpenseService {
     };
     const systemKey = categoryKeyMap[expense.category] || 'misc_expense';
     const expenseLedgerId = this.postingEngine.ledgerResolver.getLedgerId(1, systemKey);
-    const cashLedgerId = this.postingEngine.ledgerResolver.getLedgerId(1, 'cash_in_hand');
+    const cashLedgerId = this.resolvePaymentLedger(expense);
 
     const voucherResult = this.postingEngine.post({
       companyId: 1,
@@ -120,6 +122,32 @@ export class ExpenseService {
       .prepare('UPDATE expenses SET voucher_id = ? WHERE id = ?')
       .run(voucherResult.voucherId, expense.id);
     expense.voucher_id = voucherResult.voucherId;
+  }
+
+  /**
+   * Cash pays by default; UPI, card and bank payments reduce the chosen bank
+   * account (or the only bank account when there is just one).
+   */
+  resolvePaymentLedger(expense) {
+    const mode = expense.payment_mode || 'CASH';
+    if (mode === 'CASH') return this.postingEngine.ledgerResolver.getLedgerId(1, 'cash_in_hand');
+    const banks = this.db
+      .prepare(
+        "SELECT id FROM ledgers WHERE company_id = 1 AND (system_key = 'hdfc_bank' OR system_key LIKE 'bank_%') ORDER BY id",
+      )
+      .all();
+    const chosen = expense.payment_account_id
+      ? banks.find((bank) => bank.id === Number(expense.payment_account_id))
+      : banks.length === 1
+        ? banks[0]
+        : null;
+    if (!chosen)
+      throw new AppError(
+        'Choose which bank account paid this expense.',
+        400,
+        'BANK_ACCOUNT_REQUIRED',
+      );
+    return chosen.id;
   }
 
   update(id, payload, userId) {

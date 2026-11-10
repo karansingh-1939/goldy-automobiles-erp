@@ -136,14 +136,17 @@ it('uses the aggregate expense summary and preserves old payment/notes on edit',
   mount(<ExpenseManager />);
   expect(await screen.findByText('Filtered total: ₹9000.00')).toBeTruthy();
   fireEvent.click(await screen.findByLabelText('Edit expense 8'));
-  expect(screen.getByLabelText('Payment method (record only)').value).toBe('UPI');
+  expect(screen.getByLabelText('Paid by').value).toBe('UPI');
   expect(screen.getByLabelText('Expense notes').value).toBe('Office');
   fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Updated lease' } });
   fireEvent.click(screen.getByText('Save expense'));
   await waitFor(() =>
     expect(patch).toHaveBeenCalledWith(
       '/api/v1/expenses/8',
-      expect.objectContaining({ description: 'Updated lease [Payment: UPI] [Notes: Office]' }),
+      expect.objectContaining({
+        description: 'Updated lease [Notes: Office]',
+        payment_mode: 'UPI',
+      }),
     ),
   );
   fireEvent.change(screen.getByLabelText('Expense from date'), { target: { value: '2026-10-01' } });

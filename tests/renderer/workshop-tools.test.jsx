@@ -34,6 +34,8 @@ it('records an expense through the React form', async () => {
       category: 'Rent',
       amount: 1500.5,
       description: '',
+      payment_mode: 'CASH',
+      payment_account_id: null,
     }),
   );
 });

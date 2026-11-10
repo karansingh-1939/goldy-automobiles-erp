@@ -112,6 +112,8 @@ export class ExpenseRepository {
         category,
         amount,
         description,
+        payment_mode,
+        payment_account_id,
         created_by
       )
       VALUES (
@@ -119,6 +121,8 @@ export class ExpenseRepository {
         @category,
         @amount,
         @description,
+        @payment_mode,
+        @payment_account_id,
         @created_by
       )
     `,

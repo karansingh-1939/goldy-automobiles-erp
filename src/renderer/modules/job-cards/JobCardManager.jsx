@@ -24,6 +24,8 @@ export default function JobCardManager() {
   const [selectedJcId, setSelectedJcId] = useState(null);
   const [confirmFinalizeId, setConfirmFinalizeId] = useState(null);
   const [cancelJobId, setCancelJobId] = useState(null);
+  const [payMode, setPayMode] = useState('LATER');
+  const [payAccountId, setPayAccountId] = useState('');
   const [cancelReason, setCancelReason] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
@@ -186,13 +188,50 @@ export default function JobCardManager() {
     onError: (err) => addNotification(err.message || 'Failed to add labor charge.', 'error'),
   });
 
+  const moneyAccounts = useQuery({
+    queryKey: ['money-accounts'],
+    queryFn: () => api.get('/api/v1/accounting/money-accounts'),
+    enabled: confirmFinalizeId !== null,
+  });
+  const bankAccounts = (
+    Array.isArray(moneyAccounts.data?.data) ? moneyAccounts.data.data : []
+  ).filter((account) => account.kind === 'BANK');
   const finalizeMutation = useMutation({
     mutationFn: () => api.post(`/api/v1/job-cards/${selectedJcId}/finalize`),
-    onSuccess: () => {
+    onSuccess: async (result) => {
       setConfirmFinalizeId(null);
       queryClient.invalidateQueries({ queryKey: ['job-cards'] });
       queryClient.invalidateQueries({ queryKey: ['job-card-detail', selectedJcId] });
-      addNotification('Job card invoice finalized and posted to General Ledger.', 'success');
+      const invoice = result?.data?.invoice;
+      if (payMode === 'LATER' || !invoice) {
+        addNotification('Bill made. Payment is pending (shown in dues).', 'success');
+        return;
+      }
+      // Record the payment the customer made at the counter.
+      const bankId =
+        Number(payAccountId) || (bankAccounts.length === 1 ? bankAccounts[0].id : null);
+      try {
+        await api.post('/api/v1/accounting/receipts', {
+          customerId: invoice.customer_id,
+          receiptDate: invoice.invoice_date,
+          amount: Number(invoice.grand_total),
+          ...(payMode === 'CASH'
+            ? { paymentMode: 'CASH' }
+            : { paymentMode: 'BANK', bankLedgerId: bankId }),
+          narration: `${payMode} payment for ${invoice.invoice_number}`,
+          autoAllocate: true,
+        });
+        queryClient.invalidateQueries({ queryKey: ['money-accounts'] });
+        addNotification(
+          `Bill made and ${payMode === 'CASH' ? 'cash' : payMode} payment saved.`,
+          'success',
+        );
+      } catch (error) {
+        addNotification(
+          `Bill made, but the payment was not saved: ${error.message}. Record it in Money In.`,
+          'error',
+        );
+      }
     },
     onError: (err) => {
       setConfirmFinalizeId(null);
@@ -464,11 +503,48 @@ export default function JobCardManager() {
                     This creates the tax invoice, reduces stock and records revenue. Check the parts
                     and labour before posting.
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <label className="text-sm font-medium">
+                      Payment
+                      <select
+                        className="mt-1 block rounded border p-2 text-gray-900 dark:bg-gray-800 dark:text-white"
+                        value={payMode}
+                        onChange={(event) => setPayMode(event.target.value)}
+                      >
+                        <option value="LATER">Pay later (credit)</option>
+                        <option value="CASH">Paid in cash</option>
+                        <option value="UPI">Paid by UPI</option>
+                        <option value="CARD">Paid by card</option>
+                      </select>
+                    </label>
+                    {(payMode === 'UPI' || payMode === 'CARD') && bankAccounts.length > 1 && (
+                      <label className="text-sm font-medium">
+                        Into bank account
+                        <select
+                          className="mt-1 block rounded border p-2 text-gray-900 dark:bg-gray-800 dark:text-white"
+                          value={payAccountId}
+                          onChange={(event) => setPayAccountId(event.target.value)}
+                        >
+                          <option value="">Choose bank</option>
+                          {bankAccounts.map((bank) => (
+                            <option key={bank.id} value={bank.id}>
+                              {bank.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
                   <div className="mt-2 flex gap-2">
                     <button
                       className="rounded bg-green-600 px-3 py-1.5 font-semibold text-white hover:bg-green-700"
                       onClick={() => finalizeMutation.mutate()}
-                      disabled={finalizeMutation.isPending}
+                      disabled={
+                        finalizeMutation.isPending ||
+                        ((payMode === 'UPI' || payMode === 'CARD') &&
+                          bankAccounts.length > 1 &&
+                          !payAccountId)
+                      }
                     >
                       {finalizeMutation.isPending ? 'Posting...' : 'Confirm & post invoice'}
                     </button>

@@ -76,7 +76,16 @@ function normalizeDescription(value) {
 export function validateExpensePayload(payload = {}, { partial = false } = {}) {
   const data = {};
   const unknownFields = Object.keys(payload).filter(
-    (field) => !['date', 'expense_date', 'category', 'amount', 'description'].includes(field),
+    (field) =>
+      ![
+        'date',
+        'expense_date',
+        'category',
+        'amount',
+        'description',
+        'payment_mode',
+        'payment_account_id',
+      ].includes(field),
   );
 
   if (unknownFields.length) {
@@ -105,6 +114,18 @@ export function validateExpensePayload(payload = {}, { partial = false } = {}) {
   if (category !== undefined) data.category = category;
   if (amount !== undefined) data.amount = amount;
   if (description !== undefined) data.description = description;
+  if (payload.payment_mode !== undefined) {
+    const mode = String(payload.payment_mode || 'CASH').toUpperCase();
+    if (!['CASH', 'UPI', 'CARD', 'BANK'].includes(mode))
+      throw new AppError('Paid by must be cash, UPI, card or bank.', 400, 'VALIDATION_ERROR');
+    data.payment_mode = mode;
+  }
+  if (payload.payment_account_id !== undefined) {
+    const accountId = payload.payment_account_id ? Number(payload.payment_account_id) : null;
+    if (accountId !== null && !Number.isInteger(accountId))
+      throw new AppError('Choose a valid bank account.', 400, 'VALIDATION_ERROR');
+    data.payment_account_id = accountId;
+  }
 
   if (partial && Object.keys(data).length === 0) {
     throw new AppError('At least one field is required.', 400, 'VALIDATION_ERROR');
