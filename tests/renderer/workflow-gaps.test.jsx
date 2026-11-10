@@ -233,6 +233,8 @@ it('reports failed job-card finalization so staff can correct the problem', asyn
   show(JobCardManager);
   fireEvent.click(await screen.findByText('JC-FAIL'));
   fireEvent.click(await screen.findByText('Post & Finalize Invoice'));
+  expect(api.post).not.toHaveBeenCalled();
+  fireEvent.click(await screen.findByText('Confirm & post invoice'));
   await waitFor(() =>
     expect(
       useAppStore

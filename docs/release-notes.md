@@ -8,7 +8,8 @@
 - Security: the local API now refuses requests addressed to non-loopback host names, blocking DNS-rebinding access from websites open on the same laptop.
 - Privacy: starter-catalog suppliers no longer receive invented phone numbers, emails, addresses or GSTINs in the live database, and a test fixture's realistic phone number was replaced with a fictional one.
 - Repository safety: `npm run check` now starts with a guard that fails if databases, backups, private workshop folders, `.env` files or secret keys would be committed to the public repository.
-- Verification: repository safety, formatting, lint, 231 backend tests, 72 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
+- Click-through fixes: the invoice register shows customer names and registrations instead of record numbers; printed bills show the job card odometer; job cards show the opening time in local time instead of UTC; the job card phone lookup no longer erases a new customer name typed while it runs; posting a job card invoice now asks for confirmation.
+- Verification: repository safety, formatting, lint, 231 backend tests, 76 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
 
 ## Unreleased — audit fixes, 15 October 2026
 

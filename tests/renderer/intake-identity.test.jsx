@@ -49,3 +49,48 @@ it('keeps a failed vehicle lookup visible when the customer lookup succeeds', as
   await act(async () => result.current.handleCustomerPhoneSearch('1111111111'));
   await waitFor(() => expect(result.current.lookupError).toBe('Vehicle lookup unavailable'));
 });
+
+it('keeps a typed new-customer name when the phone lookup finds no match', async () => {
+  let release;
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ok: true, status: 200, json: async () => ({ data: null }) });
+        }),
+    ),
+  );
+  const { result } = renderHook(() => useIntakeLookup(vi.fn()));
+  let lookup;
+  act(() => {
+    result.current.setCustomerPhone('9000011111');
+    lookup = result.current.handleCustomerPhoneSearch('9000011111');
+  });
+  act(() => result.current.setCustomerName('New Walk-in'));
+  await act(async () => {
+    release();
+    await lookup;
+  });
+  expect(result.current.customerName).toBe('New Walk-in');
+  expect(result.current.isExistingCustomer).toBe(false);
+});
+
+it('clears details loaded for an existing customer when the phone changes', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url) => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: url.includes('2222222222') ? { id: 2, name: 'Existing Owner', city: 'Karnal' } : null,
+      }),
+    })),
+  );
+  const { result } = renderHook(() => useIntakeLookup(vi.fn()));
+  await act(async () => result.current.handleCustomerPhoneSearch('2222222222'));
+  expect(result.current.customerName).toBe('Existing Owner');
+  await act(async () => result.current.handleCustomerPhoneSearch('3333333333'));
+  expect(result.current.customerName).toBe('');
+  expect(result.current.customerCity).toBe('');
+});

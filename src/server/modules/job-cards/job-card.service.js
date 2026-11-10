@@ -904,8 +904,16 @@ export class JobCardService {
       throw new AppError('Invoice not found.', 404, 'INVOICE_NOT_FOUND');
     }
 
+    // Invoices do not store the odometer; the printed bill shows the job card's reading.
+    const jobCard = invoice.job_card_id
+      ? this.db
+          .prepare('SELECT odometer_reading FROM job_cards WHERE id = ?')
+          .get(invoice.job_card_id)
+      : null;
+
     return {
       ...invoice,
+      odometer_reading: jobCard?.odometer_reading ?? null,
       items: this.repository.listInvoiceItems(id),
     };
   }

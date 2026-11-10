@@ -9,6 +9,7 @@ import { useIntakeLookup } from './use-intake-lookup.js';
 import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import RemoteSelect from '../../shared/components/RemoteSelect.jsx';
 import ServerPagination from '../../shared/components/ServerPagination.jsx';
+import { formatLocalTimestamp } from '../../shared/utils/date-time.js';
 import { Search, Plus, X, CheckCircle } from 'lucide-react';
 
 export default function JobCardManager() {
@@ -21,6 +22,7 @@ export default function JobCardManager() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedJcId, setSelectedJcId] = useState(null);
+  const [confirmFinalizeId, setConfirmFinalizeId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
   const [showLabourModal, setShowLabourModal] = useState(false);
@@ -185,11 +187,15 @@ export default function JobCardManager() {
   const finalizeMutation = useMutation({
     mutationFn: () => api.post(`/api/v1/job-cards/${selectedJcId}/finalize`),
     onSuccess: () => {
+      setConfirmFinalizeId(null);
       queryClient.invalidateQueries({ queryKey: ['job-cards'] });
       queryClient.invalidateQueries({ queryKey: ['job-card-detail', selectedJcId] });
       addNotification('Job card invoice finalized and posted to General Ledger.', 'success');
     },
-    onError: (err) => addNotification(err.message || 'Failed to finalize invoice.', 'error'),
+    onError: (err) => {
+      setConfirmFinalizeId(null);
+      addNotification(err.message || 'Failed to finalize invoice.', 'error');
+    },
   });
 
   const handleCreateJc = (e) => {
@@ -409,12 +415,13 @@ export default function JobCardManager() {
                     {jcDetail.job_card_number}
                   </h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Odometer: {jcDetail.odometer_reading} km | Opened: {jcDetail.opened_at}
+                    Odometer: {jcDetail.odometer_reading} km | Opened:{' '}
+                    {formatLocalTimestamp(jcDetail.opened_at)}
                   </p>
                 </div>
                 {jcDetail.status === 'DRAFT' && (
                   <button
-                    onClick={() => finalizeMutation.mutate()}
+                    onClick={() => setConfirmFinalizeId(jcDetail.id)}
                     disabled={!canFinalize || finalizeMutation.isPending}
                     title={!canFinalize ? 'Invoice finalization permission required.' : undefined}
                     className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm transition-colors"
@@ -424,6 +431,34 @@ export default function JobCardManager() {
                   </button>
                 )}
               </div>
+
+              {jcDetail.status === 'DRAFT' && confirmFinalizeId === jcDetail.id && (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+                >
+                  <p>
+                    This creates the tax invoice, reduces stock and records revenue. Check the parts
+                    and labour before posting.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="rounded bg-green-600 px-3 py-1.5 font-semibold text-white hover:bg-green-700"
+                      onClick={() => finalizeMutation.mutate()}
+                      disabled={finalizeMutation.isPending}
+                    >
+                      {finalizeMutation.isPending ? 'Posting...' : 'Confirm & post invoice'}
+                    </button>
+                    <button
+                      className="rounded border px-3 py-1.5"
+                      onClick={() => setConfirmFinalizeId(null)}
+                      disabled={finalizeMutation.isPending}
+                    >
+                      Keep editing
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-3">
                 <button

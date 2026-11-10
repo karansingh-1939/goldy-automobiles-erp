@@ -72,13 +72,16 @@ export function useIntakeLookup(addNotification) {
   // Real-time lookup methods
   const handleCustomerPhoneSearch = async (phoneVal) => {
     const requestId = ++customerRequest.current;
+    // Only clear details that a previous lookup filled in; keep what staff typed for a new customer.
+    if (customerIdentity.current) {
+      setCustomerName('');
+      setCustomerAddress('');
+      setCustomerCity('');
+      setCustomerNotes('');
+    }
     setCustomerId('');
     setIsExistingCustomer(false);
     setExistingCustomerVehicles([]);
-    setCustomerName('');
-    setCustomerAddress('');
-    setCustomerCity('');
-    setCustomerNotes('');
     setCustomerError('');
     checkVehicleOwner('', phoneVal);
     const clean = phoneVal.replace(/[^0-9]/g, '');
@@ -101,10 +104,6 @@ export function useIntakeLookup(addNotification) {
         } else {
           setIsExistingCustomer(false);
           setCustomerId('');
-          setCustomerName('');
-          setCustomerAddress('');
-          setCustomerCity('');
-          setCustomerNotes('');
           setExistingCustomerVehicles([]);
         }
       } catch (err) {

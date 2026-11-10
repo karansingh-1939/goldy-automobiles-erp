@@ -24,43 +24,39 @@ export class MasterRepository {
   }
 
   list({ search, pageSize, offset }) {
-    if (this.config.table === 'invoices' && search) {
+    if (this.config.table === 'invoices') {
       const querySearch = `%${search}%`;
       const selectCols = this.config.listColumns.map((col) => `invoices.${col}`).join(', ');
-
-      const rows = this.db
-        .prepare(
-          `
-        SELECT ${selectCols}
+      const from = `
         FROM invoices
         LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
-        LEFT JOIN customers ON invoices.customer_id = customers.id
-        WHERE invoices.invoice_number LIKE ? COLLATE NOCASE
+        LEFT JOIN customers ON invoices.customer_id = customers.id`;
+      const where = search
+        ? `WHERE invoices.invoice_number LIKE ? COLLATE NOCASE
            OR vehicles.engine_number LIKE ? COLLATE NOCASE
            OR vehicles.chassis_number LIKE ? COLLATE NOCASE
            OR vehicles.registration_number LIKE ? COLLATE NOCASE
-           OR customers.name LIKE ? COLLATE NOCASE
+           OR customers.name LIKE ? COLLATE NOCASE`
+        : '';
+      const params = search ? Array(5).fill(querySearch) : [];
+
+      // The register shows who was billed, so return the customer name and registration too.
+      const rows = this.db
+        .prepare(
+          `
+        SELECT ${selectCols}, customers.name AS customer_name,
+               vehicles.registration_number AS registration_number
+        ${from}
+        ${where}
         ORDER BY invoices.id DESC
         LIMIT ? OFFSET ?
       `,
         )
-        .all(querySearch, querySearch, querySearch, querySearch, querySearch, pageSize, offset);
+        .all(...params, pageSize, offset);
 
       const total = this.db
-        .prepare(
-          `
-        SELECT COUNT(*) AS count
-        FROM invoices
-        LEFT JOIN vehicles ON invoices.vehicle_id = vehicles.id
-        LEFT JOIN customers ON invoices.customer_id = customers.id
-        WHERE invoices.invoice_number LIKE ? COLLATE NOCASE
-           OR vehicles.engine_number LIKE ? COLLATE NOCASE
-           OR vehicles.chassis_number LIKE ? COLLATE NOCASE
-           OR vehicles.registration_number LIKE ? COLLATE NOCASE
-           OR customers.name LIKE ? COLLATE NOCASE
-      `,
-        )
-        .get(querySearch, querySearch, querySearch, querySearch, querySearch).count;
+        .prepare(`SELECT COUNT(*) AS count ${from} ${where}`)
+        .get(...params).count;
 
       return { rows, total };
     }

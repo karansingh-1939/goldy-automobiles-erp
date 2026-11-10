@@ -141,6 +141,18 @@ test('four billing sections and chassis number integration', async (t) => {
       });
       assert.equal(invSearchChassis.response.status, 200);
       assert.equal(invSearchChassis.body.data.length, 1);
+
+      // The unfiltered register names the customer and vehicle instead of raw IDs.
+      const register = await context.request('/api/v1/invoices', { headers });
+      assert.equal(register.response.status, 200);
+      const listed = register.body.data.find((row) => row.invoice_number === 'INV-SEARCH-TEST');
+      assert.equal(listed.customer_name, 'John Doe');
+      assert.equal(listed.registration_number, 'MH12XX9999');
+
+      // The invoice detail carries the job card odometer for the printed bill.
+      const detail = await context.request(`/api/v1/invoices/${listed.id}`, { headers });
+      assert.equal(detail.response.status, 200);
+      assert.equal(detail.body.data.odometer_reading, 1000);
     } finally {
       await context.close();
     }
