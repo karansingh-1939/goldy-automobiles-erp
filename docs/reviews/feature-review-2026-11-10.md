@@ -13,10 +13,10 @@ The core is strong: billing, weighted average costing, stock, double-entry posti
 | #   | Problem                                                                                                                                                                     | Status                                       |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | 1   | Billing stops on 1 April 2027: only FY 2026-27 existed                                                                                                                      | **Fixed** (financial years now roll forward) |
-| 2   | Company profile (name, GSTIN, address, phone) cannot be edited; settings are read-only and bills print a hard-coded address with a blank GSTIN                              | Open                                         |
-| 3   | Tax invoice print is not Rule 46 complete: no customer GSTIN, no place of supply/state, tax summary always splits CGST/SGST (wrong for interstate)                          | Open                                         |
-| 4   | Labour lines go to GST reports with HSN `UNSPECIFIED`; labour needs SAC 9987                                                                                                | Open                                         |
-| 5   | A wrong part/labour line or wrong job card cannot be edited, removed or voided before billing; the only escape is billing then cancelling, which burns a GST invoice number | Open                                         |
+| 2   | Company profile (name, GSTIN, address, phone) cannot be edited; settings are read-only and bills print a hard-coded address with a blank GSTIN                              | **Fixed**                                    |
+| 3   | Tax invoice print is not Rule 46 complete: no customer GSTIN, no place of supply/state, tax summary always splits CGST/SGST (wrong for interstate)                          | **Fixed**                                    |
+| 4   | Labour lines go to GST reports with HSN `UNSPECIFIED`; labour needs SAC 9987                                                                                                | **Fixed**                                    |
+| 5   | A wrong part/labour line or wrong job card cannot be edited, removed or voided before billing; the only escape is billing then cancelling, which burns a GST invoice number | **Fixed**                                    |
 | 6   | Backup failures (including the USB copy) are silent; nothing shows backup age                                                                                               | Open                                         |
 
 ### Feature verdicts

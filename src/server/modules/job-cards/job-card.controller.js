@@ -38,6 +38,35 @@ export class JobCardController {
     }
   };
 
+  removeLine = (req, res, next) => {
+    try {
+      res.status(200).json({
+        data: this.jobCardService.removeLine(
+          Number(req.params.id),
+          req.params.kind,
+          Number(req.params.lineId),
+          req.user?.id,
+        ),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  cancel = (req, res, next) => {
+    try {
+      res.status(200).json({
+        data: this.jobCardService.cancelJobCard(
+          Number(req.params.id),
+          req.body?.reason,
+          req.user?.id,
+        ),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   addLabour = (req, res, next) => {
     try {
       const labour = this.jobCardService.addLabour(

@@ -254,6 +254,12 @@ export function createJobCardRouter(db) {
   router.post('/job-cards', requirePermission('job_cards.write'), controller.create);
   router.post('/job-cards/:id/parts', requirePermission('job_cards.write'), controller.addPart);
   router.post('/job-cards/:id/labour', requirePermission('job_cards.write'), controller.addLabour);
+  router.delete(
+    '/job-cards/:id/:kind(parts|labour)/:lineId',
+    requirePermission('job_cards.write'),
+    controller.removeLine,
+  );
+  router.post('/job-cards/:id/cancel', requirePermission('job_cards.write'), controller.cancel);
   router.post(
     '/job-cards/:id/finalize',
     requirePermission('invoices.finalize'),

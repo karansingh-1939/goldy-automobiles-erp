@@ -1,24 +1,32 @@
 import React from 'react';
 export const money = (value) => `₹${Number(value || 0).toFixed(2)}`;
-export default function JobCardCharges({ job }) {
+export default function JobCardCharges({ job, onRemove, removing }) {
   const parts = job.parts || [],
     labour = job.labour || [];
+  const canRemove = job.status === 'DRAFT' && typeof onRemove === 'function';
   const sections = [
-    ['Parts Consumption', parts.filter((p) => p.item_type !== 'LUBRICANT')],
-    ['Lubricants', parts.filter((p) => p.item_type === 'LUBRICANT')],
-    ['Outside Jobs', labour.filter((p) => /^\[Outside Job\]/i.test(p.description))],
-    ['Labour (In-House)', labour.filter((p) => !/^\[Outside Job\]/i.test(p.description))],
+    ['Parts Consumption', 'parts', parts.filter((p) => p.item_type !== 'LUBRICANT')],
+    ['Lubricants', 'parts', parts.filter((p) => p.item_type === 'LUBRICANT')],
+    ['Outside Jobs', 'labour', labour.filter((p) => /^\[Outside Job\]/i.test(p.description))],
+    ['Labour (In-House)', 'labour', labour.filter((p) => !/^\[Outside Job\]/i.test(p.description))],
   ];
   return (
     <div className="space-y-4">
-      {sections.map(([title, rows]) => (
+      {sections.map(([title, kind, rows]) => (
         <section key={title}>
           <h3 className="font-semibold">{title}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr>
-                  {['Description', 'Quantity', 'Rate', 'GST', 'Total'].map((h) => (
+                  {[
+                    'Description',
+                    'Quantity',
+                    'Rate',
+                    'GST',
+                    'Total',
+                    ...(canRemove ? [''] : []),
+                  ].map((h) => (
                     <th className="p-2" key={h}>
                       {h}
                     </th>
@@ -39,6 +47,19 @@ export default function JobCardCharges({ job }) {
                         {money(tax)} ({row.gst_rate || 0}%)
                       </td>
                       <td>{money(row.line_total ?? rate * qty + tax)}</td>
+                      {canRemove && (
+                        <td className="text-right">
+                          <button
+                            type="button"
+                            className="rounded border px-2 py-1 text-xs text-red-700 hover:bg-red-50 dark:text-red-300"
+                            disabled={removing}
+                            onClick={() => onRemove(kind, row)}
+                            aria-label={`Remove ${row.description}`}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

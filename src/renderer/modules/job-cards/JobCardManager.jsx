@@ -23,6 +23,8 @@ export default function JobCardManager() {
   const [page, setPage] = useState(1);
   const [selectedJcId, setSelectedJcId] = useState(null);
   const [confirmFinalizeId, setConfirmFinalizeId] = useState(null);
+  const [cancelJobId, setCancelJobId] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
   const [showLabourModal, setShowLabourModal] = useState(false);
@@ -196,6 +198,27 @@ export default function JobCardManager() {
       setConfirmFinalizeId(null);
       addNotification(err.message || 'Failed to finalize invoice.', 'error');
     },
+  });
+
+  const removeLineMutation = useMutation({
+    mutationFn: ({ kind, id }) => api.del(`/api/v1/job-cards/${selectedJcId}/${kind}/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-card-detail', selectedJcId] });
+      addNotification('Line removed.', 'success');
+    },
+    onError: (err) => addNotification(err.message || 'Could not remove the line.', 'error'),
+  });
+  const cancelJobMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/v1/job-cards/${selectedJcId}/cancel`, { reason: cancelReason }),
+    onSuccess: () => {
+      setCancelJobId(null);
+      setCancelReason('');
+      queryClient.invalidateQueries({ queryKey: ['job-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['job-card-detail', selectedJcId] });
+      addNotification('Job card cancelled. No bill was made.', 'success');
+    },
+    onError: (err) => addNotification(err.message || 'Could not cancel the job card.', 'error'),
   });
 
   const handleCreateJc = (e) => {
@@ -518,7 +541,56 @@ export default function JobCardManager() {
                   .join(', ') || 'None marked present'}
               </p>
               <p>Assigned technician: {jcDetail.technician_name || 'Unassigned'}</p>
-              <JobCardCharges job={jcDetail} />
+              <JobCardCharges
+                job={jcDetail}
+                removing={removeLineMutation.isPending}
+                onRemove={(kind, row) => removeLineMutation.mutate({ kind, id: row.id })}
+              />
+              {jcDetail.status === 'DRAFT' &&
+                (cancelJobId === jcDetail.id ? (
+                  <form
+                    className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm dark:border-red-800 dark:bg-red-950"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      cancelJobMutation.mutate();
+                    }}
+                  >
+                    <label className="block font-medium">
+                      Why is this job being cancelled?
+                      <input
+                        className="mt-1 block w-full rounded border p-2 dark:bg-gray-800"
+                        value={cancelReason}
+                        onChange={(event) => setCancelReason(event.target.value)}
+                        placeholder="For example: customer took the car back"
+                        required
+                      />
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="rounded bg-red-600 px-3 py-1.5 font-semibold text-white"
+                        disabled={cancelJobMutation.isPending || !cancelReason.trim()}
+                      >
+                        Cancel this job
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded border px-3 py-1.5"
+                        onClick={() => setCancelJobId(null)}
+                      >
+                        Keep the job
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-sm text-red-700 underline dark:text-red-300"
+                    onClick={() => setCancelJobId(jcDetail.id)}
+                  >
+                    Cancel job (no bill)
+                  </button>
+                ))}
             </div>
           )}
         </div>

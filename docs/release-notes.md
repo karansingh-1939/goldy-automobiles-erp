@@ -10,7 +10,13 @@
 - Repository safety: `npm run check` now starts with a guard that fails if databases, backups, private workshop folders, `.env` files or secret keys would be committed to the public repository.
 - Click-through fixes: the invoice register shows customer names and registrations instead of record numbers; printed bills show the job card odometer; job cards show the opening time in local time instead of UTC; the job card phone lookup no longer erases a new customer name typed while it runs; posting a job card invoice now asks for confirmation.
 - GST invoice numbering: job card bills are numbered `INV/26-27/0001` and counter-sale and shipment bills `CS/26-27/0001`. Each series is consecutive, restarts every April, never reuses a cancelled invoice's number and stays within the 16-character GST limit. Existing invoices keep their old numbers. Customer credit notes and supplier return notes still use the old random style.
-- Verification: repository safety, formatting, lint, 234 backend tests, 76 renderer tests, desktop smoke, Windows package and packaged smoke all pass.
+- Financial years roll forward automatically, so billing continues after 31 March 2027.
+- Company details (name, address, phone, GSTIN, state, terms) are editable in Settings and validated; bills print them.
+- Bills show supplier and customer GSTIN, state and code, place of supply, reverse-charge flag and a signatory line; the tax summary shows IGST for interstate bills; labour uses SAC 9987.
+- Simpler menu: 12 everyday screens with plain names and a collapsed "More tools" group.
+- Job cards: remove a wrong part or labour line before billing, and cancel an unbilled job with a reason, without using an invoice number.
+- Feature review with verdicts and a phased plan: [feature review](reviews/feature-review-2026-11-10.md).
+- Verification: repository safety, formatting, lint, 240 backend tests, 76 renderer tests
 
 ## Unreleased — audit fixes, 15 October 2026
 

@@ -563,6 +563,71 @@ export class JobCardService {
     }
   }
 
+  /**
+   * Removes a part or labour line from an unbilled job card. Parts are only
+   * taken out of stock when the job is billed, so no stock reversal is needed.
+   */
+  removeLine(jobCardId, kind, lineId, userId) {
+    const jobCard = this.getMutableJobCard(jobCardId);
+    const table = { parts: 'job_card_items', labour: 'job_card_labour' }[kind];
+    if (!table) throw new AppError('Unknown line type.', 400, 'VALIDATION_ERROR');
+    return this.repository.transaction(() => {
+      const line = this.db
+        .prepare(`SELECT * FROM ${table} WHERE id = ? AND job_card_id = ?`)
+        .get(lineId, jobCard.id);
+      if (!line) throw new AppError('Line not found on this job card.', 404, 'LINE_NOT_FOUND');
+      this.db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(line.id);
+      this.auditRepository.create({
+        userId,
+        action: kind === 'parts' ? 'REMOVE_PART' : 'REMOVE_LABOUR',
+        entityType: 'job_cards',
+        entityId: jobCard.id,
+        oldValue: line,
+      });
+      return { removed: true };
+    });
+  }
+
+  /**
+   * Cancels a job card that was never billed (for example the customer left).
+   * No invoice number is used, and parts were never taken out of stock.
+   */
+  cancelJobCard(jobCardId, reason, userId) {
+    const jobCard = this.getMutableJobCard(jobCardId);
+    const cleanReason = String(reason || '').trim();
+    if (!cleanReason) {
+      throw new AppError('Give a short reason for cancelling.', 400, 'VALIDATION_ERROR');
+    }
+    return this.repository.transaction(() => {
+      const runningTimer = this.db
+        .prepare(
+          'SELECT id FROM mechanic_time_entries WHERE job_card_id = ? AND stopped_at IS NULL LIMIT 1',
+        )
+        .get(jobCard.id);
+      if (runningTimer) {
+        throw new AppError(
+          'Stop the mechanic timer on this job before cancelling it.',
+          409,
+          'MECHANIC_TIMER_RUNNING',
+        );
+      }
+      this.db
+        .prepare(
+          "UPDATE job_cards SET status = 'CANCELLED', closed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        )
+        .run(jobCard.id);
+      this.auditRepository.create({
+        userId,
+        action: 'CANCEL',
+        entityType: 'job_cards',
+        entityId: jobCard.id,
+        oldValue: { status: jobCard.status },
+        newValue: { status: 'CANCELLED', reason: cleanReason },
+      });
+      return this.get(jobCard.id);
+    });
+  }
+
   finalize(jobCardId, userId) {
     try {
       return this.repository.transaction(() => {
