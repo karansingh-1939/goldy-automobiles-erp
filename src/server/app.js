@@ -25,6 +25,7 @@ import { createReturnsRouter } from './modules/returns/returns.routes.js';
 import { createWarrantyRouter } from './modules/warranties/warranty.routes.js';
 import { createCrmRouter } from './modules/crm/crm.routes.js';
 import { createWorkshopRouter } from './modules/workshop/workshop.routes.js';
+import { createCompanySettingsRouter } from './modules/settings/company-settings.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/error-handler.js';
 import { localHostGuard } from './shared/middleware/local-host-guard.js';
 
@@ -140,34 +141,7 @@ export function createApp({ db: rawDb = getDatabase(), backupScheduler } = {}) {
     res.status(200).json({ status: 'ok' });
   });
 
-  app.get('/api/v1/settings/company', (req, res) => {
-    try {
-      const settings = db
-        .prepare("SELECT key, value FROM system_settings WHERE key LIKE 'company.%'")
-        .all();
-      const companyConfig = {};
-      settings.forEach((s) => {
-        companyConfig[s.key] = s.value;
-      });
-      res.status(200).json({
-        status: 'success',
-        data: {
-          name: companyConfig['company.name'] || 'GOLDY AUTOMOBILE',
-          address:
-            companyConfig['company.address'] || 'Opp. Randhir Cinema, Kunjpura Road, KARNAL-132001',
-          phone: companyConfig['company.phone'] || '0184-2206673, 94160-30673',
-          email: companyConfig['company.email'] || '',
-          gstin: companyConfig['company.gstin'] || '',
-          jobCardTerms:
-            companyConfig['company.job_card_terms'] ||
-            "Vehicle stored repaired & driven at customer's risk.",
-        },
-      });
-    } catch (err) {
-      res.status(500).json({ error: { message: err.message } });
-    }
-  });
-
+  app.use('/api/v1/settings/company', createCompanySettingsRouter(db));
   app.use('/api/v1/auth', createAuthRouter(db));
   app.use('/api/v1/expenses', createExpenseRouter(db));
   app.use('/api/v1/inventory', createInventoryRouter(db));

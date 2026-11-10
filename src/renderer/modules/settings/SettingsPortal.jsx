@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/api-client.js';
 import { useAppStore } from '../../shared/store/use-app-store.js';
-import { Settings, Database, RefreshCw, Play } from 'lucide-react';
+import { Database, RefreshCw, Play } from 'lucide-react';
 import BackupSchedule from './BackupSchedule.jsx';
 import BackupUpload from './BackupUpload.jsx';
+import CompanyProfileForm from './CompanyProfileForm.jsx';
 
 export default function SettingsPortal() {
   const queryClient = useQueryClient();
@@ -39,16 +40,6 @@ export default function SettingsPortal() {
       ),
     onError: (error) => addNotification(error.message, 'error'),
   });
-
-  const { data: companyResponse } = useQuery({
-    queryKey: ['company-profile'],
-    queryFn: () => api.get('/api/v1/settings/company'),
-  });
-  const company = companyResponse?.data || {};
-  const companyName = company.name || '';
-  const gstin = company.gstin || '';
-  const phone = company.phone || '';
-  const address = company.address || '';
 
   // Fetch Backups List
   const {
@@ -110,89 +101,12 @@ export default function SettingsPortal() {
           Settings & Utilities
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          View company details and manage database backups.
+          Edit company details and manage database backups.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Side - Company Profile */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3">
-            <Settings className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-            <h3 className="font-bold text-gray-950 dark:text-white">Company Details</h3>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="company-name-input"
-                className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
-              >
-                Workshop / Company Name
-              </label>
-              <input
-                id="company-name-input"
-                type="text"
-                value={companyName}
-                readOnly
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="company-gstin-input"
-                className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
-              >
-                Company GSTIN
-              </label>
-              <input
-                id="company-gstin-input"
-                type="text"
-                value={gstin}
-                readOnly
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white font-mono"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="company-phone-input"
-                  className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
-                >
-                  Support Phone
-                </label>
-                <input
-                  id="company-phone-input"
-                  type="text"
-                  value={phone}
-                  readOnly
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="company-address-input"
-                  className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
-                >
-                  Address Location
-                </label>
-                <input
-                  id="company-address-input"
-                  type="text"
-                  value={address}
-                  readOnly
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 text-sm focus-ring text-gray-950 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500">
-              Company details come from the workshop database.
-            </p>
-          </div>
-        </div>
+        <CompanyProfileForm />
 
         {/* Right Side - Backups & Recovery */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm space-y-6">
