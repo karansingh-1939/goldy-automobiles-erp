@@ -2,6 +2,7 @@ import { AppError } from '../../shared/errors/app-error.js';
 import { AccountingPostingEngine } from './posting-engine.service.js';
 import { createInventoryService } from '../inventory/inventory.service.js';
 import { assertCustomerCreditLimit } from './customer-credit.service.js';
+import { DocumentSeries, nextDocumentNumber } from '../../shared/utils/document-number.js';
 
 function roundMoney(val) {
   return Math.round(val * 100) / 100;
@@ -138,22 +139,12 @@ export class DirectBillingService {
     );
 
     return this.db.transaction(() => {
-      // 2. Generate sequential invoice number
-      const year = new Date(invoiceDate).getFullYear();
-      const prefix = `DIR-${year}-`;
-      const last = this.db
-        .prepare(
-          'SELECT invoice_number FROM direct_invoices WHERE invoice_number LIKE ? ORDER BY invoice_number DESC LIMIT 1',
-        )
-        .get(`${prefix}%`);
-      let seq = 1;
-      if (last) {
-        const match = last.invoice_number.match(/(\d+)$/);
-        if (match) {
-          seq = parseInt(match[1], 10) + 1;
-        }
-      }
-      const invoiceNumber = `${prefix}${String(seq).padStart(6, '0')}`;
+      // 2. Reserve the next GST invoice number for the invoice's financial year
+      const invoiceNumber = nextDocumentNumber(
+        this.db,
+        DocumentSeries.COUNTER_INVOICE,
+        invoiceDate,
+      );
 
       // Insert dummy invoice to get ID for references
       const dummyInfo = this.db

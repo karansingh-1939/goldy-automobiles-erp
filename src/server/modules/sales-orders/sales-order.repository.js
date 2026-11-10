@@ -1,3 +1,5 @@
+import { DocumentSeries, nextDocumentNumber } from '../../shared/utils/document-number.js';
+
 export class SalesOrderRepository {
   constructor(db) {
     this.db = db;
@@ -319,15 +321,9 @@ export class SalesOrderRepository {
     return this.db.prepare('SELECT id FROM direct_invoices WHERE sales_shipment_id = ?').get(id);
   }
 
-  nextDirectInvoiceNumber(year) {
-    const prefix = `DIR-${year}-`;
-    const last = this.db
-      .prepare(
-        'SELECT invoice_number FROM direct_invoices WHERE invoice_number LIKE ? ORDER BY id DESC LIMIT 1',
-      )
-      .get(`${prefix}%`);
-    const sequence = last?.invoice_number.match(/(\d+)$/);
-    return `${prefix}${String(sequence ? Number(sequence[1]) + 1 : 1).padStart(6, '0')}`;
+  // Shipment invoices share the counter-sale series because both live in direct_invoices.
+  nextCounterInvoiceNumber(invoiceDate) {
+    return nextDocumentNumber(this.db, DocumentSeries.COUNTER_INVOICE, invoiceDate);
   }
 
   createShipmentInvoice(order, shipment, number, userId) {

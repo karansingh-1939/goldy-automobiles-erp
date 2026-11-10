@@ -41,7 +41,7 @@ export class ShipmentInvoiceService {
         );
       }
 
-      const invoiceNumber = this.repository.nextDirectInvoiceNumber(new Date().getFullYear());
+      const invoiceNumber = this.repository.nextCounterInvoiceNumber(shipment.shipment_date);
       const invoiceId = this.repository.createShipmentInvoice(
         order,
         shipment,

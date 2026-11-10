@@ -1,5 +1,6 @@
 import { assertCustomerCreditLimit } from '../accounting/customer-credit.service.js';
 import { localDate } from '../../shared/utils/local-date.js';
+import { DocumentSeries, nextDocumentNumber } from '../../shared/utils/document-number.js';
 import { AppError } from '../../shared/errors/app-error.js';
 import { AuditRepository } from '../audit/audit.repository.js';
 import { InventoryService } from '../inventory/inventory.service.js';
@@ -691,12 +692,13 @@ export class JobCardService {
         // Assert Customer Credit Limit (Company ID = 1 by default in job card flow)
         this.assertCreditLimit(1, jobCard.customer_id, totals.grandTotal);
 
+        const invoiceDate = localDate();
         const invoiceId = this.repository.createInvoice({
-          invoice_number: code('INV'),
+          invoice_number: nextDocumentNumber(this.db, DocumentSeries.WORKSHOP_INVOICE, invoiceDate),
           job_card_id: jobCard.id,
           customer_id: jobCard.customer_id,
           vehicle_id: jobCard.vehicle_id,
-          invoice_date: localDate(),
+          invoice_date: invoiceDate,
           subtotal: totals.revenue,
           taxable_amount: totals.revenue,
           cgst_total: totals.cgst,

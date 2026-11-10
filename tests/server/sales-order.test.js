@@ -246,7 +246,7 @@ test('Sales Orders, Quotations & Customer Order Management Sprint 7', async () =
     });
     assert.equal(res.response.status, 201);
     const invoice = res.body.data;
-    assert.equal(invoice.invoice_number.startsWith('DIR-'), true);
+    assert.match(invoice.invoice_number, /^CS\/\d{2}-\d{2}\/\d{4}$/);
     assert.equal(invoice.sales_shipment_id, shipment.id);
     const linkedInvoice = db.prepare('SELECT * FROM direct_invoices WHERE id=?').get(invoice.id);
     assert.ok(linkedInvoice.voucher_id);
