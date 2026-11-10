@@ -217,7 +217,7 @@ test('gst repository summary, GSTR datasets, and HSN summary exclude cancelled i
     assert.equal(partLine.sgst_amount, 27);
     assert.equal(partLine.total_tax, 54);
 
-    assert.equal(labourLine.hsn_sac, 'UNSPECIFIED');
+    assert.equal(labourLine.hsn_sac, '9987');
     assert.equal(labourLine.taxable_value, 500);
     assert.equal(labourLine.total_tax, 0);
 
@@ -241,7 +241,7 @@ test('gst repository summary, GSTR datasets, and HSN summary exclude cancelled i
     assert.equal(hsn.length, 2);
 
     const partHsn = hsn.find((row) => row.hsn_sac === '87083000');
-    const labourHsn = hsn.find((row) => row.hsn_sac === 'UNSPECIFIED');
+    const labourHsn = hsn.find((row) => row.hsn_sac === '9987');
     assert.equal(partHsn.quantity, 2);
     assert.equal(partHsn.taxable_value, 300);
     assert.equal(partHsn.total_tax, 54);

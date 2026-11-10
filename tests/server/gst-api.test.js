@@ -46,7 +46,7 @@ test('gst API exposes summary, gstr1, gstr3b, and hsn-summary with filtered repo
     assert.equal(partLine.invoiceId, fixture.juneInvoice.id);
     assert.equal(partLine.customerGstin, '27AABCU9603R1ZM');
     assert.equal(partLine.hsnSac, '87083000');
-    assert.equal(labourLine.hsnSac, 'UNSPECIFIED');
+    assert.equal(labourLine.hsnSac, '9987');
 
     const gstr3b = await context.request(`/api/v1/gst/gstr3b${juneQuery}`, { headers });
     assert.equal(gstr3b.response.status, 200, JSON.stringify(gstr3b.body));

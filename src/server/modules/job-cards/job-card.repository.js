@@ -612,7 +612,8 @@ export class JobCardRepository {
       SELECT
         invoice_items.*,
         inventory_items.category,
-        inventory_items.hsn_code
+        CASE WHEN invoice_items.inventory_item_id IS NULL THEN '9987'
+          ELSE inventory_items.hsn_code END AS hsn_code
       FROM invoice_items
       LEFT JOIN inventory_items ON inventory_items.id = invoice_items.inventory_item_id
       WHERE invoice_items.invoice_id = ?

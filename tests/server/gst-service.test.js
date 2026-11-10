@@ -51,7 +51,7 @@ test('gst service returns summary, GSTR-1, GSTR-3B, and HSN reports with camelCa
     assert.equal(partLine.totalTax, 54);
     assert.equal(partLine.lineTotal, 354);
 
-    assert.equal(labourLine.hsnSac, 'UNSPECIFIED');
+    assert.equal(labourLine.hsnSac, '9987');
     assert.equal(labourLine.taxableValue, 500);
     assert.equal(labourLine.totalTax, 0);
 
@@ -78,7 +78,7 @@ test('gst service returns summary, GSTR-1, GSTR-3B, and HSN reports with camelCa
     assert.equal(hsn.data.length, 2);
 
     const partHsn = hsn.data.find((row) => row.hsnSac === '87083000');
-    const labourHsn = hsn.data.find((row) => row.hsnSac === 'UNSPECIFIED');
+    const labourHsn = hsn.data.find((row) => row.hsnSac === '9987');
     assert.equal(partHsn.quantity, 2);
     assert.equal(partHsn.taxableValue, 300);
     assert.equal(partHsn.totalTax, 54);

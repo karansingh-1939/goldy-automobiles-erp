@@ -164,7 +164,9 @@ export class GstRepository {
         customers.state AS place_of_supply,
         invoice_items.id AS line_id,
         invoice_items.item_type,
-        COALESCE(NULLIF(TRIM(inventory_items.hsn_code), ''), NULLIF(TRIM(inventory_items.hsn_sac_code), ''), 'UNSPECIFIED') AS hsn_sac,
+        -- Labour and outside work have no stock item; motor vehicle repair services use SAC 9987.
+        CASE WHEN invoice_items.inventory_item_id IS NULL THEN '9987'
+          ELSE COALESCE(NULLIF(TRIM(inventory_items.hsn_code), ''), NULLIF(TRIM(inventory_items.hsn_sac_code), ''), 'UNSPECIFIED') END AS hsn_sac,
         invoice_items.description,
         invoice_items.quantity,
         invoice_items.unit_price,
@@ -193,8 +195,9 @@ export class GstRepository {
         customers.gstin AS customer_gstin,
         customers.state AS place_of_supply,
         direct_invoice_items.id AS line_id,
-        'part' AS item_type,
-        COALESCE(NULLIF(TRIM(inventory_items.hsn_code), ''), NULLIF(TRIM(inventory_items.hsn_sac_code), ''), 'UNSPECIFIED') AS hsn_sac,
+        CASE WHEN direct_invoice_items.item_id IS NULL THEN 'labour' ELSE 'part' END AS item_type,
+        CASE WHEN direct_invoice_items.item_id IS NULL THEN '9987'
+          ELSE COALESCE(NULLIF(TRIM(inventory_items.hsn_code), ''), NULLIF(TRIM(inventory_items.hsn_sac_code), ''), 'UNSPECIFIED') END AS hsn_sac,
         direct_invoice_items.description,
         direct_invoice_items.quantity,
         direct_invoice_items.unit_price,

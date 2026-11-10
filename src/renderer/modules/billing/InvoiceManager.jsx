@@ -182,12 +182,16 @@ export default function InvoiceManager() {
               </h2>
               <p>{company.data?.data?.address}</p>
               <p>
-                {company.data?.data?.phone} · GSTIN: {company.data?.data?.gstin || '—'}
+                {company.data?.data?.phone} · GSTIN: {company.data?.data?.gstin || '—'} · State:{' '}
+                {company.data?.data?.state || '—'}
+                {company.data?.data?.stateCode ? ` (${company.data.data.stateCode})` : ''}
               </p>
-              <h3 className="font-bold">TAX INVOICE · {invoice.invoice_number}</h3>
-              <p>
-                {invoice.invoice_date} · {invoice.status}
-              </p>
+              {/* Only a GST-registered supplier may issue a tax invoice. */}
+              <h3 className="font-bold">
+                {company.data?.data?.gstin ? 'TAX INVOICE' : 'INVOICE'} · {invoice.invoice_number}
+                {invoice.status === 'CANCELLED' ? ' · CANCELLED' : ''}
+              </h3>
+              <p>Date: {invoice.invoice_date} · Original for recipient · Reverse charge: No</p>
             </header>
             {[customer, vehicle, company].some((q) => q.error) && (
               <p role="alert">
@@ -208,6 +212,14 @@ export default function InvoiceManager() {
               {customer.data?.data?.phone}
               <br />
               {customer.data?.data?.address} {customer.data?.data?.city}
+              {customer.data?.data?.gstin && (
+                <>
+                  <br />
+                  Customer GSTIN: {customer.data.data.gstin}
+                </>
+              )}
+              <br />
+              Place of supply: {customer.data?.data?.state || company.data?.data?.state || '—'}
             </p>
             <p>
               Vehicle: {vehicle.data?.data?.registration_number || invoice.vehicle_id || '—'} ·{' '}
@@ -242,8 +254,9 @@ export default function InvoiceManager() {
                     </thead>
                     <tbody>
                       {rows.map((item, index) => {
-                        const taxable = Number(item.unit_price) * Number(item.quantity),
-                          tax = Number(item.line_total) - taxable;
+                        const taxable =
+                            item.line_revenue ?? Number(item.unit_price) * Number(item.quantity),
+                          tax = Number(item.line_total) - Number(taxable);
                         return (
                           <tr key={item.id || index}>
                             <td>{item.description}</td>
@@ -280,6 +293,14 @@ export default function InvoiceManager() {
                 Gross profit {money(invoice.gross_profit)} · Net profit {money(invoice.net_profit)}
               </p>
             )}
+            {company.data?.data?.invoiceTerms && (
+              <p className="whitespace-pre-line text-sm">{company.data.data.invoiceTerms}</p>
+            )}
+            <p className="pt-8 text-right">
+              For {company.data?.data?.name || 'GOLDY AUTOMOBILE'}
+              <br />
+              Authorised signatory
+            </p>
             <p>Thank you for your business.</p>
           </article>
         </>

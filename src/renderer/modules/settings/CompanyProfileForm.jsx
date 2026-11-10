@@ -85,7 +85,7 @@ export default function CompanyProfileForm() {
           value={values.state || ''}
           onChange={(event) => set('state', event.target.value)}
         >
-          {(states.data?.data || []).map((state) => (
+          {(Array.isArray(states.data?.data) ? states.data.data : []).map((state) => (
             <option key={state.code} value={state.name}>
               {state.code} · {state.name}
             </option>
