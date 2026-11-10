@@ -276,6 +276,7 @@ export class AccountingPostingEngine {
       const isCashOrBank =
         ledger.system_key === 'cash_in_hand' ||
         ledger.system_key === 'hdfc_bank' ||
+        String(ledger.system_key || '').startsWith('bank_') ||
         ledger.name.toLowerCase().includes('cash') ||
         ledger.name.toLowerCase().includes('bank');
       return { ...entry, isCashOrBank };

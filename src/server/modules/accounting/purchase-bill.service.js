@@ -186,7 +186,9 @@ export class PurchaseBillService {
       // 6. Post double-entry Purchase General Ledger Voucher
       const ledgerEntries = [
         {
-          ledgerId: supplier.ledger_id,
+          ledgerId:
+            supplier.ledger_id ||
+            this.postingEngine.getOrCreateSupplierLedger(companyId, supplierId),
           type: 'CREDIT',
           amount: grandTotal,
           narration: `Accounts Payable: Invoice ${billNumber} from ${supplier.name}`,

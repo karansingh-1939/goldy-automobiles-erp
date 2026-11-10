@@ -1,3 +1,4 @@
+import { MoneyService } from './money.service.js';
 import { Router } from 'express';
 import { createAuthService } from '../auth/auth.routes.js';
 import { authenticate, requirePermission } from '../../shared/middleware/auth-middleware.js';
@@ -292,6 +293,41 @@ export function createAccountingRouter(db) {
       next(err);
     }
   });
+
+  // Plain-language money screens (cash and bank accounts, money in/out, opening balances)
+  const moneyService = new MoneyService(db, { postingEngine });
+  const handle = (status, fn) => (req, res, next) => {
+    try {
+      res.status(status).json({ data: fn(req) });
+    } catch (err) {
+      next(err);
+    }
+  };
+  router.get(
+    '/money-accounts',
+    requirePermission('accounting.read'),
+    handle(200, () => moneyService.listAccounts()),
+  );
+  router.post(
+    '/money-accounts',
+    requirePermission('accounting.write'),
+    handle(201, (req) => moneyService.addBankAccount(req.body, req.user.id)),
+  );
+  router.patch(
+    '/money-accounts/:id',
+    requirePermission('accounting.write'),
+    handle(200, (req) => moneyService.renameBankAccount(req.params.id, req.body, req.user.id)),
+  );
+  router.post(
+    '/money-entries',
+    requirePermission('accounting.write'),
+    handle(201, (req) => moneyService.recordOther(req.body, req.user.id)),
+  );
+  router.post(
+    '/opening-balances',
+    requirePermission('accounting.write'),
+    handle(201, (req) => moneyService.recordOpeningBalances(req.body, req.user.id)),
+  );
 
   // Create a manual voucher (Contra, Receipt, Payment, Journal)
   router.post('/vouchers', requirePermission('accounting.write'), (req, res, next) => {

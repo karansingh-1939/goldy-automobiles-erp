@@ -111,7 +111,10 @@ export class SupplierPaymentService {
         referenceId: null, // Set after insert
         entries: [
           {
-            ledgerId: supplier.ledger_id,
+            // Suppliers with no posted purchase yet have no ledger; create it on first payment.
+            ledgerId:
+              supplier.ledger_id ||
+              this.postingEngine.getOrCreateSupplierLedger(companyId, supplierId),
             type: 'DEBIT',
             amount: payAmount,
             narration: `Payment to supplier: ${supplier.name}`,
