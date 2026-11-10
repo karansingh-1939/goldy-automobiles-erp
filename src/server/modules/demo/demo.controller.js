@@ -29,6 +29,7 @@ const businessTables = [
   'purchase_return_items',
   'supplier_ledgers',
   'technicians',
+  'staff_payments',
   'job_cards',
   'job_card_items',
   'job_card_labour',

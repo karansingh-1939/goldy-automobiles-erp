@@ -63,6 +63,7 @@ export default function Layout() {
     { name: 'Money In / Out', path: '/money', icon: Wallet },
     { name: 'Dues & Daily Cash', path: '/cash-receivables', icon: BookOpen },
     { name: 'Expenses', path: '/expenses', icon: BookOpen },
+    { name: 'Staff & Salary', path: '/staff', icon: Users },
     { name: 'Reports & GST', path: '/reports', icon: FileSpreadsheet },
     { name: 'Settings & Backup', path: '/settings', icon: Settings },
   ];

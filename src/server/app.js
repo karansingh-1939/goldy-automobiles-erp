@@ -26,6 +26,7 @@ import { createWarrantyRouter } from './modules/warranties/warranty.routes.js';
 import { createCrmRouter } from './modules/crm/crm.routes.js';
 import { createWorkshopRouter } from './modules/workshop/workshop.routes.js';
 import { createCompanySettingsRouter } from './modules/settings/company-settings.js';
+import { createStaffPayRouter } from './modules/staff-pay/staff-pay.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/error-handler.js';
 import { localHostGuard } from './shared/middleware/local-host-guard.js';
 
@@ -150,6 +151,7 @@ export function createApp({ db: rawDb = getDatabase(), backupScheduler } = {}) {
   app.use('/api/v1/gst', createGstRouter(db));
   app.use('/api/v1/backups', createBackupRouter(db, backupScheduler));
   app.use('/api/v1/technicians', createTechnicianRouter(db));
+  app.use('/api/v1/staff-pay', createStaffPayRouter(db));
   app.use('/api/v1/audit-logs', createAuditRouter(db));
   app.use('/api/v1', createServiceHistoryRouter(db));
   app.use('/api/v1', createJobCardRouter(db));

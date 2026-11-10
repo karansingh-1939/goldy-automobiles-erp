@@ -25,6 +25,7 @@ import ServiceReminders from './modules/workshop/ServiceReminders.jsx';
 import WorkshopFinance from './modules/accounting/WorkshopFinance.jsx';
 import ExpenseManager from './modules/expenses/ExpenseManager.jsx';
 import MoneyInOut from './modules/accounting/MoneyInOut.jsx';
+import StaffPay from './modules/staff/StaffPay.jsx';
 import TechnicianManager from './modules/workshop/TechnicianManager.jsx';
 import AuditLogManager from './modules/audit/AuditLogManager.jsx';
 import MasterManager from './modules/masters/MasterManager.jsx';
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="/accounting" element={<AccountingPortal />} />
               <Route path="/cash-receivables" element={<WorkshopFinance />} />
               <Route path="/money" element={<MoneyInOut />} />
+              <Route path="/staff" element={<StaffPay />} />
               <Route path="/reports" element={<ReportsManager />} />
               <Route path="/customers" element={<CustomerManager />} />
               <Route path="/vehicles" element={<VehicleManager />} />

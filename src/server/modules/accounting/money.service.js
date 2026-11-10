@@ -29,6 +29,7 @@ const OTHER_PARTIES = {
 const LAZY_LEDGERS = {
   loans_payable: { name: 'Loans', group: NON_CURRENT_LIABILITIES_GROUP, nature: 'Credit' },
   other_income: { name: 'Other Income', group: INDIRECT_INCOME_GROUP, nature: 'Credit' },
+  staff_advances: { name: 'Staff Advances', group: CURRENT_ASSETS_GROUP, nature: 'Debit' },
 };
 
 const roundMoney = (value) => Math.round(Number(value) * 100) / 100;
