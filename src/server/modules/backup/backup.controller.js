@@ -12,6 +12,14 @@ export class BackupController {
     this.backupScheduler = backupScheduler;
   }
 
+  health = (req, res, next) => {
+    try {
+      res.status(200).json({ data: this.backupService.getHealth() });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   manualBackup = async (req, res, next) => {
     try {
       const backupLog = await this.backupService.backupDatabase({

@@ -220,11 +220,24 @@ export class BackupScheduler {
       await this.backupService.backupDatabase({ type: 'AUTO' });
       this.backupService.recordSuccessfulRun(now);
       this.retryNotBefore = 0;
+      this.recordAutoError('');
     } catch (err) {
       this.retryNotBefore = Date.now() + 5 * 60 * 1000;
       console.error('Automated backup scheduled run failed:', err.message);
+      // Keep the failure visible on the Home screen, not only in the console.
+      this.recordAutoError(err.message);
     } finally {
       this.isExecutionLocked = false;
+    }
+  }
+
+  recordAutoError(message) {
+    try {
+      this.backupService.repository?.updateSchedulerSettings?.({
+        'backup.last_auto_error': message,
+      });
+    } catch (error) {
+      console.error('Could not record backup status:', error.message);
     }
   }
 }

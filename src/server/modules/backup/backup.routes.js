@@ -17,6 +17,7 @@ export function createBackupRouter(db, backupScheduler) {
   router.use(requireAuth);
   router.use(requireAdministrator);
 
+  router.get('/health', requirePermission('backups.read'), controller.health);
   router.post('/manual', requirePermission('backups.write'), controller.manualBackup);
   router.post('/:id/verify', requirePermission('backups.read'), controller.verifyBackup);
   router.get('/', requirePermission('backups.read'), controller.list);

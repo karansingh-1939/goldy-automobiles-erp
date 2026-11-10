@@ -185,6 +185,59 @@ export class BackupService {
     }
   }
 
+  /**
+   * Plain summary for the Home screen: is the data safely backed up?
+   * Backups older than two days, a failed latest attempt, or a failing USB
+   * copy produce warnings the owner can act on with "Back up now".
+   */
+  getHealth(now = new Date()) {
+    const settings = this.getSettings();
+    const latest = this.db
+      .prepare(
+        "SELECT status, error_message, created_at FROM backup_logs WHERE type IN ('AUTO', 'MANUAL') ORDER BY id DESC LIMIT 1",
+      )
+      .get();
+    const lastSuccess = this.db
+      .prepare(
+        "SELECT created_at FROM backup_logs WHERE status = 'SUCCESS' AND type IN ('AUTO', 'MANUAL') ORDER BY id DESC LIMIT 1",
+      )
+      .get();
+    const asDate = (value) =>
+      value
+        ? new Date(
+            String(value).replace(' ', 'T') +
+              (String(value).includes('Z') || String(value).includes('+') ? '' : 'Z'),
+          )
+        : null;
+    const lastSuccessAt = asDate(lastSuccess?.created_at);
+    const ageHours = lastSuccessAt ? (now - lastSuccessAt) / 3600000 : null;
+    const warnings = [];
+    if (!lastSuccessAt) warnings.push('No backup has been made yet.');
+    else if (ageHours > 48)
+      warnings.push(`The last backup is ${Math.floor(ageHours / 24)} days old.`);
+    if (latest?.status === 'FAILED')
+      warnings.push(`The last backup failed: ${latest.error_message || 'unknown error'}.`);
+    if (settings['backup.last_auto_error'])
+      warnings.push(`Automatic backup problem: ${settings['backup.last_auto_error']}.`);
+    const externalDirectory = settings['backup.external_directory'] || '';
+    const externalLastSuccess = asDate(settings['backup.external_last_success']);
+    if (externalDirectory) {
+      if (settings['backup.external_last_error'])
+        warnings.push(
+          `Copy to USB/external folder failed: ${settings['backup.external_last_error']}. Check the drive is connected.`,
+        );
+      else if (!externalLastSuccess || (now - externalLastSuccess) / 3600000 > 48)
+        warnings.push('No copy has been saved to the USB/external folder in the last 2 days.');
+    }
+    return {
+      ok: warnings.length === 0,
+      lastSuccessAt: lastSuccessAt?.toISOString() || null,
+      externalConfigured: Boolean(externalDirectory),
+      externalLastSuccessAt: externalLastSuccess?.toISOString() || null,
+      warnings,
+    };
+  }
+
   getSettings() {
     return this.repository.getSchedulerSettings();
   }

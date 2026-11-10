@@ -25,8 +25,11 @@ export async function startServer({ port = env.port } = {}) {
     closeDatabase();
     throw error;
   }
+  const backupService = createBackupService(db);
   return {
     url: `http://127.0.0.1:${server.address().port}`,
+    backupHealth: () => backupService.getHealth(),
+    backupNow: () => backupService.backupDatabase({ type: 'MANUAL' }),
     async close() {
       scheduler.stop();
       await new Promise((resolve, reject) =>

@@ -8,6 +8,7 @@ import { KpiCard } from './components/KpiCard.jsx';
 import { TopCustomersCard } from './components/TopCustomersCard.jsx';
 import { TopServicesCard } from './components/TopServicesCard.jsx';
 import { RecentSalesTable } from './components/RecentSalesTable.jsx';
+import { BackupHealthBanner } from './components/BackupHealthBanner.jsx';
 import { BaseChart } from '../../shared/components/BaseChart.jsx';
 import { AlertTriangle, UserPlus, Car, Database, Truck, Layers, Briefcase } from 'lucide-react';
 
@@ -210,14 +211,10 @@ export default function SalesDashboardContainer() {
       message: `Deliveries: ${pendingDeliveries} open job cards have a promised delivery date.`,
     });
   }
-  alerts.push({
-    id: 'backup',
-    severity: 'low',
-    message: 'System Health: Ensure you trigger manual database backup snapshot exports weekly.',
-  });
 
   return (
     <main className="max-w-7xl mx-auto p-6 space-y-6">
+      <BackupHealthBanner />
       {/* Date Filter Panel */}
       <DateFilterHeader
         date={date}
