@@ -28,7 +28,7 @@ jobs:
           cache: npm
       - name: Install the locked dependencies and verify SQLite runtime
         run: npm ci
-      - name: Check formatting, lint, build and tests
+      - name: Check repository safety, formatting, lint, build and tests
         run: npm run check
       - name: Audit dependencies
         run: npm audit --audit-level=high

@@ -32,6 +32,7 @@ Requirements:
 - Production quality architecture
 - Modular code structure
 - Windows EXE packaging
+- Public repository holds code only: never commit workshop databases, backups, customer documents or secret keys; tests and screenshots use fictional data, and secrets go in .env or app Settings (enforced by `npm run check:safety`)
 
 Core Modules:
 

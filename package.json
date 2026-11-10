@@ -30,7 +30,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint src tests scripts public *.js --max-warnings 0",
-    "check": "npm run format:check && npm run lint && npm test",
+    "check:safety": "node scripts/check-repo-safety.js",
+    "check": "npm run check:safety && npm run format:check && npm run lint && npm test",
     "pack": "npm run build:fe && electron-builder --dir",
     "build:win": "npm run build:fe && electron-builder --win"
   },

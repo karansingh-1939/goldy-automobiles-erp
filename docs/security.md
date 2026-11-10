@@ -79,4 +79,23 @@ Requests whose `Host` header is not `127.0.0.1`, `localhost` or `[::1]` are refu
 2. **Delete Recovery Files**: Ensure that `data/setup/recovery-code.txt` is deleted. The software does this automatically on first login, but double-checking is recommended.
 3. **No Network Dependency**: Since the application is offline-first, all security controls (bcrypt hashing, lockout tracking, recovery verification) run completely locally on your machine.
 4. **Keep the Laptop Account Protected**: The database, backups and logs live in the Windows user's AppData folder. Use a Windows password, keep Windows updated, and copy backups to a USB drive kept in a safe place.
-5. **Keep the Source Repository Private**: The repository contains the business name, address and phone numbers used on printed bills. Keep it private on GitHub; it is not needed for the laptop to run the application.
+5. **The Source Repository Is Public and Holds Code Only**: The business name, address and phone numbers on printed bills are intentionally public. Customer, vehicle, invoice and payment records live only in the laptop's SQLite database and backups, which are never committed.
+
+---
+
+## 7. Repository Safety Rules
+
+`npm run check` (run locally and by GitHub CI) starts with `npm run check:safety`, which fails if git would publish:
+
+- database files (`*.sqlite`, `*.db` and their WAL/SHM/journal files) or the `data/`, `backups/`, `Tax_Invoices/` or `job_cards/` folders;
+- `.env` files (only `.env.example` is allowed) or private key and certificate files;
+- text that matches real secret formats, such as payment-gateway live keys (Razorpay, Stripe), GitHub, AWS, Google, Slack or AI service keys, and private key blocks;
+- any file that `.gitignore` excludes but was force-added.
+
+When adding integrations such as online payments or SMS:
+
+1. Put keys in `.env` or the application's Settings screen, never in source code, tests or documentation.
+2. Use only fictional customers, phone numbers and vehicles in tests, fixtures and screenshots.
+3. If a key is ever committed, revoke it at the provider immediately; deleting the commit is not enough because public history is copied.
+
+Also enable GitHub secret scanning and push protection under the repository's **Settings → Code security**.
