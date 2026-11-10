@@ -22,10 +22,12 @@ import {
   Users,
   Car,
   Truck,
-  ShoppingBag,
-  Award,
-  Undo2,
+  Receipt,
+  Wallet,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -47,27 +49,59 @@ export default function Layout() {
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
 
+  // Everyday screens use plain words for a non-technical owner; specialist
+  // screens stay one click away under "More tools".
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, shortcut: 'F1' },
-    { name: 'Job Cards', path: '/job-cards', icon: Wrench, shortcut: 'F2' },
-    { name: 'Workshop Queue', path: '/workshop', icon: Wrench, shortcut: '' },
-    { name: 'Service Reminders', path: '/reminders', icon: Car, shortcut: '' },
-    { name: 'Sales Orders', path: '/sales-orders', icon: ShoppingBag, shortcut: 'F3' },
-    { name: 'Inventory & Batches', path: '/inventory', icon: Package, shortcut: 'F4' },
-    { name: 'Purchasing', path: '/purchasing', icon: ShoppingCart, shortcut: 'F5' },
-    { name: 'Accounting Ledger', path: '/accounting', icon: BookOpen, shortcut: 'F6' },
-    { name: 'Cash & Receivables', path: '/cash-receivables', icon: BookOpen, shortcut: '' },
-    { name: 'Expenses', path: '/expenses', icon: BookOpen, shortcut: '' },
-    { name: 'Technicians', path: '/technicians', icon: Users, shortcut: '' },
-    { name: 'Audit Logs', path: '/audit-logs', icon: FileSpreadsheet, shortcut: '' },
-    { name: 'GST & Exports', path: '/reports', icon: FileSpreadsheet, shortcut: 'F7' },
-    { name: 'Customers', path: '/customers', icon: Users, shortcut: 'F8' },
-    { name: 'Vehicles Database', path: '/vehicles', icon: Car, shortcut: 'F10' },
-    { name: 'Suppliers', path: '/suppliers', icon: Truck, shortcut: 'F11' },
-    { name: 'Warranties Hub', path: '/warranties', icon: Award, shortcut: 'F12' },
-    { name: 'Returns Logistics', path: '/returns', icon: Undo2, shortcut: '' },
-    { name: 'System Settings', path: '/settings', icon: Settings, shortcut: 'F9' },
+    { name: 'Home', path: '/', icon: LayoutDashboard },
+    { name: 'Job Cards', path: '/job-cards', icon: Wrench },
+    { name: 'Bills', path: '/invoices', icon: Receipt },
+    { name: 'Customers', path: '/customers', icon: Users },
+    { name: 'Vehicles', path: '/vehicles', icon: Car },
+    { name: 'Stock', path: '/inventory', icon: Package },
+    { name: 'Buy Stock', path: '/purchasing', icon: ShoppingCart },
+    { name: 'Suppliers', path: '/suppliers', icon: Truck },
+    { name: 'Payments & Dues', path: '/cash-receivables', icon: Wallet },
+    { name: 'Expenses', path: '/expenses', icon: BookOpen },
+    { name: 'Reports & GST', path: '/reports', icon: FileSpreadsheet },
+    { name: 'Settings & Backup', path: '/settings', icon: Settings },
   ];
+  const moreItems = [
+    { name: 'Workshop Queue', path: '/workshop' },
+    { name: 'Service Reminders', path: '/reminders' },
+    { name: 'Service History', path: '/service-history' },
+    { name: 'Mechanics', path: '/technicians' },
+    { name: 'Accounts (Ledger)', path: '/accounting' },
+    { name: 'Supplier Ledger', path: '/supplier-ledger' },
+    { name: 'Sales Orders', path: '/sales-orders' },
+    { name: 'Returns', path: '/returns' },
+    { name: 'Warranties', path: '/warranties' },
+    { name: 'Stock Count', path: '/stock-verification' },
+    { name: 'Godowns & Masters', path: '/masters' },
+    { name: 'Fixed Assets', path: '/assets' },
+    { name: 'Audit Log', path: '/audit-logs' },
+  ];
+  const [showMore, setShowMore] = useState(() => {
+    try {
+      return localStorage.getItem('goldy_show_more_tools') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleMore = () => {
+    setShowMore((open) => {
+      try {
+        localStorage.setItem('goldy_show_more_tools', open ? '0' : '1');
+      } catch {
+        // Remembering the choice is optional.
+      }
+      return !open;
+    });
+  };
+  const companyProfile = useQuery({
+    queryKey: ['company-profile'],
+    queryFn: () => api.get('/api/v1/settings/company'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Hotkey handlers
   useEffect(() => {
@@ -146,7 +180,7 @@ export default function Layout() {
     }
   }, [showSearch]);
 
-  const filteredNavItems = navItems.filter((item) =>
+  const filteredNavItems = [...navItems, ...moreItems].filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -160,48 +194,54 @@ export default function Layout() {
               GOLDY AUTOMOBILES
             </span>
           </div>
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1" aria-label="Main menu">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (
                 <button
-                  key={item.name}
+                  key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all ${
                     isActive
                       ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-4.5 w-4.5" />
-                    <span>{item.name}</span>
-                  </div>
-                  <kbd className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded shadow-sm">
-                    {item.shortcut}
-                  </kbd>
+                  <Icon className="h-5 w-5" />
+                  <span>{item.name}</span>
                 </button>
               );
             })}
             <div className="border-t border-gray-200 pt-3 mt-3 dark:border-gray-800">
-              <p className="px-4 text-xs font-semibold text-gray-500 mb-2">Workshop tools</p>
-              {[
-                ['Invoices & Billing', '/invoices'],
-                ['Warehouses & Masters', '/masters'],
-                ['Stock Verification', '/stock-verification'],
-                ['Fixed Assets', '/assets'],
-                ['Supplier Ledger', '/supplier-ledger'],
-                ['Service History', '/service-history'],
-              ].map(([name, path]) => (
-                <button
-                  key={path}
-                  onClick={() => navigate(path)}
-                  className="block px-4 py-2 text-sm text-gray-600 hover:text-brand-600 dark:text-gray-400"
-                >
-                  {name}
-                </button>
-              ))}
+              <button
+                onClick={toggleMore}
+                aria-expanded={showMore}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                {showMore ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                More tools
+              </button>
+              {showMore &&
+                moreItems.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    aria-current={location.pathname === item.path ? 'page' : undefined}
+                    className={`block w-full text-left px-4 py-2 pl-10 text-sm rounded-lg ${
+                      location.pathname === item.path
+                        ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
+                        : 'text-gray-600 hover:text-brand-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                ))}
             </div>
           </nav>
         </div>
@@ -246,7 +286,7 @@ export default function Layout() {
               className="flex items-center gap-3 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/30 text-xs w-64 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <Search className="h-3.5 w-3.5" />
-              <span className="flex-1 text-left">Search Workspace...</span>
+              <span className="flex-1 text-left">Find a screen...</span>
               <kbd className="text-[10px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-1 py-0.5 rounded shadow-sm">
                 Ctrl + P
               </kbd>
@@ -255,7 +295,7 @@ export default function Layout() {
 
           <div className="flex items-center gap-4">
             <span className="text-xs font-semibold px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800 rounded-full">
-              Karnal Workshop (Tenant 1)
+              {companyProfile.data?.data?.name || 'GOLDY AUTOMOBILE'}
             </span>
             <button
               onClick={toggleTheme}
@@ -356,10 +396,10 @@ export default function Layout() {
             <div className="max-h-[300px] overflow-y-auto p-2">
               {filteredNavItems.length > 0 ? (
                 filteredNavItems.map((item) => {
-                  const Icon = item.icon;
+                  const Icon = item.icon || ChevronRight;
                   return (
                     <button
-                      key={item.name}
+                      key={item.path}
                       onClick={() => {
                         navigate(item.path);
                         setShowSearch(false);
@@ -371,16 +411,11 @@ export default function Layout() {
                         <Icon className="h-4.5 w-4.5 text-gray-400" />
                         <span className="font-medium">{item.name}</span>
                       </div>
-                      <kbd className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded shadow-sm">
-                        {item.shortcut}
-                      </kbd>
                     </button>
                   );
                 })
               ) : (
-                <div className="p-4 text-center text-xs text-gray-400">
-                  No matching workspace screens found.
-                </div>
+                <div className="p-4 text-center text-xs text-gray-400">No matching screen.</div>
               )}
             </div>
           </div>
