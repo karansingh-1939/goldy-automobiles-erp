@@ -9,8 +9,15 @@ import { TopCustomersCard } from './components/TopCustomersCard.jsx';
 import { TopServicesCard } from './components/TopServicesCard.jsx';
 import { RecentSalesTable } from './components/RecentSalesTable.jsx';
 import { BackupHealthBanner } from './components/BackupHealthBanner.jsx';
-import { BaseChart } from '../../shared/components/BaseChart.jsx';
-import { AlertTriangle, UserPlus, Car, Database, Truck, Layers, Briefcase } from 'lucide-react';
+import {
+  AlertTriangle,
+  UserPlus,
+  Database,
+  Wrench,
+  Wallet,
+  ShoppingCart,
+  Package,
+} from 'lucide-react';
 
 const inrFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -132,12 +139,10 @@ export default function SalesDashboardContainer() {
   // Bind Metrics with null-safeties
   const todayRevenue = financialData?.today?.revenue || 0;
   const monthlyRevenue = financialData?.thisMonth?.revenue || 0;
-  const grossProfit = financialData?.thisMonth?.grossProfit || 0;
   const netProfit = financialData?.thisMonth?.netProfit || 0;
   const outstandingAmount = financialData?.outstandingAmount || 0;
 
   const openJobCards = operationsData?.openJobCards || 0;
-  const completedJobCards = operationsData?.completedJobCards || 0;
   const pendingDeliveries = operationsData?.pendingDeliveriesCount || 0;
 
   const lowStockCount = inventoryData?.lowStockCount || 0;
@@ -145,77 +150,48 @@ export default function SalesDashboardContainer() {
 
   const overallLoading = salesLoading || opsLoading || finLoading || invLoading;
 
-  // Chart 1: Revenue Line Chart
-  const revenueChartData = {
-    labels: [`${date.slice(0, 7)} through ${date}`],
-    datasets: [
-      {
-        label: 'Monthly Revenue (₹)',
-        data: [monthlyRevenue],
-        borderColor: '#0284c7',
-        backgroundColor: 'rgba(2, 132, 199, 0.05)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  };
-
-  // Chart 2: Job Status Doughnut
-  const jobStatusChartData = {
-    labels: ['Other open cards', 'Completed', 'Open with delivery promise'],
-    datasets: [
-      {
-        data: [Math.max(0, openJobCards - pendingDeliveries), completedJobCards, pendingDeliveries],
-        backgroundColor: ['#f59e0b', '#10b981', '#3b82f6'],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // Chart 3: Warehouse Stock value Bar
-  const warehouseLabels =
-    inventoryData?.warehouseSummary?.map((w) => w.warehouseCode || w.warehouseName) || [];
-  const warehouseValues = inventoryData?.warehouseSummary?.map((w) => w.totalValue) || [];
-  const stockValueChartData = {
-    labels: warehouseLabels,
-    datasets: [
-      {
-        label: 'Warehouse stock (₹)',
-        data: warehouseValues,
-        backgroundColor: '#6366f1',
-        borderRadius: 6,
-      },
-    ],
-  };
-
-  // Operational Alerts list builder
+  // Plain-language list of things the owner should act on.
   const alerts = [];
   if (lowStockCount > 0) {
     alerts.push({
       id: 'low-stock',
       severity: 'high',
-      message: `Critical Stock: ${lowStockCount} inventory items have fallen below minimum reorder levels.`,
+      message: `${lowStockCount} ${lowStockCount === 1 ? 'item is' : 'items are'} running low. Time to reorder.`,
+      href: '#/inventory',
+      action: 'See stock',
     });
   }
   if (outstandingAmount > 100000) {
     alerts.push({
       id: 'receivables',
       severity: 'medium',
-      message: `Outstanding Receivables total exceeds limit at ${inrFormatter.format(outstandingAmount)}.`,
+      message: `Customers owe you ${inrFormatter.format(outstandingAmount)} in total.`,
+      href: '#/cash-receivables',
+      action: 'See dues',
     });
   }
   if (pendingDeliveries > 0) {
     alerts.push({
       id: 'deliveries',
       severity: 'low',
-      message: `Deliveries: ${pendingDeliveries} open job cards have a promised delivery date.`,
+      message: `${pendingDeliveries} ${pendingDeliveries === 1 ? 'car has' : 'cars have'} a promised delivery date.`,
+      href: '#/workshop',
+      action: 'See cars',
     });
   }
+
+  const shortcuts = [
+    ['#/job-cards', Wrench, 'New job card'],
+    ['#/money', Wallet, 'Money in / out'],
+    ['#/customers', UserPlus, 'Add customer'],
+    ['#/purchasing', ShoppingCart, 'Buy stock'],
+    ['#/inventory', Package, 'Stock list'],
+    ['#/settings', Database, 'Back up data'],
+  ];
 
   return (
     <main className="max-w-7xl mx-auto p-6 space-y-6">
       <BackupHealthBanner />
-      {/* Date Filter Panel */}
       <DateFilterHeader
         date={date}
         onDateChange={setDate}
@@ -223,179 +199,106 @@ export default function SalesDashboardContainer() {
         isLoading={overallLoading}
       />
 
-      {/* Quick Actions Panel */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          Quick Shortcuts
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <a
-            href="#/customers"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <UserPlus className="h-6 w-6 text-brand-600 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Add Customer</span>
-          </a>
-          <a
-            href="#/vehicles"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <Car className="h-6 w-6 text-indigo-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-              Register Vehicle
-            </span>
-          </a>
-          <a
-            href="#/job-cards"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <Briefcase className="h-6 w-6 text-amber-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-              Create Job Card
-            </span>
-          </a>
-          <a
-            href="#/suppliers"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <Truck className="h-6 w-6 text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">New Supplier</span>
-          </a>
-          <a
-            href="#/inventory"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <Layers className="h-6 w-6 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-              Stock Catalog
-            </span>
-          </a>
-          <a
-            href="#/settings"
-            className="flex flex-col items-center justify-center p-4 border border-gray-150 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors group"
-          >
-            <Database className="h-6 w-6 text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Backup DB</span>
-          </a>
+      <section
+        aria-labelledby="shortcuts-title"
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm"
+      >
+        <h2
+          id="shortcuts-title"
+          className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3"
+        >
+          Start something
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {shortcuts.map(([href, Icon, label]) => (
+            <a
+              key={href}
+              href={href}
+              className="flex flex-col items-center justify-center gap-2 p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-brand-50 hover:border-brand-300 dark:hover:bg-gray-800 transition-colors focus-ring"
+            >
+              <Icon className="h-6 w-6 text-brand-600 dark:text-brand-400" aria-hidden="true" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                {label}
+              </span>
+            </a>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* 12-KPI Executive Overview Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
-          title="Today's Revenue"
+          title="Sales today"
           value={inrFormatter.format(todayRevenue)}
           isLoading={overallLoading}
         />
         <KpiCard
-          title="Monthly Revenue"
+          title="Sales this month"
           value={inrFormatter.format(monthlyRevenue)}
           isLoading={overallLoading}
         />
         <KpiCard
-          title="Monthly Gross Profit"
-          value={inrFormatter.format(grossProfit)}
-          isLoading={overallLoading}
-        />
-        <KpiCard
-          title="Monthly Net Profit"
+          title="Profit this month (after expenses)"
           value={inrFormatter.format(netProfit)}
           isLoading={overallLoading}
         />
         <KpiCard
-          title="Receivables"
+          title="Customers owe you"
           value={inrFormatter.format(outstandingAmount)}
           isLoading={overallLoading}
         />
-        <KpiCard title="Active Job Cards" value={openJobCards} isLoading={overallLoading} />
-        <KpiCard title="Completed Job Cards" value={completedJobCards} isLoading={overallLoading} />
-        <KpiCard title="Low Stock Items" value={lowStockCount} isLoading={overallLoading} />
+        <KpiCard title="Cars in the workshop" value={openJobCards} isLoading={overallLoading} />
         <KpiCard
-          title="Inventory Value"
+          title="Stock value"
           value={inrFormatter.format(totalValuation)}
           isLoading={overallLoading}
         />
-        <KpiCard
-          title="Open with Delivery Promise"
-          value={pendingDeliveries}
-          isLoading={overallLoading}
-        />
       </div>
 
-      {/* Operational Alerts & Dashboard Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Side: Alerts Panel */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between h-full min-h-[300px]">
-          <div>
-            <div className="flex items-center gap-2 border-b border-gray-150 dark:border-gray-800 pb-3 mb-4">
-              <AlertTriangle className="h-5 w-5 text-amber-500 animate-pulse" />
-              <h3 className="font-bold text-gray-900 dark:text-white">Operational Alerts</h3>
-            </div>
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`p-3 rounded-lg border text-xs font-medium flex items-start gap-2.5 ${
+      <section
+        aria-labelledby="attention-title"
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm"
+      >
+        <h2
+          id="attention-title"
+          className="flex items-center gap-2 text-base font-semibold text-gray-800 dark:text-gray-200 mb-3"
+        >
+          <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+          Needs attention
+        </h2>
+        {alerts.length ? (
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+            {alerts.map((alert) => (
+              <li key={alert.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span
+                  className={`text-base ${
                     alert.severity === 'high'
-                      ? 'bg-red-50/50 border-red-200 text-red-750 dark:bg-red-950/20 dark:border-red-900/60'
-                      : alert.severity === 'medium'
-                        ? 'bg-amber-50/50 border-amber-250 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/60'
-                        : 'bg-blue-50/50 border-blue-200 text-blue-750 dark:bg-blue-950/20 dark:border-blue-900/60'
+                      ? 'text-red-700 dark:text-red-300'
+                      : 'text-gray-800 dark:text-gray-200'
                   }`}
                 >
-                  <span className="mt-0.5">•</span>
-                  <span>{alert.message}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="text-[10px] text-gray-400 mt-4 border-t border-gray-150 dark:border-gray-800 pt-2.5">
-            Operational alerts trigger automatically on active threshold violations.
-          </div>
-        </div>
+                  {alert.message}
+                </span>
+                <a
+                  href={alert.href}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                >
+                  {alert.action}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-base text-gray-600 dark:text-gray-400">
+            Nothing needs attention right now.
+          </p>
+        )}
+      </section>
 
-        {/* Middle: Revenue Line chart */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm h-[320px]">
-          <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-4 uppercase">
-            Revenue This Month
-          </h4>
-          <div className="h-[230px]">
-            <BaseChart type="bar" data={revenueChartData} />
-          </div>
-        </div>
-
-        {/* Right: Job status Doughnut chart */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm h-[320px]">
-          <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-4 uppercase">
-            Workshop Job Distribution
-          </h4>
-          <div className="h-[230px]">
-            <BaseChart type="doughnut" data={jobStatusChartData} />
-          </div>
-        </div>
-      </div>
-
-      {/* Row 4: Warehouse stock value chart */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm h-[340px]">
-        <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-4 uppercase">
-          Warehouse Inventory Valuations
-        </h4>
-        <div className="h-[250px]">
-          {warehouseLabels.length ? (
-            <BaseChart type="bar" data={stockValueChartData} />
-          ) : (
-            <p className="text-sm text-gray-500">No warehouse inventory data.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Row 5: Top customers & services */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopCustomersCard customers={data.topCustomers} isLoading={overallLoading} />
         <TopServicesCard services={data.topServices} isLoading={overallLoading} />
       </div>
 
-      {/* Row 6: Recent sales Table list */}
       <RecentSalesTable sales={data.recentSales} isLoading={overallLoading} />
     </main>
   );

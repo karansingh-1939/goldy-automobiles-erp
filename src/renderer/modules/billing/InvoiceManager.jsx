@@ -7,6 +7,25 @@ import { api } from '../../shared/api/api-client.js';
 import { usePermissions } from '../../shared/hooks/use-permissions.js';
 import ServerPagination from '../../shared/components/ServerPagination.jsx';
 const money = (n) => `₹${Number(n || 0).toFixed(2)}`;
+// What the owner needs from a bill at a glance: is it paid?
+function billState(row) {
+  if (row.status === 'CANCELLED')
+    return {
+      label: 'Cancelled',
+      style: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    };
+  if (row.payment_status === 'PAID')
+    return {
+      label: 'Paid',
+      style: 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300',
+    };
+  if (row.payment_status === 'PARTIAL')
+    return {
+      label: 'Part paid',
+      style: 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300',
+    };
+  return { label: 'Unpaid', style: 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-300' };
+}
 export default function InvoiceManager() {
   const [params] = useSearchParams();
   const [search, setSearch] = useState(''),
@@ -71,16 +90,21 @@ export default function InvoiceManager() {
   return (
     <div className="p-6 space-y-5">
       <style>{`@media print { body * { visibility:hidden; } #invoice-print, #invoice-print * { visibility:visible; } #invoice-print {position:absolute;left:0;top:0;width:100%;background:white;color:black;} #invoice-print .internal-profit{display:none;} }`}</style>
-      <h1 className="text-2xl font-bold">Invoice Register</h1>
+      <header>
+        <h1 className="text-2xl font-bold">Bills</h1>
+        <p className="text-base text-gray-600 dark:text-gray-400">
+          Every bill made. Open one to print it or see what was charged.
+        </p>
+      </header>
       <input
         aria-label="Search invoices"
-        placeholder="Search invoice number"
+        placeholder="Search by bill number, customer or car number"
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
           setPage(1);
         }}
-        className="rounded border p-2"
+        className="w-full max-w-md rounded-lg border p-2.5 text-base dark:bg-gray-800"
       />
       {list.isLoading && <p role="status">Loading invoices...</p>}
       {list.error && (
@@ -89,10 +113,10 @@ export default function InvoiceManager() {
         </p>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left text-base">
           <thead>
-            <tr>
-              {['Invoice', 'Date', 'Customer', 'Vehicle', 'Total', 'Status', 'Action'].map((t) => (
+            <tr className="text-sm text-gray-600 dark:text-gray-400">
+              {['Bill no.', 'Date', 'Customer', 'Car', 'Total', 'Payment', ''].map((t) => (
                 <th className="p-2" key={t}>
                   {t}
                 </th>
@@ -109,10 +133,16 @@ export default function InvoiceManager() {
                   {row.registration_number || (row.vehicle_id ? `Vehicle #${row.vehicle_id}` : '—')}
                 </td>
                 <td>{money(row.grand_total)}</td>
-                <td>{row.status}</td>
+                <td>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-sm font-medium ${billState(row).style}`}
+                  >
+                    {billState(row).label}
+                  </span>
+                </td>
                 <td>
                   <button
-                    className="underline"
+                    className="rounded-lg border px-3 py-1 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
                     aria-label={`View ${row.invoice_number}`}
                     onClick={() => {
                       setId(row.id);
@@ -120,7 +150,7 @@ export default function InvoiceManager() {
                       cancel.reset();
                     }}
                   >
-                    View invoice
+                    Open
                   </button>
                 </td>
               </tr>

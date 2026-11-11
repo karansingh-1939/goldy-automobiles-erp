@@ -247,7 +247,7 @@ describe('Sales Dashboard Frontend Test Suite', () => {
       });
 
       // Verify all subsections are mounted
-      assert.ok(screen.getByText('Sales Dashboard'));
+      assert.ok(screen.getByText('Today at the workshop'));
       assert.ok(screen.getByText('Top Customers (by Value)'));
       assert.ok(screen.getByText('Top Services Performed'));
       assert.ok(screen.getByText('Recent Sales Activity'));

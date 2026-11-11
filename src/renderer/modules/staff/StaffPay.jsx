@@ -6,6 +6,15 @@ import { localDate } from '../../../../public/local-date.js';
 
 const input =
   'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-base dark:border-gray-700 dark:bg-gray-800';
+const monthName = (month) => {
+  const [year, monthNumber] = String(month).split('-').map(Number);
+  return year && monthNumber
+    ? new Date(year, monthNumber - 1, 1).toLocaleDateString('en-IN', {
+        month: 'long',
+        year: 'numeric',
+      })
+    : month;
+};
 const rupees = (value) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value || 0));
 
@@ -53,7 +62,7 @@ function PayForm({ staff, kind, accounts, month, onDone }) {
       }}
     >
       <label className="text-sm font-medium">
-        {kind === 'SALARY' ? `Salary for ${month} (₹)` : 'Advance amount (₹)'}
+        {kind === 'SALARY' ? `Salary for ${monthName(month)} (₹)` : 'Advance amount (₹)'}
         <input
           className={input}
           type="number"
@@ -214,8 +223,8 @@ export default function StaffPay() {
               <h2 className="text-lg font-semibold">{person.name}</h2>
               <p className="text-sm text-gray-500">
                 {person.salaryPaid
-                  ? `Salary for ${month} paid (${rupees(person.paidThisMonth)})`
-                  : `Salary for ${month} not paid yet`}
+                  ? `Salary for ${monthName(month)} paid (${rupees(person.paidThisMonth)})`
+                  : `Salary for ${monthName(month)} not paid yet`}
                 {person.advanceDue > 0 ? ` · Advance due ${rupees(person.advanceDue)}` : ''}
               </p>
             </div>

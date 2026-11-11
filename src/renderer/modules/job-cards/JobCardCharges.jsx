@@ -5,14 +5,22 @@ export default function JobCardCharges({ job, onRemove, removing }) {
     labour = job.labour || [];
   const canRemove = job.status === 'DRAFT' && typeof onRemove === 'function';
   const sections = [
-    ['Parts Consumption', 'parts', parts.filter((p) => p.item_type !== 'LUBRICANT')],
+    ['Parts', 'parts', parts.filter((p) => p.item_type !== 'LUBRICANT')],
     ['Lubricants', 'parts', parts.filter((p) => p.item_type === 'LUBRICANT')],
     ['Outside Jobs', 'labour', labour.filter((p) => /^\[Outside Job\]/i.test(p.description))],
-    ['Labour (In-House)', 'labour', labour.filter((p) => !/^\[Outside Job\]/i.test(p.description))],
+    ['Labour', 'labour', labour.filter((p) => !/^\[Outside Job\]/i.test(p.description))],
   ];
+  // Only show sections that have lines; four empty tables were noise.
+  const filled = sections.filter(([, , rows]) => rows.length);
+  if (!filled.length)
+    return (
+      <p className="rounded-lg border border-dashed border-gray-300 p-4 text-base text-gray-600 dark:border-gray-700 dark:text-gray-400">
+        No parts or labour added yet. Use “+ Add part” or “+ Add labour”.
+      </p>
+    );
   return (
     <div className="space-y-4">
-      {sections.map(([title, kind, rows]) => (
+      {filled.map(([title, kind, rows]) => (
         <section key={title}>
           <h3 className="font-semibold">{title}</h3>
           <div className="overflow-x-auto">
@@ -65,7 +73,6 @@ export default function JobCardCharges({ job, onRemove, removing }) {
                 })}
               </tbody>
             </table>
-            {!rows.length && <p className="p-2 text-sm text-gray-500">No charges recorded.</p>}
           </div>
         </section>
       ))}

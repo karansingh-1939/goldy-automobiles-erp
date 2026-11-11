@@ -38,8 +38,29 @@
     --brand-900: 210 40% 98%;
   }
 
+  /* The owner reads this on a laptop at arm's length: scale every rem-based size
+     (text, spacing, controls) up one step. Printed bills keep the normal size. */
+  html {
+    font-size: 112.5%;
+  }
+  @media print {
+    html {
+      font-size: 100%;
+    }
+  }
+
   body {
     @apply font-sans antialiased bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200;
+  }
+
+  /* Amounts and dates line up in columns. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: hsl(var(--brand-200));
+    color: hsl(var(--brand-900));
   }
 }
 

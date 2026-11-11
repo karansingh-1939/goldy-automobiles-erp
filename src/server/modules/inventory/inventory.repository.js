@@ -417,7 +417,10 @@ export class InventoryRepository {
       SELECT id, sku, item_name, current_quantity, reorder_level, unit_of_measure
       FROM inventory_items
       WHERE is_active = 1
+        AND reorder_level > 0
         AND current_quantity <= reorder_level
+        -- An item never bought (e.g. the starter catalogue) is not "running low".
+        AND EXISTS (SELECT 1 FROM inventory_batches b WHERE b.item_id = inventory_items.id)
       ORDER BY item_name
     `,
       )

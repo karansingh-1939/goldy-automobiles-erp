@@ -196,7 +196,7 @@ export default function Layout() {
               GOLDY AUTOMOBILES
             </span>
           </div>
-          <nav className="p-4 space-y-1" aria-label="Main menu">
+          <nav className="px-3 py-2 space-y-0.5" aria-label="Main menu">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -205,7 +205,7 @@ export default function Layout() {
                   key={item.path}
                   onClick={() => navigate(item.path)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-base font-medium transition-all ${
                     isActive
                       ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'

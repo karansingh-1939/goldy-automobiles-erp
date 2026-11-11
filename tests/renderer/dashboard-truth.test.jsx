@@ -1,6 +1,6 @@
 import React from 'react';
 import { expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SalesDashboardContainer from '../../src/renderer/modules/dashboard/SalesDashboardContainer.jsx';
 
@@ -43,32 +43,27 @@ function stubDashboard(financialError = false, operations = {}) {
   );
 }
 
-it('shows actual zero metrics and never substitutes invented chart history or jobs', async () => {
+it('shows actual zero metrics in plain words and no decorative charts', async () => {
   stubDashboard();
   show();
-  await waitFor(() => expect(screen.queryAllByLabelText('Chart data').length).toBeGreaterThan(0));
-  const charts = screen.getAllByLabelText('Chart data').map((node) => JSON.parse(node.textContent));
-  expect(charts.flatMap((chart) => chart.datasets.flatMap((dataset) => dataset.data))).toEqual([
-    0, 0, 0, 0,
-  ]);
-  expect(screen.getByText('No warehouse inventory data.')).toBeTruthy();
-  expect(screen.getByText('Active Job Cards').parentElement.textContent).toContain('0');
+  expect((await screen.findByText('Cars in the workshop')).parentElement.textContent).toContain(
+    '0',
+  );
+  expect(screen.getByText('Sales today').parentElement.textContent).toContain('₹0');
+  expect(screen.queryAllByLabelText('Chart data')).toHaveLength(0);
+  expect(screen.getByText('Nothing needs attention right now.')).toBeTruthy();
 });
 
-it('does not count open cards with a delivery promise twice in the distribution chart', async () => {
+it('lists promised deliveries in plain words under Needs attention', async () => {
   stubDashboard(false, { openJobCards: 5, completedJobCards: 2, pendingDeliveriesCount: 3 });
   show();
-  await screen.findByText('Deliveries: 3 open job cards have a promised delivery date.');
-  const chart = screen
-    .getAllByLabelText('Chart data')
-    .map((node) => JSON.parse(node.textContent))
-    .find((data) => data.labels.includes('Open with delivery promise'));
-  expect(chart.datasets[0].data).toEqual([2, 2, 3]);
+  expect(await screen.findByText('3 cars have a promised delivery date.')).toBeTruthy();
+  expect(screen.getByText('Cars in the workshop').parentElement.textContent).toContain('5');
 });
 
 it('reports unavailable financial data instead of presenting it as zero revenue', async () => {
   stubDashboard(true);
   show();
   expect(await screen.findByText('Financial data unavailable')).toBeTruthy();
-  expect(screen.queryByText("Today's Revenue")).toBeNull();
+  expect(screen.queryByText('Sales today')).toBeNull();
 });

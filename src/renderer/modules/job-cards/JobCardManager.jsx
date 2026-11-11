@@ -12,6 +12,20 @@ import ServerPagination from '../../shared/components/ServerPagination.jsx';
 import { formatLocalTimestamp } from '../../shared/utils/date-time.js';
 import { Search, Plus, X, CheckCircle } from 'lucide-react';
 
+// Plain words for job card states.
+const STATUS_LABEL = {
+  DRAFT: 'Open',
+  IN_PROGRESS: 'Working',
+  COMPLETED: 'Billed',
+  CANCELLED: 'Cancelled',
+};
+const STATUS_STYLE = {
+  DRAFT: 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300',
+  IN_PROGRESS: 'bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300',
+  COMPLETED: 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300',
+  CANCELLED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+};
+
 export default function JobCardManager() {
   const queryClient = useQueryClient();
   const addNotification = useAppStore((state) => state.addNotification);
@@ -180,12 +194,12 @@ export default function JobCardManager() {
       api.post(`/api/v1/job-cards/${selectedJcId}/labour`, labourPayload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-card-detail', selectedJcId] });
-      addNotification('Labor description logged.', 'success');
+      addNotification('Labour added.', 'success');
       setShowLabourModal(false);
       setLabourDesc('');
       setLabourCost('');
     },
-    onError: (err) => addNotification(err.message || 'Failed to add labor charge.', 'error'),
+    onError: (err) => addNotification(err.message || 'Could not add labour.', 'error'),
   });
 
   const moneyAccounts = useQuery({
@@ -352,10 +366,10 @@ export default function JobCardManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Job Cards & Workshop Invoicing
+            Job Cards
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Track active repair jobs, log materials, and draft tax invoices.
+            Open a job card for each car, add parts and labour, then make the bill.
           </p>
         </div>
         <button
@@ -384,7 +398,7 @@ export default function JobCardManager() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search by job number, registration..."
+              placeholder="Search by car number or job number"
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
             />
           </div>
@@ -400,7 +414,9 @@ export default function JobCardManager() {
                 </button>
               </div>
             ) : jobCards.length === 0 ? (
-              <div className="p-12 text-center text-sm text-gray-500">No workshop jobs open.</div>
+              <div className="p-12 text-center text-sm text-gray-500">
+                No open jobs. Press “Create Job Card” to start.
+              </div>
             ) : (
               jobCards.map((jc) => {
                 const isSelected = selectedJcId === jc.id;
@@ -420,24 +436,24 @@ export default function JobCardManager() {
                       isSelected ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                        {jc.job_card_number}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-base tracking-wide text-gray-900 dark:text-white">
+                        {jc.registration_number}
                       </span>
                       <span
-                        className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          jc.status === 'FINALIZED'
-                            ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400'
-                            : 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
+                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          STATUS_STYLE[jc.status] || STATUS_STYLE.DRAFT
                         }`}
                       >
-                        {jc.status}
+                        {STATUS_LABEL[jc.status] || jc.status}
                       </span>
                     </div>
-                    <p className="font-mono font-bold text-sm text-gray-900 dark:text-white mt-1">
-                      {jc.registration_number}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
+                      {jc.complaint}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{jc.complaint}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                      {jc.job_card_number}
+                    </p>
                   </div>
                 );
               })
@@ -455,7 +471,7 @@ export default function JobCardManager() {
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm min-h-[400px]">
           {!selectedJcId ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-400">
-              Select a job card from the list to inspect material logs and invoices.
+              Choose a car from the list to see its job card.
             </div>
           ) : detailError ? (
             <div role="alert" className="p-6 text-sm text-red-600">
@@ -489,7 +505,7 @@ export default function JobCardManager() {
                     className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm transition-colors"
                   >
                     <CheckCircle className="h-4 w-4" />
-                    Post & Finalize Invoice
+                    Make bill
                   </button>
                 )}
               </div>
@@ -584,14 +600,14 @@ export default function JobCardManager() {
                       className="rounded border px-3 py-2"
                       onClick={() => setShowPartModal(true)}
                     >
-                      + Add Spare Part
+                      + Add part
                     </button>
                     <button
                       disabled={!canWrite}
                       className="rounded border px-3 py-2"
                       onClick={() => setShowLabourModal(true)}
                     >
-                      + Add Labor Charge
+                      + Add labour
                     </button>
                   </>
                 )}
@@ -884,9 +900,7 @@ export default function JobCardManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 className="text-base font-bold text-gray-950 dark:text-white">
-                Add Labor Charge
-              </h3>
+              <h3 className="text-base font-bold text-gray-950 dark:text-white">Add labour</h3>
               <button
                 onClick={() => setShowLabourModal(false)}
                 className="p-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"
@@ -917,7 +931,7 @@ export default function JobCardManager() {
                   htmlFor="modal-labour-cost"
                   className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
                 >
-                  Labor Charge (₹) *
+                  Labour charge (₹) *
                 </label>
                 <input
                   id="modal-labour-cost"
@@ -966,7 +980,7 @@ export default function JobCardManager() {
                   disabled={!canWrite || addLabourMutation.isPending}
                   className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
-                  Add Labor
+                  Add labour
                 </button>
               </div>
             </form>

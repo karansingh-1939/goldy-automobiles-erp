@@ -232,7 +232,7 @@ it('reports failed job-card finalization so staff can correct the problem', asyn
   vi.spyOn(api, 'post').mockRejectedValue(new Error('Credit limit exceeded'));
   show(JobCardManager);
   fireEvent.click(await screen.findByText('JC-FAIL'));
-  fireEvent.click(await screen.findByText('Post & Finalize Invoice'));
+  fireEvent.click(await screen.findByText('Make bill'));
   expect(api.post).not.toHaveBeenCalled();
   fireEvent.click(await screen.findByText('Confirm & post invoice'));
   await waitFor(() =>
@@ -275,7 +275,7 @@ it('records a cash payment chosen while billing a job card', async () => {
   );
   show(JobCardManager);
   fireEvent.click(await screen.findByText('JC-PAY'));
-  fireEvent.click(await screen.findByText('Post & Finalize Invoice'));
+  fireEvent.click(await screen.findByText('Make bill'));
   fireEvent.change(await screen.findByLabelText('Payment'), { target: { value: 'CASH' } });
   fireEvent.click(screen.getByText('Confirm & post invoice'));
   await waitFor(() =>

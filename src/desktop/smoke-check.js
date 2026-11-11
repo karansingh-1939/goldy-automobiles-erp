@@ -91,7 +91,7 @@ export async function runDesktopSmoke(window, backend, failures) {
   );
   await execute(fill, 'password-input', password);
   await execute(click, 'Sign In');
-  await until('authenticated dashboard', hasText, 'Quick Shortcuts');
+  await until('authenticated dashboard', hasText, 'Start something');
   console.log('SMOKE PASS: administrator setup, recovery and login');
 
   const { getDatabase } = await import('../server/database/connection.js');
@@ -215,7 +215,7 @@ export async function runDesktopSmoke(window, backend, failures) {
     await execute(() => {
       location.hash = '/';
     });
-    await until('dashboard screenshot', hasText, 'Quick Shortcuts');
+    await until('dashboard screenshot', hasText, 'Start something');
     await until(
       'loaded dashboard',
       () => !document.querySelector('div.animate-pulse[aria-hidden="true"]'),
@@ -223,7 +223,7 @@ export async function runDesktopSmoke(window, backend, failures) {
     await execute(() => document.querySelector('button[aria-label="Refresh data"]').click());
     await until('refreshed inventory value', () => {
       const label = [...document.querySelectorAll('span')].find(
-        (element) => element.textContent === 'Inventory Value',
+        (element) => element.textContent === 'Stock value',
       );
       return label?.parentElement.textContent.includes('1,000');
     });
@@ -307,7 +307,7 @@ export async function runDesktopSmoke(window, backend, failures) {
   });
   await until('automatic dashboard inventory refresh', () => {
     const label = [...document.querySelectorAll('span')].find(
-      (node) => node.textContent === 'Inventory Value',
+      (node) => node.textContent === 'Stock value',
     );
     return label?.parentElement.textContent.includes('1,200');
   });
@@ -338,7 +338,7 @@ export async function runDesktopSmoke(window, backend, failures) {
     ['/assets', 'Fixed assets'],
     ['/masters', 'Reference masters'],
     ['/purchasing', 'Procurement & Purchasing'],
-    ['/invoices', 'Invoice Register'],
+    ['/invoices', 'Bills'],
     ['/supplier-ledger', 'Supplier ledger'],
     ['/service-history', 'Vehicle Service History'],
     ['/expenses', 'Workshop expenses'],

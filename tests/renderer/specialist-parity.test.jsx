@@ -43,8 +43,9 @@ it('renders real labour fields and all four job charge sections', () => {
     />,
   );
   expect(screen.getByText('₹590.00')).toBeTruthy();
-  for (const name of ['Parts Consumption', 'Lubricants', 'Outside Jobs', 'Labour (In-House)'])
-    expect(screen.getByText(name)).toBeTruthy();
+  // Only sections with lines are shown.
+  for (const name of ['Lubricants', 'Outside Jobs']) expect(screen.getByText(name)).toBeTruthy();
+  for (const name of ['Parts', 'Labour']) expect(screen.queryByText(name)).toBeNull();
 });
 it('searches invoices, renders detail and confirms cancellation explicitly', async () => {
   vi.spyOn(api, 'get').mockImplementation(async (url) => ({
@@ -124,7 +125,7 @@ it('posts selected batch and outside labour charge using the backend contract', 
   const post = vi.spyOn(api, 'post').mockResolvedValue({ data: {} });
   show(<JobCardManager />);
   fireEvent.click(await screen.findByText('JC-1'));
-  fireEvent.click(await screen.findByRole('button', { name: '+ Add Spare Part' }));
+  fireEvent.click(await screen.findByRole('button', { name: '+ Add part' }));
   await screen.findByRole('option', { name: /Oil/ });
   fireEvent.change(screen.getByLabelText('Select Part *'), { target: { value: '3' } });
   await screen.findByRole('option', { name: /B-8/ });
@@ -140,11 +141,11 @@ it('posts selected batch and outside labour charge using the backend contract', 
     }),
   );
   await waitFor(() => expect(screen.queryByLabelText('Select Part *')).toBeNull());
-  fireEvent.click(screen.getByRole('button', { name: '+ Add Labor Charge' }));
+  fireEvent.click(screen.getByRole('button', { name: '+ Add labour' }));
   fireEvent.change(screen.getByLabelText('Description *'), { target: { value: 'Alignment' } });
-  fireEvent.change(screen.getByLabelText('Labor Charge (₹) *'), { target: { value: '500' } });
+  fireEvent.change(screen.getByLabelText('Labour charge (₹) *'), { target: { value: '500' } });
   fireEvent.click(screen.getByLabelText('Outside job'));
-  fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add labour' }));
   await waitFor(() =>
     expect(post).toHaveBeenCalledWith('/api/v1/job-cards/1/labour', {
       description: '[Outside Job] Alignment',
