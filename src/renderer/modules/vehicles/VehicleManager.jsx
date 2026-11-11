@@ -170,7 +170,7 @@ export default function VehicleManager() {
   const columns = [
     {
       accessorKey: 'registration_number',
-      header: 'Registration No.',
+      header: 'Car number',
       cell: (info) => (
         <span className="font-mono font-bold text-gray-900 dark:text-white">{info.getValue()}</span>
       ),
@@ -198,7 +198,7 @@ export default function VehicleManager() {
     },
     {
       accessorKey: 'customer_name',
-      header: 'Owner Account',
+      header: 'Owner',
       cell: (info) => (
         <span className="text-brand-650 dark:text-brand-400 font-semibold">
           {info.getValue() || `ID: ${info.row.original.customer_id}`}
@@ -240,10 +240,10 @@ export default function VehicleManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Vehicle Database
+            Vehicles
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Complete fleet management, lookup search, and owner assignments.
+            Every car with its owner and last odometer reading.
           </p>
         </div>
         <button
@@ -336,7 +336,7 @@ export default function VehicleManager() {
                     htmlFor="vehicle-owner-select"
                     className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
                   >
-                    Owner Account *
+                    Owner *
                   </label>
                   <RemoteSelect
                     id="vehicle-owner-select"

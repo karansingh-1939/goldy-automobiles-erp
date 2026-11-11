@@ -11,7 +11,7 @@ export default function PurchasingManager() {
   const { hasPermission } = usePermissions();
   const [creating, setCreating] = useState(false);
   const [receiptId, setReceiptId] = useState(null);
-  const [activeTab, setActiveTab] = useState('orders');
+  const [activeTab, setActiveTab] = useState('receipts');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -58,17 +58,17 @@ export default function PurchasingManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Procurement & Purchasing
+            Buy Stock
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Log incoming parts orders, track vendor deliveries, and verify receipts.
+            Enter each supplier bill. Stock and supplier dues update by themselves.
           </p>
         </div>
       </div>
 
       {hasPermission('purchases.write') && !creating && (
         <button className="rounded border px-3 py-2" onClick={() => setCreating(true)}>
-          Record supplier invoice
+          Enter supplier bill
         </button>
       )}
       {creating && (
@@ -96,7 +96,7 @@ export default function PurchasingManager() {
               : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
         >
-          Purchase Orders
+          Orders (optional)
         </button>
         <button
           onClick={() => {
@@ -109,7 +109,7 @@ export default function PurchasingManager() {
               : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
         >
-          Purchase Receipts
+          Supplier bills
         </button>
       </div>
 
@@ -122,7 +122,9 @@ export default function PurchasingManager() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder={`Search ${activeTab === 'orders' ? 'orders' : 'receipts'}...`}
+          placeholder={
+            activeTab === 'orders' ? 'Search orders' : 'Search by bill number or supplier'
+          }
           className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus-ring"
         />
       </div>
@@ -182,7 +184,9 @@ export default function PurchasingManager() {
         ) : loadingPR ? (
           <div className="p-12 text-center text-sm text-gray-500">Loading receipts...</div>
         ) : receipts.length === 0 ? (
-          <div className="p-12 text-center text-sm text-gray-500">No purchase receipts logged.</div>
+          <div className="p-12 text-center text-sm text-gray-500">
+            No supplier bills yet. Press “Enter supplier bill” to add one.
+          </div>
         ) : (
           <table className="w-full border-collapse text-left text-sm text-gray-500 dark:text-gray-400">
             <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-semibold border-b border-gray-200 dark:border-gray-800">

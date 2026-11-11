@@ -97,7 +97,7 @@ export default function ExpenseManager() {
     },
     {
       id: 'payment',
-      header: 'Payment metadata',
+      header: 'Paid by',
       cell: ({ row }) =>
         PAID_BY[row.original.payment_mode] ||
         decodeExpenseDescription(row.original.description).paymentMethod,
@@ -160,8 +160,8 @@ export default function ExpenseManager() {
   return (
     <div className="space-y-5 p-4 sm:p-6">
       <header>
-        <h1 className="text-2xl font-bold">Workshop expenses</h1>
-        <p className="text-sm text-gray-500">Track operating costs and their accounting entries.</p>
+        <h1 className="text-2xl font-bold">Expenses</h1>
+        <p className="text-sm text-gray-500">Rent, electricity, salary and other shop costs.</p>
       </header>
       {mutation.error && (
         <p role="alert" className="text-red-600">

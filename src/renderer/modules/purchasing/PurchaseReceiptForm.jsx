@@ -82,7 +82,7 @@ export default function PurchaseReceiptForm({ onSaved, onCancel }) {
         if (!save.isPending) save.mutate();
       }}
     >
-      <h2 className="text-lg font-semibold">Record supplier invoice</h2>
+      <h2 className="text-lg font-semibold">Enter supplier bill</h2>
       <fieldset disabled={save.isPending} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>

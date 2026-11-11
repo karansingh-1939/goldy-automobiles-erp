@@ -160,7 +160,7 @@ export default function SupplierManager() {
   const columns = [
     {
       accessorKey: 'name',
-      header: 'Vendor Name',
+      header: 'Name',
       cell: (info) => (
         <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
       ),
@@ -218,10 +218,10 @@ export default function SupplierManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Supplier Directory
+            Suppliers
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Complete vendor coordinate listings, contact cards, and GST filing indexes.
+            Shops and companies you buy parts from.
           </p>
         </div>
         <button
@@ -314,7 +314,7 @@ export default function SupplierManager() {
                     htmlFor="supplier-name-field"
                     className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
                   >
-                    Vendor Name *
+                    Supplier name *
                   </label>
                   <input
                     id="supplier-name-field"

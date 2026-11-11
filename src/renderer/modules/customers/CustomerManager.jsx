@@ -165,7 +165,7 @@ export default function CustomerManager() {
   const columns = [
     {
       accessorKey: 'name',
-      header: 'Client Name',
+      header: 'Name',
       cell: (info) => (
         <span className="font-semibold text-gray-900 dark:text-white">{info.getValue()}</span>
       ),
@@ -231,10 +231,10 @@ export default function CustomerManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Customer Directory
+            Customers
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Complete fleet management, lookup search, and credit limit configuration.
+            Everyone who brings a car, with phone, GSTIN and how much credit (udhaar) you allow.
           </p>
         </div>
         <button
@@ -327,7 +327,7 @@ export default function CustomerManager() {
                     htmlFor="customer-name-field"
                     className="block text-xs font-semibold text-gray-600 dark:text-gray-400"
                   >
-                    Client Name *
+                    Customer name *
                   </label>
                   <input
                     id="customer-name-field"

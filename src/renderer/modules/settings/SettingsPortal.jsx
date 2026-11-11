@@ -98,10 +98,10 @@ export default function SettingsPortal() {
     <div className="p-6 space-y-6 max-h-[90vh] overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-          Settings & Utilities
+          Settings & Backup
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Edit company details and manage database backups.
+          Your shop details, and keeping your data safe.
         </p>
       </div>
 
@@ -127,14 +127,14 @@ export default function SettingsPortal() {
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
               <RefreshCw className="h-4 w-4" />
-              Generate Backup
+              Back up now
             </button>
             <button
               onClick={() =>
                 useAppStore.getState().openDialog({
                   title: 'Restore latest backup?',
                   message:
-                    'This replaces the current workshop database with the latest verified backup.',
+                    'This replaces all current data with the last backup. Anything entered after that backup will be lost.',
                   onConfirm: () => restoreLatestMutation.mutate(),
                 })
               }
@@ -142,7 +142,7 @@ export default function SettingsPortal() {
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <Play className="h-4 w-4" />
-              Restore Latest
+              Restore last backup
             </button>
           </div>
 

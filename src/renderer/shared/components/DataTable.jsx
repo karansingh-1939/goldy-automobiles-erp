@@ -76,7 +76,7 @@ export default function DataTable({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-xs uppercase tracking-wider font-bold border-r border-gray-100 dark:border-gray-800/40 last:border-r-0"
+                    className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800/40 last:border-r-0"
                     style={{ width: header.column.columnDef.width }}
                   >
                     {header.isPlaceholder ? null : (

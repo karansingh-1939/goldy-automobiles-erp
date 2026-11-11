@@ -242,8 +242,8 @@ export async function runDesktopSmoke(window, backend, failures) {
   await execute(() => {
     location.hash = '/purchasing';
   });
-  await until('purchasing receipt action', hasText, 'Record supplier invoice');
-  await execute(click, 'Record supplier invoice');
+  await until('purchasing receipt action', hasText, 'Enter supplier bill');
+  await execute(click, 'Enter supplier bill');
   for (const [id, value] of [
     ['receipt-supplier', supplier.id],
     ['receipt-item-0', item.id],
@@ -319,8 +319,8 @@ export async function runDesktopSmoke(window, backend, failures) {
     await execute(() => {
       location.hash = '/purchasing';
     });
-    await until('receipt screenshot route', hasText, 'Purchase Receipts');
-    await execute(click, 'Purchase Receipts');
+    await until('receipt screenshot route', hasText, 'Supplier bills');
+    await execute(click, 'Supplier bills');
     await until('receipt screenshot row', hasText, 'SMOKE-RECEIPT');
     await execute(click, 'SMOKE-RECEIPT');
     await until('receipt screenshot details', hasText, 'Receipt details SMOKE-RECEIPT');
@@ -333,18 +333,18 @@ export async function runDesktopSmoke(window, backend, failures) {
     );
   }
   for (const [route, title] of [
-    ['/inventory', 'Inventory'],
+    ['/inventory', 'Stock'],
     ['/stock-verification', 'Stock verification'],
     ['/assets', 'Fixed assets'],
     ['/masters', 'Reference masters'],
-    ['/purchasing', 'Procurement & Purchasing'],
+    ['/purchasing', 'Buy Stock'],
     ['/invoices', 'Bills'],
     ['/supplier-ledger', 'Supplier ledger'],
     ['/service-history', 'Vehicle Service History'],
-    ['/expenses', 'Workshop expenses'],
+    ['/expenses', 'Expenses'],
     ['/technicians', 'Technicians'],
-    ['/settings', 'Settings & Utilities'],
-    ['/reports', 'Reporting & Compliance Hub'],
+    ['/settings', 'Settings & Backup'],
+    ['/reports', 'Reports & GST'],
   ]) {
     await execute((path) => {
       location.hash = path;
@@ -362,13 +362,8 @@ export async function runDesktopSmoke(window, backend, failures) {
   await execute(() => {
     location.hash = '/inventory';
   });
-  await until('inventory tools', hasText, 'Stock operations');
-  for (const name of [
-    'Stock operations',
-    'Stock audit & reconciliation',
-    'Reports',
-    'Fixed assets',
-  ]) {
+  await until('inventory tools', hasText, 'Move or adjust stock');
+  for (const name of ['Move or adjust stock', 'Count stock', 'Reports', 'Fixed assets']) {
     await execute(click, name);
     await new Promise((resolve) => setTimeout(resolve, 350));
     if (failures.length) throw new Error('Renderer runtime errors');

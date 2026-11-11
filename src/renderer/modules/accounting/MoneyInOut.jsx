@@ -342,6 +342,17 @@ export default function MoneyInOut() {
   const accounts = useMoneyAccounts();
   const [direction, setDirection] = useState('');
   const [bankName, setBankName] = useState('');
+  const [renaming, setRenaming] = useState(null);
+  const renameBank = useMutation({
+    mutationFn: () =>
+      api.patch(`/api/v1/accounting/money-accounts/${renaming.id}`, { name: renaming.name }),
+    onSuccess: () => {
+      setRenaming(null);
+      client.invalidateQueries({ queryKey: ['money-accounts'] });
+      addNotification('Bank account renamed.', 'success');
+    },
+    onError: (error) => addNotification(error.message || 'Could not rename.', 'error'),
+  });
   const addBank = useMutation({
     mutationFn: () => api.post('/api/v1/accounting/money-accounts', { name: bankName }),
     onSuccess: () => {
@@ -366,8 +377,50 @@ export default function MoneyInOut() {
         <h2 className="text-lg font-semibold">Your money now</h2>
         <ul className="divide-y dark:divide-gray-800">
           {accounts.map((account) => (
-            <li key={account.id} className="flex justify-between py-2 text-base">
-              <span>{account.kind === 'CASH' ? 'Cash in hand' : account.name}</span>
+            <li
+              key={account.id}
+              className="flex flex-wrap items-center justify-between gap-2 py-2 text-base"
+            >
+              {renaming?.id === account.id ? (
+                <form
+                  className="flex flex-1 gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    renameBank.mutate();
+                  }}
+                >
+                  <input
+                    className={input + ' mt-0'}
+                    aria-label={`New name for ${account.name}`}
+                    value={renaming.name}
+                    onChange={(e) => setRenaming({ ...renaming, name: e.target.value })}
+                    required
+                  />
+                  <button type="submit" className="rounded-lg border px-3 py-2 text-sm">
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="text-sm underline"
+                    onClick={() => setRenaming(null)}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <span className="flex items-center gap-3">
+                  {account.kind === 'CASH' ? 'Cash in hand' : account.name}
+                  {account.kind === 'BANK' && (
+                    <button
+                      type="button"
+                      className="text-sm text-brand-600 underline dark:text-brand-400"
+                      onClick={() => setRenaming({ id: account.id, name: account.name })}
+                    >
+                      Rename
+                    </button>
+                  )}
+                </span>
+              )}
               <span className="font-semibold">{rupees(account.balance)}</span>
             </li>
           ))}

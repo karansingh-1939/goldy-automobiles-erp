@@ -73,10 +73,8 @@ export default function WorkshopFinance() {
   return (
     <div className="space-y-5 p-4 sm:p-6">
       <header>
-        <h1 className="text-2xl font-bold">Receivables & daily cash</h1>
-        <p className="text-sm text-gray-500">
-          Review current customer dues and compare the cash book with cash on hand.
-        </p>
+        <h1 className="text-2xl font-bold">Dues & daily cash</h1>
+        <p className="text-sm text-gray-500">Who owes you money, and today's cash count.</p>
       </header>
       <section className={panel} aria-label="Receivable ageing">
         <div className="flex items-center justify-between">
@@ -121,7 +119,7 @@ export default function WorkshopFinance() {
                 ['customer_name', 'Customer'],
                 ['phone', 'Phone'],
                 ['invoice_date', 'Date'],
-                ['ageDays', 'Age (days)'],
+                ['ageDays', 'Days unpaid'],
                 ['outstanding', 'Due', money],
               ]}
               rows={balances.documents}
@@ -133,8 +131,8 @@ export default function WorkshopFinance() {
                 ['name', 'Customer'],
                 ['phone', 'Phone'],
                 ['due', 'Net due', money],
-                ['credit', 'Credit balance', money],
-                ['unaged', 'Unaged due', money],
+                ['credit', 'Paid in advance', money],
+                ['unaged', 'Old balance', money],
               ]}
               rows={balances.customers}
             />

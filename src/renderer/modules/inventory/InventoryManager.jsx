@@ -6,9 +6,9 @@ import StockVerificationManager from './StockVerificationManager.jsx';
 import FixedAssetManager from './FixedAssetManager.jsx';
 import { buttonClass } from './inventory-ui.jsx';
 const tabs = {
-  catalog: ['Inventory catalog', InventoryCatalog],
-  operations: ['Stock operations', StockOperations],
-  audit: ['Stock audit & reconciliation', StockVerificationManager],
+  catalog: ['Stock list', InventoryCatalog],
+  operations: ['Move or adjust stock', StockOperations],
+  audit: ['Count stock', StockVerificationManager],
   reports: ['Reports', InventoryReports],
   assets: ['Fixed assets', FixedAssetManager],
 };
@@ -17,7 +17,7 @@ export default function InventoryManager() {
   const Component = tabs[tab][1];
   return (
     <div className="p-6 space-y-5">
-      <h1 className="text-xl font-bold">Inventory</h1>
+      <h1 className="text-2xl font-bold">Stock</h1>
       <nav aria-label="Inventory tools" className="flex flex-wrap gap-2">
         {Object.entries(tabs).map(([key, [label]]) => (
           <button

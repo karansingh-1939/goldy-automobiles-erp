@@ -60,10 +60,10 @@ it('clears saved optional customer fields and closes the successful edit', async
   fireEvent.click(within(row).getAllByRole('button')[0]);
   fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: '' } });
   fireEvent.change(screen.getByLabelText('Credit Limit (₹)'), { target: { value: '' } });
-  fireEvent.submit(screen.getByLabelText('Client Name *').closest('form'));
+  fireEvent.submit(screen.getByLabelText('Customer name *').closest('form'));
   await waitFor(() => expect(customer.email).toBeNull());
   expect(customer.credit_limit).toBeNull();
-  await waitFor(() => expect(screen.queryByLabelText('Client Name *')).toBeNull());
+  await waitFor(() => expect(screen.queryByLabelText('Customer name *')).toBeNull());
 });
 
 it('finds an owner outside the first page of customers', async () => {
@@ -85,8 +85,8 @@ it('finds an owner outside the first page of customers', async () => {
   fireEvent.click(screen.getByText('Register Vehicle'));
   fireEvent.change(screen.getByLabelText('Search owners'), { target: { value: 'Older Owner' } });
   expect(await screen.findByRole('option', { name: /Older Owner/ })).toBeTruthy();
-  fireEvent.change(screen.getByLabelText('Owner Account *'), { target: { value: '21' } });
-  expect(screen.getByLabelText('Owner Account *').value).toBe('21');
+  fireEvent.change(screen.getByLabelText('Owner *'), { target: { value: '21' } });
+  expect(screen.getByLabelText('Owner *').value).toBe('21');
 });
 
 it('creates a sales order with a warehouse and then confirms it', async () => {
@@ -158,6 +158,7 @@ it('pages purchasing records and distinguishes an API failure from an empty resu
     }),
   );
   show(PurchasingManager);
+  fireEvent.click(screen.getByText('Orders (optional)'));
   await screen.findByText('PO-1');
   fireEvent.click(screen.getByText('Next page'));
   expect(await screen.findByRole('alert')).toHaveProperty(

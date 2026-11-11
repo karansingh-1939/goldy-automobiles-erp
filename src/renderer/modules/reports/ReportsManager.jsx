@@ -203,11 +203,10 @@ export default function ReportsManager() {
       <div className="flex items-center justify-between no-print">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Reporting & Compliance Hub
+            Reports & GST
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Generate statements, file tax returns, audit ledger balances, and download Tally XML
-            sheets.
+            GST files for your CA, profit and accounts.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -299,7 +298,7 @@ export default function ReportsManager() {
             className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg transition-colors"
           >
             <Download className="h-3.5 w-3.5" />
-            Export Tally Prime XML
+            Tally file (for CA)
           </button>
         )}
       </div>
